@@ -1,0 +1,5 @@
+openai==1.11.1
+python-dotenv==1.0.1
+requests
+termcolor==2.4.0
+web3==6.15.1

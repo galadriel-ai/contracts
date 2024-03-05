@@ -49,6 +49,13 @@ forge create --rpc-url https://evm-rpc.arctic-1.seinetwork.io/ --private-key <yo
 
 ### Run basic agent example
 
+**Python env**
+```
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt 
+```
+
 **Setup .envs**
 ```
 cp client/template.env client/.env
