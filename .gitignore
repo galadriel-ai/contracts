@@ -1,0 +1,15 @@
+**/venv
+**/.env
+**/.venv
+client/data
+.idea
+**/.idea
+**/node_modules
+*.pyc
+contracts/oracle/build
+contracts/callback_oracle/build
+contracts/agent/build
+contracts/agent-old/build
+contracts/agent2/build
+arbitrum-contracts/node_modules
+
