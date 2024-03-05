@@ -39,7 +39,7 @@ indexed_prompts: List[PromptAndResponse] = []
 def _index_next_prompt():
     global calls_made, last_unindexed_prompt_id
     current_prompt_index = last_unindexed_prompt_id + 1
-    while prompt := contract.functions.prompts(current_prompt_index).call():
+    while prompt := _get_prompt(current_prompt_index):
         calls_made = calls_made + 1
         if prompt:
             callback_address = contract.functions.callbackAddresses(current_prompt_index).call()
@@ -66,6 +66,13 @@ def _index_next_prompt():
         current_prompt_index = last_unindexed_prompt_id + 1
     else:
         calls_made = calls_made + 1
+
+
+def _get_prompt(current_prompt_index):
+    try:
+        return contract.functions.prompts(current_prompt_index).call()
+    except:
+        return None
 
 
 def _answer_unanswered_prompts():
@@ -108,6 +115,10 @@ def _send_add_response_tx(prompt: PromptAndResponse, response: str) -> bool:
     tx_data = {
         "from": account.address,
         "nonce": nonce,
+        # TODO: pick gas amount in a better way
+        "gas": 1000000,
+        "maxFeePerGas": web3_client.to_wei("2", "gwei"),
+        "maxPriorityFeePerGas": web3_client.to_wei("1", "gwei"),
     }
     if chain_id := settings.CHAIN_ID:
         tx_data["chainId"] = int(chain_id)
