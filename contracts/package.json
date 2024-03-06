@@ -7,7 +7,8 @@
     "node": "yarn hardhat node",
     "compile": "yarn hardhat compile",
     "test": "yarn hardhat test",
-    "deploy:localhost": "yarn hardhat run scripts/deploy.ts --network localhost"
+    "deploy:localhost": "yarn hardhat run scripts/deploy.ts --network localhost",
+    "deploy:devnet": "yarn hardhat run scripts/deploy.ts --network devnet"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
