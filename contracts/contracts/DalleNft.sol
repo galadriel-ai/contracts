@@ -7,11 +7,12 @@ import {ERC721URIStorage, ERC721} from "@openzeppelin/contracts/token/ERC721/ext
 
 
 interface IOracle {
-    function addPrompt(
+    function addFunctionCall(
         address runOwner,
-        string memory promptType,
-        uint promptId
-    ) external returns (uint);
+        string memory functionType,
+        string memory functionInput,
+        uint functionCallbackId
+    ) external returns (uint i);
 }
 
 contract DalleNft is ERC721URIStorage {
@@ -76,7 +77,15 @@ contract DalleNft is ERC721URIStorage {
         uint currentId = mintInputsCount[msg.sender];
         mintInputsCount[msg.sender] = currentId + 1;
 
-        IOracle(oracleAddress).addPrompt(msg.sender, "image_generation", currentId);
+        string memory fullPrompt = prompt;
+        fullPrompt = string.concat(fullPrompt, message);
+        fullPrompt = string.concat(fullPrompt, "\"");
+        IOracle(oracleAddress).addFunctionCall(
+            msg.sender,
+            "image_generation",
+            fullPrompt,
+            currentId
+        );
         emit MintInputCreated(msg.sender, currentId);
 
         return currentId;
