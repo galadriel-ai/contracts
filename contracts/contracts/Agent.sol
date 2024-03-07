@@ -41,6 +41,11 @@ contract Agent {
         emit OracleAddressUpdated(newOracleAddress);
     }
 
+    modifier onlyOracle() {
+        require(msg.sender == oracleAddress, "Caller is not oracle");
+        _;
+    }
+
     function runAgent(string memory prompt, uint8 max_iterations) public returns (uint i) {
         AgentRun storage run = agentRuns[agentRunCount];
 
@@ -59,8 +64,7 @@ contract Agent {
         return currentId;
     }
 
-    function addResponse(string memory response, uint promptId) public {
-        require(msg.sender == oracleAddress, "Caller is not oracle");
+    function addResponse(string memory response, uint promptId) public onlyOracle {
         require(agentRuns[promptId].is_finished == false, "Run is already finished");
 
         agentRuns[promptId].responses.push(response);
