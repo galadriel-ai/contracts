@@ -116,7 +116,7 @@ def _send_add_response_tx(prompt: PromptAndResponse, response: str) -> bool:
         "from": account.address,
         "nonce": nonce,
         # TODO: pick gas amount in a better way
-        "gas": 1000000,
+        # "gas": 1000000,
         "maxFeePerGas": web3_client.to_wei("2", "gwei"),
         "maxPriorityFeePerGas": web3_client.to_wei("1", "gwei"),
     }
