@@ -88,14 +88,6 @@ contract DalleNft is ERC721URIStorage {
         _setTokenURI(tokenId, response);
     }
 
-    //    function addMessage(string memory message, uint runId) public {
-    //        ChatRun storage run = chatRuns[msg.sender][runId];
-    //        require(run.messagesCount == run.responsesCount, "No response to previous message");
-    //        run.messages.push(message);
-    //        run.messagesCount++;
-    //        IOracle(oracleAddress).addPrompt(msg.sender, runId);
-    //    }
-
     function getMessages(address owner, uint chatId) public view returns (string[] memory) {
         string[] memory promptsArray = new string[](1);
         string memory fullPrompt = prompt;
@@ -104,8 +96,4 @@ contract DalleNft is ERC721URIStorage {
         promptsArray[0] = fullPrompt;
         return promptsArray;
     }
-
-    //    function getResponses(address owner, uint chatId) public view returns (string[] memory) {
-    //        return chatRuns[owner][chatId].responses;
-    //    }
 }
