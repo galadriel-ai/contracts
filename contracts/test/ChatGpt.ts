@@ -2,7 +2,7 @@ import {loadFixture,} from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import {expect} from "chai";
 import {ethers} from "hardhat";
 
-describe("Agent", function () {
+describe("ChatGpt", function () {
   // We define a fixture to reuse the same setup in every test.
   // We use loadFixture to run this setup once, snapshot that state,
   // and reset Hardhat Network to that snapshot in every test.
@@ -42,7 +42,7 @@ describe("Agent", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await chatGpt.startChat("Hello");
-      await oracle.connect(oracleAccount).addResponse(0, "Hi", 0);
+      await oracle.connect(oracleAccount).addResponse(0, "Hi", "chat", 0);
       const responses = await chatGpt.getResponses(owner.address, 0)
       expect(responses.length).to.equal(1)
       expect(responses[0]).to.equal("Hi")
@@ -59,7 +59,7 @@ describe("Agent", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await chatGpt.startChat("Hello");
-      await oracle.connect(oracleAccount).addResponse(0, "Hi", 0);
+      await oracle.connect(oracleAccount).addResponse(0, "Hi", "chat", 0);
       await chatGpt.addMessage("message", 0);
 
       const messages = await chatGpt.getMessages(owner.address, 0)
@@ -84,9 +84,9 @@ describe("Agent", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await chatGpt.startChat("Hello");
-      await oracle.connect(oracleAccount).addResponse(0, "Hi", 0);
+      await oracle.connect(oracleAccount).addResponse(0, "Hi", "chat", 0);
       await expect(
-        oracle.connect(oracleAccount).addResponse(0, "Hi", 0)
+        oracle.connect(oracleAccount).addResponse(0, "Hi", "chat", 0)
       ).to.be.revertedWith("Prompt already processed");
     });
     it("Oracle cannot add 2 responses", async () => {
@@ -101,14 +101,14 @@ describe("Agent", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await chatGpt.startChat("Hello");
-      await oracle.connect(oracleAccount).addResponse(0, "Hi", 0);
+      await oracle.connect(oracleAccount).addResponse(0, "Hi", "chat", 0);
 
       // Ultimate edge-case, user whitelisted some random address
       const randomAccount = allSigners[7];
       await chatGpt.setOracleAddress(randomAccount);
 
       await expect(
-        chatGpt.connect(randomAccount).addResponse("Hi", owner.address, 0)
+        chatGpt.connect(randomAccount).addResponse("Hi", "chat", owner.address, 0)
       ).to.be.revertedWith("No message to respond to");
     });
 

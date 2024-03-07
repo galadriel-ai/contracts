@@ -5,7 +5,11 @@ pragma solidity ^0.8.9;
 // import "hardhat/console.sol";
 
 interface IOracle {
-    function addPrompt(address runOwner, uint promptId) external returns (uint);
+    function addPrompt(
+        address runOwner,
+        string memory promptType,
+        uint promptId
+    ) external returns (uint);
 }
 
 contract ChatGpt {
@@ -60,13 +64,18 @@ contract ChatGpt {
         uint currentId = chatRunsCount[msg.sender];
         chatRunsCount[msg.sender] = currentId + 1;
 
-        IOracle(oracleAddress).addPrompt(msg.sender, currentId);
+        IOracle(oracleAddress).addPrompt(msg.sender, "chat", currentId);
         emit ChatCreated(msg.sender, currentId);
 
         return currentId;
     }
 
-    function addResponse(string memory response, address chatOwner, uint runId) public onlyOracle {
+    function addResponse(
+        string memory response,
+        string memory responseType,
+        address chatOwner,
+        uint runId
+    ) public onlyOracle {
         ChatRun storage run = chatRuns[chatOwner][runId];
         require(run.messagesCount > run.responsesCount, "No message to respond to");
         run.responses.push(response);
@@ -78,7 +87,7 @@ contract ChatGpt {
         require(run.messagesCount == run.responsesCount, "No response to previous message");
         run.messages.push(message);
         run.messagesCount++;
-        IOracle(oracleAddress).addPrompt(msg.sender, runId);
+        IOracle(oracleAddress).addPrompt(msg.sender, "chat", runId);
     }
 
     function getMessages(address owner, uint chatId) public view returns (string[] memory) {

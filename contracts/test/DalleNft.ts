@@ -2,7 +2,7 @@ import {loadFixture,} from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import {expect} from "chai";
 import {ethers} from "hardhat";
 
-describe("Agent", function () {
+describe("DalleNft", function () {
   // We define a fixture to reuse the same setup in every test.
   // We use loadFixture to run this setup once, snapshot that state,
   // and reset Hardhat Network to that snapshot in every test.
@@ -49,7 +49,7 @@ describe("Agent", function () {
 
       await dalleNft.initializeMint("funky gorilla");
 
-      await oracle.connect(oracleAccount).addResponse(0, "ipfs://CID", 0);
+      await oracle.connect(oracleAccount).addResponse(0, "ipfs://CID", "function_result", 0);
 
       const tokenUri = await dalleNft.tokenURI(0)
       expect(tokenUri).to.equal("ipfs://CID")
@@ -68,15 +68,31 @@ describe("Agent", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await dalleNft.initializeMint("funky gorilla");
-      await oracle.connect(oracleAccount).addResponse(0, "ipfs://CID", 0);
+      await oracle.connect(oracleAccount).addResponse(0, "ipfs://CID", "function_result", 0);
 
       // Ultimate edge-case, user whitelisted some random address
       const randomAccount = allSigners[7];
       await dalleNft.setOracleAddress(randomAccount);
 
       await expect(
-        dalleNft.connect(randomAccount).addResponse("Hi", owner.address, 0)
+        dalleNft.connect(randomAccount).addResponse("Hi", "function_result", owner.address, 0)
       ).to.be.revertedWith("NFT already minted");
+    });
+    it("Cannot call with wrong response type", async () => {
+      const {
+        dalleNft,
+        oracle,
+        allSigners,
+        owner,
+      } = await loadFixture(deploy);
+      const oracleAccount = allSigners[6];
+      await dalleNft.setOracleAddress(oracle.target);
+      await oracle.updateWhitelist(oracleAccount, true);
+
+      await dalleNft.initializeMint("funky gorilla");
+      await expect(
+        oracle.connect(oracleAccount).addResponse(0, "ipfs://CID", "chat", 0)
+      ).to.be.revertedWith("Expecting function_result");
     });
   })
 });

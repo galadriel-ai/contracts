@@ -7,7 +7,11 @@ import {ERC721URIStorage, ERC721} from "@openzeppelin/contracts/token/ERC721/ext
 
 
 interface IOracle {
-    function addPrompt(address runOwner, uint promptId) external returns (uint);
+    function addPrompt(
+        address runOwner,
+        string memory promptType,
+        uint promptId
+    ) external returns (uint);
 }
 
 contract DalleNft is ERC721URIStorage {
@@ -72,15 +76,25 @@ contract DalleNft is ERC721URIStorage {
         uint currentId = mintInputsCount[msg.sender];
         mintInputsCount[msg.sender] = currentId + 1;
 
-        IOracle(oracleAddress).addPrompt(msg.sender, currentId);
+        IOracle(oracleAddress).addPrompt(msg.sender, "image_generation", currentId);
         emit MintInputCreated(msg.sender, currentId);
 
         return currentId;
     }
 
-    function addResponse(string memory response, address chatOwner, uint runId) public onlyOracle {
+    function addResponse(
+        string memory response,
+        string memory responseType,
+        address chatOwner,
+        uint runId
+    ) public onlyOracle {
         MintInput storage mintInput = mintInputs[chatOwner][runId];
         require(!mintInput.isMinted, "NFT already minted");
+        require(
+            keccak256(abi.encodePacked(responseType)) == keccak256(abi.encodePacked("function_result")),
+            "Expecting function_result"
+        );
+
         mintInput.isMinted = true;
 
         uint256 tokenId = _nextTokenId++;
