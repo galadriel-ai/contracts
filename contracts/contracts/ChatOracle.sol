@@ -62,6 +62,7 @@ contract ChatOracle {
     }
 
     function addResponse(uint promptId, string memory response, uint promptCallBackId) public onlyWhitelisted {
+        require(!isPromptProcessed[promptId], "Prompt already processed");
         isPromptProcessed[promptId] = true;
         address runOwner = runOwners[promptId];
         IChatGpt(callbackAddresses[promptId]).addResponse(response, runOwner, promptCallBackId);

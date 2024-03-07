@@ -33,15 +33,19 @@ contract ChatGpt {
         oracleAddress = initialOracleAddress;
     }
 
-    function setOracleAddress(address newOracleAddress) public {
-        require(msg.sender == owner, "Caller is not the owner");
-        oracleAddress = newOracleAddress;
-        emit OracleAddressUpdated(newOracleAddress);
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Caller is not owner");
+        _;
     }
 
     modifier onlyOracle() {
         require(msg.sender == oracleAddress, "Caller is not oracle");
         _;
+    }
+
+    function setOracleAddress(address newOracleAddress) public onlyOwner {
+        oracleAddress = newOracleAddress;
+        emit OracleAddressUpdated(newOracleAddress);
     }
 
     function startChat(string memory message) public returns (uint i) {

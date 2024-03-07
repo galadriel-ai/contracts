@@ -87,7 +87,30 @@ describe("Agent", function () {
       await oracle.connect(oracleAccount).addResponse(0, "Hi", 0);
       await expect(
         oracle.connect(oracleAccount).addResponse(0, "Hi", 0)
+      ).to.be.revertedWith("Prompt already processed");
+    });
+    it("Oracle cannot add 2 responses", async () => {
+      const {
+        chatGpt,
+        oracle,
+        allSigners,
+        owner
+      } = await loadFixture(deploy);
+      const oracleAccount = allSigners[6];
+      await chatGpt.setOracleAddress(oracle.target);
+      await oracle.updateWhitelist(oracleAccount, true);
+
+      await chatGpt.startChat("Hello");
+      await oracle.connect(oracleAccount).addResponse(0, "Hi", 0);
+
+      // Ultimate edge-case, user whitelisted some random address
+      const randomAccount = allSigners[7];
+      await chatGpt.setOracleAddress(randomAccount);
+
+      await expect(
+        chatGpt.connect(randomAccount).addResponse("Hi", owner.address, 0)
       ).to.be.revertedWith("No message to respond to");
     });
+
   })
 });
