@@ -5,6 +5,7 @@ from src.entities import Chat
 
 repository = OracleRepository()
 
+
 async def _answer_chat(chat: Chat):
     try:
         response = await generate_response_use_case.execute("gpt-4-turbo-preview", chat)
@@ -13,7 +14,8 @@ async def _answer_chat(chat: Chat):
             await repository.send_response(chat, response)
     except Exception as ex:
         print(f"Failed to answer chat {chat.id}, exc: {ex}")
-    
+
+
 async def _answer_unanswered_chats():
     chat_tasks = {}
     while True:
@@ -30,13 +32,14 @@ async def _answer_unanswered_chats():
             for index in completed_tasks:
                 try:
                     await chat_tasks[index]
-                    print("Chat {index} answered successfully")
+                    print(f"Chat {index} answered successfully")
                 except Exception as e:
                     print(f"Task for chat {index} raised an exception: {e}")
                 del chat_tasks[index]
         except Exception as exc:
             print(f"Main loop raised an exception: {exc}")
         await asyncio.sleep(2)
+
 
 async def main():
     await _answer_unanswered_chats()

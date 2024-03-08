@@ -5,7 +5,7 @@ async function main() {
     const contractABI = [
         "function startChat(string memory message) public returns (uint)"
     ];
-    const contractAddress = "0x3Aa5ebB10DC797CAC828524e59A333d0A371443c";
+    const contractAddress = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
     const [signer] = await ethers.getSigners();
 
     // Create a contract instance

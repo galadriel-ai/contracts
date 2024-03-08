@@ -5,7 +5,7 @@ async function main() {
     const contractABI = [
         "function updateWhitelist(address _addressToWhitelist, bool isWhitelisted)"
     ];
-    const contractAddress = "0x0165878A594ca255338adfa4d48449f69242Eb8F";
+    const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
     const [signer] = await ethers.getSigners();
 
     // Create a contract instance

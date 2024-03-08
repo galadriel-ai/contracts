@@ -23,9 +23,7 @@ class OracleRepository:
     async def _index_new_chats(self):
         chats_count = await self.oracle_contract.functions.promptsCount().call()
         if chats_count > self.last_chats_count:
-            print(
-                f"Indexing new prompts from {self.last_chats_count} to {chats_count}"
-            )
+            print(f"Indexing new prompts from {self.last_chats_count} to {chats_count}")
             for i in range(self.last_chats_count, chats_count):
                 callback_id = await self.oracle_contract.functions.promptCallbackIds(
                     i
@@ -59,7 +57,9 @@ class OracleRepository:
 
     async def get_unanswered_chats(self) -> List[Chat]:
         await self._index_new_chats()
-        unanswered_chats = [chat for chat in self.indexed_chats if not chat.is_processed]
+        unanswered_chats = [
+            chat for chat in self.indexed_chats if not chat.is_processed
+        ]
         return unanswered_chats
 
     async def send_response(self, chat: Chat, response: str) -> bool:
