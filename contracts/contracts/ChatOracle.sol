@@ -41,7 +41,7 @@ contract ChatOracle {
     mapping(uint => address) public functionCallbackAddresses;
     mapping(uint => uint) public functionCallbackIds;
     mapping(uint => bool) public isFunctionProcessed;
-    uint private functionsCount;
+    uint public functionsCount;
 
 
     address private owner;
