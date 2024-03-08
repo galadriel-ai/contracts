@@ -2,23 +2,19 @@ from typing import Optional
 
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletion
+from src.entities import Chat
 
 import settings
 
 
-async def execute(model: str, prompt: str) -> Optional[str]:
+async def execute(model: str, chat: Chat) -> Optional[str]:
     try:
         client = AsyncOpenAI(
             api_key=settings.OPEN_AI_API_KEY,
             model=model,
         )
         chat_completion: ChatCompletion = await client.chat.completions.create(
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
-            ],
+            messages=chat.messages,
             model=model,
         )
         return chat_completion.choices[0].message.content

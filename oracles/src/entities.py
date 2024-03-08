@@ -3,11 +3,9 @@ from dataclasses import dataclass
 
 
 @dataclass
-class PromptAndResponse:
+class Chat:
     id: int
-    prompt: str
     callback_id: int
-    # Not actually needed here, contract handles it
-    callback_address: str
     is_processed: bool
+    messages: dict
     response: Optional[str] = None

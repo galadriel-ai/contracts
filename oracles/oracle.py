@@ -6,17 +6,17 @@ repository = OracleRepository()
 
 
 async def _answer_unanswered_prompts():
-    prompts = await repository.get_unanswered_prompts()
-    for prompt in prompts:
+    chats = await repository.get_unanswered_prompts()
+    for chat in chats:
         try:
             response = await generate_response_use_case(
-                "gpt-4-turbo-preview", prompt.prompt
+                "gpt-4-turbo-preview", chat
             )
             if response:
-                prompt.response = response
-                await repository.send_response(prompt, response)
+                chat.response = response
+                await repository.send_response(chat, response)
         except Exception as ex:
-            print(f"Failed to answer prompt {prompt.id}, exc: {ex}")
+            print(f"Failed to answer prompt {chat.id}, exc: {ex}")
 
 
 async def _listen():
@@ -26,11 +26,11 @@ async def _listen():
         except Exception as exc:
             print("Failed to index chain, exc:", exc)
         await asyncio.sleep(2)
-        print(f"Calls made: {repository.calls_made}")
+        print("Looping")
 
 
 async def main():
-   await  _listen()
+    await _listen()
 
 
 if __name__ == "__main__":
