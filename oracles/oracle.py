@@ -5,13 +5,12 @@ from src.domain.llm import generate_response_use_case
 repository = OracleRepository()
 
 
-async def _answer_unanswered_prompts():
-    chats = await repository.get_unanswered_prompts()
+async def _answer_unanswered_chats():
+    chats = await repository.get_unanswered_chats()
     for chat in chats:
         try:
-            response = await generate_response_use_case(
-                "gpt-4-turbo-preview", chat
-            )
+            response = await generate_response_use_case.execute("gpt-4-turbo-preview", chat)
+            print(response)
             if response:
                 chat.response = response
                 await repository.send_response(chat, response)
@@ -22,7 +21,7 @@ async def _answer_unanswered_prompts():
 async def _listen():
     while True:
         try:
-            await _answer_unanswered_prompts()
+            await _answer_unanswered_chats()
         except Exception as exc:
             print("Failed to index chain, exc:", exc)
         await asyncio.sleep(2)

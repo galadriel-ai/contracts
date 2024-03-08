@@ -11,7 +11,6 @@ async def execute(model: str, chat: Chat) -> Optional[str]:
     try:
         client = AsyncOpenAI(
             api_key=settings.OPEN_AI_API_KEY,
-            model=model,
         )
         chat_completion: ChatCompletion = await client.chat.completions.create(
             messages=chat.messages,
