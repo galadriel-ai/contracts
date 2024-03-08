@@ -1,5 +1,4 @@
-import time
-
+import asyncio
 from src.repositories.oracle_repository import OracleRepository
 from src.llm import generate_response_use_case
 
@@ -20,20 +19,20 @@ async def _answer_unanswered_prompts():
             print(f"Failed to answer prompt {prompt.id}, exc: {ex}")
 
 
-def _listen():
+async def _listen():
     global calls_made
     while True:
         try:
             _answer_unanswered_prompts()
         except Exception as exc:
             print("Failed to index chain, exc:", exc)
-        time.sleep(2)
+        asyncio.sleep(2)
         print(f"Calls made: {calls_made}")
 
 
-def main():
-    _listen()
+async def main():
+   await  _listen()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
