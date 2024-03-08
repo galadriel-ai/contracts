@@ -7,7 +7,7 @@ pragma solidity ^0.8.13;
 interface IChatGpt {
     function addResponse(
         string memory response,
-        // chat || function_call || function_result
+        // chat || function_call || function_result || error(?)
         string memory responseType,
         address runOwner,
         uint promptId
@@ -18,13 +18,20 @@ contract ChatOracle {
 
     mapping(address => bool) whitelistedAddresses;
 
-    // chat || image_generation
-    mapping(uint => string) public promptType;
     mapping(uint => address) public callbackAddresses;
     mapping(uint => address) public runOwners;
     mapping(uint => uint) public promptCallbackIds;
     mapping(uint => bool) public isPromptProcessed;
     uint private promptsCount;
+
+    mapping(uint => string) public functionInputs;
+    mapping(uint => string) public functionType;
+    mapping(uint => address) public functionOwners;
+    mapping(uint => address) public functionCallbackAddresses;
+    mapping(uint => uint) public functionCallbackIds;
+    mapping(uint => bool) public isFunctionProcessed;
+    uint private functionsCount;
+
 
     address private owner;
 
@@ -35,9 +42,19 @@ contract ChatOracle {
         address indexed runOwner
     );
 
+
+    event FunctionAdded(
+        uint indexed functionId,
+        string indexed functionInput,
+        uint functionCallbackId,
+        address sender,
+        address indexed runOwner
+    );
+
     constructor() {
         owner = msg.sender;
         promptsCount = 0;
+        functionsCount = 0;
     }
 
     modifier onlyOwner() {
@@ -58,7 +75,6 @@ contract ChatOracle {
     function addPrompt(address runOwner, string memory _promptType, uint promptCallbackId) public returns (uint i) {
         uint promptId = promptsCount;
         callbackAddresses[promptId] = msg.sender;
-        promptType[promptId] = _promptType;
         runOwners[promptId] = runOwner;
         promptCallbackIds[promptId] = promptCallbackId;
         isPromptProcessed[promptId] = false;
@@ -82,4 +98,42 @@ contract ChatOracle {
         IChatGpt(callbackAddresses[promptId]).addResponse(response, responseType, runOwner, promptCallBackId);
     }
 
+    function addFunctionCall(
+        address runOwner,
+        string memory functionType,
+        string memory functionInput,
+        uint functionCallbackId
+    ) public returns (uint i) {
+        uint functionId = functionsCount;
+        functionOwners[functionId] = runOwner;
+        functionInputs[functionId] = functionType;
+        functionInputs[functionId] = functionInput;
+        functionCallbackIds[functionId] = functionCallbackId;
+
+        functionCallbackAddresses[functionId] = msg.sender;
+        isFunctionProcessed[functionId] = false;
+
+        functionsCount++;
+
+        emit FunctionAdded(functionId, functionInput, functionCallbackId, msg.sender, runOwner);
+
+        return functionId;
+    }
+
+    function addFunctionResponse(
+        uint functionId,
+        string memory response,
+        string memory responseType,
+        uint functionCallBackId
+    ) public onlyWhitelisted {
+        require(!isFunctionProcessed[functionId], "Function already processed");
+        isFunctionProcessed[functionId] = true;
+        address runOwner = functionOwners[functionId];
+        IChatGpt(functionCallbackAddresses[functionId]).addResponse(
+            response,
+            responseType,
+            runOwner,
+            functionCallBackId
+        );
+    }
 }
