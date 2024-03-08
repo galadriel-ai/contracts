@@ -29,6 +29,20 @@ Take some private key from local node and add to contracts/.env PRIVATE_KEY_LOCA
 npm run deploy:localhost
 ```
 
+### Run the Oracle
+
+```
+cd oracles
+cp template.env .env
+```
+update .env file
+```
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python oracle.py
+```
+
 ### Galadriel testnet / SEI devnet
 Update .env
 
