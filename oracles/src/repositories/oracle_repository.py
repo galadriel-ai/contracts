@@ -56,15 +56,10 @@ class OracleRepository:
                     )
                 )
             self.last_chats_count = chats_count
-        else:
-            print("No new chats")
 
     async def get_unanswered_chats(self) -> List[Chat]:
         await self._index_new_chats()
-        for chat in self.indexed_chats:
-            print(chat)
         unanswered_chats = [chat for chat in self.indexed_chats if not chat.is_processed]
-        print(f"Unanswered chats: {unanswered_chats}")
         return unanswered_chats
 
     async def send_response(self, chat: Chat, response: str) -> bool:
@@ -81,9 +76,9 @@ class OracleRepository:
             tx_data["chainId"] = int(chain_id)
         tx = await self.oracle_contract.functions.addResponse(
             chat.id,
+            chat.callback_id,
             response,
             "assistant",
-            chat.callback_id,
         ).build_transaction(tx_data)
         signed_tx = self.web3_client.eth.account.sign_transaction(
             tx, private_key=self.account.key
