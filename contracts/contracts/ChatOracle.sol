@@ -99,9 +99,9 @@ contract ChatOracle {
 
     function addResponse(
         uint promptId,
+        uint promptCallBackId,
         string memory response,
-        string memory responseType,
-        uint promptCallBackId
+        string memory responseType
     ) public onlyWhitelisted {
         require(!isPromptProcessed[promptId], "Prompt already processed");
         isPromptProcessed[promptId] = true;
@@ -149,9 +149,9 @@ contract ChatOracle {
 
     function addFunctionResponse(
         uint functionId,
+        uint functionCallBackId,
         string memory response,
-        string memory responseType,
-        uint functionCallBackId
+        string memory responseType
     ) public onlyWhitelisted {
         require(!isFunctionProcessed[functionId], "Function already processed");
         isFunctionProcessed[functionId] = true;
