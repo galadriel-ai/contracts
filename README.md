@@ -22,6 +22,8 @@ npm run node
 This runs a chain on: http://localhost:8545  
 Chain ID: 31337
 
+Take some private key from local node and add to contracts/.env PRIVATE_KEY_LOCALHOST
+
 **Deploy contracts**
 ```
 npm run deploy:localhost
