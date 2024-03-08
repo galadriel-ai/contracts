@@ -12,10 +12,12 @@ async function main() {
     const contract = new ethers.Contract(contractAddress, contractABI, signer);
 
     // Call the updateWhitelist function
-    const transactionResponse = await contract.updateWhitelist(signer, true);
+    const signerAddress = await signer.getAddress();
+
+    const transactionResponse = await contract.updateWhitelist(signerAddress, true);
     await transactionResponse.wait();
 
-    console.log(`Address whitelisted: "${signer}"`);
+    console.log(`Address whitelisted: "${signerAddress}"`);
 }
 
 main()
