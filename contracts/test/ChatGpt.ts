@@ -26,7 +26,8 @@ describe("ChatGpt", function () {
       await chatGpt.setOracleAddress(oracle.target);
 
       await chatGpt.startChat("Hello");
-      const messages = await chatGpt.getMessages(owner.address, 0)
+      // promptId: 0, callbackId: 0
+      const messages = await oracle.getMessages(0, 0)
       expect(messages.length).to.equal(1)
       expect(messages[0]).to.equal("Hello")
     });
@@ -43,7 +44,7 @@ describe("ChatGpt", function () {
 
       await chatGpt.startChat("Hello");
       await oracle.connect(oracleAccount).addResponse(0, "Hi", "chat", 0);
-      const messages = await chatGpt.getMessages(owner.address, 0)
+      const messages = await oracle.getMessages(0, 0)
       expect(messages.length).to.equal(2)
       expect(messages[1]).to.equal("Hi")
     });
@@ -62,7 +63,7 @@ describe("ChatGpt", function () {
       await oracle.connect(oracleAccount).addResponse(0, "Hi", "chat", 0);
       await chatGpt.addMessage("message", 0);
 
-      const messages = await chatGpt.getMessages(owner.address, 0)
+      const messages = await oracle.getMessages(0, 0)
       expect(messages.length).to.equal(3)
       expect(messages[2]).to.equal("message")
     });
