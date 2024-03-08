@@ -1,50 +1,43 @@
 # SEI
 
-### Contracts setup
-
-
-**Install sei**
-```
-git clone https://github.com/sei-protocol/sei-chain
-cd sei-chain
-git checkout v3.7.0
-make install
-seid version
-```
-
-**Add a new wallet**
-```
-seid keys add $NAME
-seid keys list
-```
+## Contracts setup
 
 **Install foundry**
 ```
-brew install libusb
-curl -L https://foundry.paradigm.xyz | bash
-foundryup
-forge --version
+cd contracts
+cp template.env .env
+npm install
 ```
+Modify .env and add your private key for relevant network  
+_CUSTOM for our chain
 
-### Deployment
+## Deployment
 
+### Local
 **Run local network**
 ```
-anvil
+cd contracts
+npm run node
 ```
 This runs a chain on: http://localhost:8545  
 Chain ID: 31337
 
-**Deploy contracts**  
-Take some private keys from the `anvil` results
+**Deploy contracts**
 ```
-forge create --rpc-url http://localhost:8545 --private-key <test_account_private_key> src/Oracle.sol:Oracle
-forge create --rpc-url http://localhost:8545 --private-key <test_account_private_key> src/Agent.sol:Agent --constructor-args <0x oracle address>
+npm run deploy:localhost
 ```
 
-(Devnet deployment didnt try yet)
+### Galadriel testnet / SEI devnet
+Update .env
+
+**Deploy to Galadriel testnet**
 ```
-forge create --rpc-url https://evm-rpc.arctic-1.seinetwork.io/ --private-key <your_private_key> src/MyNFT.sol:MyNFT
+npm run deploy:galadriel
+```
+
+**Deploy to Sei v2 devnet (atlantic-2)**
+```
+npm run deploy:devnet
 ```
 
 ### Run basic agent example
@@ -66,7 +59,8 @@ cp oracles/template.env oracles/.env
 nano oracles/.env
 ```
 
-**Run these 2 in separate processes simultaneously**
+**Run these 2 in separate processes simultaneously**  
+**This is deprecated!!**
 ```
 cd client
 python agent_runner.py
@@ -74,4 +68,22 @@ python agent_runner.py
 ```
 cd oracles
 python oracle_agent.py
+```
+
+
+
+**Install sei**
+(Not necessary for deployments and using the contracts)
+```
+git clone https://github.com/sei-protocol/sei-chain
+cd sei-chain
+git checkout v3.7.0
+make install
+seid version
+```
+
+**Add a new wallet**
+```
+seid keys add $NAME
+seid keys list
 ```

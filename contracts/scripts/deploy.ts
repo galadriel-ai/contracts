@@ -1,12 +1,15 @@
 import {ethers} from "hardhat";
 
+const DALLE_PROMPT = "make an image of: \"solarpunk oil painting "
+
 async function main() {
   const oracleAddress: string = await deployOracle();
-  await deployAgent(oracleAddress);
+  await deployChatGpt(oracleAddress);
+  await deployDalle(oracleAddress);
 }
 
 async function deployOracle(): Promise<string> {
-  const oracle = await ethers.deployContract("Oracle", [], {});
+  const oracle = await ethers.deployContract("ChatOracle", [], {});
 
   await oracle.waitForDeployment();
 
@@ -16,13 +19,28 @@ async function deployOracle(): Promise<string> {
   return oracle.target as string;
 }
 
-async function deployAgent(oracleAddress: string) {
-  const agent = await ethers.deployContract("Agent", [oracleAddress], {});
+async function deployChatGpt(oracleAddress: string) {
+  const agent = await ethers.deployContract("ChatGpt", [oracleAddress], {});
 
   await agent.waitForDeployment();
 
   console.log(
-    `Agent deployed to ${agent.target}`
+    `ChatGPT deployed to ${agent.target}`
+  );
+}
+
+async function deployDalle(oracleAddress: string) {
+  const agent = await ethers.deployContract(
+    "DalleNft",
+    [
+      oracleAddress,
+      DALLE_PROMPT,
+    ], {});
+
+  await agent.waitForDeployment();
+
+  console.log(
+    `Dall-e deployed to ${agent.target}`
   );
 }
 
