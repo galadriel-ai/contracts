@@ -111,12 +111,18 @@ contract DalleNft is ERC721URIStorage {
         _setTokenURI(tokenId, response);
     }
 
-    function getMessages(address owner, uint chatId) public view returns (string[] memory) {
+    function getMessages(address _owner, uint chatId) public view returns (string[] memory) {
         string[] memory promptsArray = new string[](1);
         string memory fullPrompt = prompt;
         fullPrompt = string.concat(fullPrompt, mintInputs[owner][chatId].prompt);
         fullPrompt = string.concat(fullPrompt, "\"");
         promptsArray[0] = fullPrompt;
         return promptsArray;
+    }
+
+    function getRoles(address _owner, uint _chatId) public pure returns (string[] memory) {
+        string[] memory rolesArray = new string[](1);
+        rolesArray[0] = "user";
+        return rolesArray;
     }
 }

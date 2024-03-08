@@ -14,12 +14,15 @@ interface IOracle {
 
 contract ChatGpt {
 
+    struct Message {
+        string role;
+        string content;
+    }
+
     struct ChatRun {
         address owner;
-        string[] messages;
+        Message[] messages;
         uint messagesCount;
-        string[] responses;
-        uint responsesCount;
     }
 
     mapping(address => mapping(uint => ChatRun)) public chatRuns;
@@ -57,8 +60,10 @@ contract ChatGpt {
         ChatRun storage run = chatRuns[msg.sender][runsCount];
 
         run.owner = msg.sender;
-        run.responsesCount = 0;
-        run.messages.push(message);
+        Message memory newMessage;
+        newMessage.content = message;
+        newMessage.role = "user";
+        run.messages.push(newMessage);
         run.messagesCount = 1;
 
         uint currentId = chatRunsCount[msg.sender];
@@ -77,24 +82,46 @@ contract ChatGpt {
         uint runId
     ) public onlyOracle {
         ChatRun storage run = chatRuns[chatOwner][runId];
-        require(run.messagesCount > run.responsesCount, "No message to respond to");
-        run.responses.push(response);
-        run.responsesCount++;
+        require(
+            keccak256(abi.encodePacked(run.messages[run.messagesCount - 1].role)) == keccak256(abi.encodePacked("user")),
+            "No message to respond to"
+        );
+
+        Message memory newMessage;
+        newMessage.content = response;
+        newMessage.role = "assistant";
+        run.messages.push(newMessage);
+        run.messagesCount++;
     }
 
     function addMessage(string memory message, uint runId) public {
         ChatRun storage run = chatRuns[msg.sender][runId];
-        require(run.messagesCount == run.responsesCount, "No response to previous message");
-        run.messages.push(message);
+        require(
+            keccak256(abi.encodePacked(run.messages[run.messagesCount - 1].role)) == keccak256(abi.encodePacked("assistant")),
+            "No response to previous message"
+        );
+
+        Message memory newMessage;
+        newMessage.content = message;
+        newMessage.role = "user";
+        run.messages.push(newMessage);
         run.messagesCount++;
         IOracle(oracleAddress).addPrompt(msg.sender, "chat", runId);
     }
 
     function getMessages(address owner, uint chatId) public view returns (string[] memory) {
-        return chatRuns[owner][chatId].messages;
+        string[] memory messages = new string[](chatRuns[owner][chatId].messages.length);
+        for (uint i = 0; i < chatRuns[owner][chatId].messages.length; i++) {
+            messages[i] = chatRuns[owner][chatId].messages[i].content;
+        }
+        return messages;
     }
 
-    function getResponses(address owner, uint chatId) public view returns (string[] memory) {
-        return chatRuns[owner][chatId].responses;
+    function getRoles(address owner, uint chatId) public view returns (string[] memory) {
+        string[] memory roles = new string[](chatRuns[owner][chatId].messages.length);
+        for (uint i = 0; i < chatRuns[owner][chatId].messages.length; i++) {
+            roles[i] = chatRuns[owner][chatId].messages[i].role;
+        }
+        return roles;
     }
 }

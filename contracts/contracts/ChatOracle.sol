@@ -7,11 +7,22 @@ pragma solidity ^0.8.13;
 interface IChatGpt {
     function addResponse(
         string memory response,
-        // chat || function_call || function_result || error(?)
+    // chat || function_call || function_result || error(?)
         string memory responseType,
         address runOwner,
         uint promptId
     ) external;
+
+    function getMessages(
+        address owner,
+        uint chatId
+    ) external view returns (string[] memory);
+
+    function getRoles(
+        address owner,
+        uint chatId
+    ) external view returns (string[] memory);
+
 }
 
 contract ChatOracle {
@@ -22,7 +33,7 @@ contract ChatOracle {
     mapping(uint => address) public runOwners;
     mapping(uint => uint) public promptCallbackIds;
     mapping(uint => bool) public isPromptProcessed;
-    uint private promptsCount;
+    uint public promptsCount;
 
     mapping(uint => string) public functionInputs;
     mapping(uint => string) public functionType;
@@ -96,6 +107,22 @@ contract ChatOracle {
         isPromptProcessed[promptId] = true;
         address runOwner = runOwners[promptId];
         IChatGpt(callbackAddresses[promptId]).addResponse(response, responseType, runOwner, promptCallBackId);
+    }
+
+    function getMessages(
+        uint promptId,
+        uint promptCallBackId
+    ) public view returns (string[] memory) {
+        address runOwner = runOwners[promptId];
+        return IChatGpt(callbackAddresses[promptId]).getMessages(runOwner, promptCallBackId);
+    }
+
+    function getRoles(
+        uint promptId,
+        uint promptCallBackId
+    ) public view returns (string[] memory) {
+        address runOwner = runOwners[promptId];
+        return IChatGpt(callbackAddresses[promptId]).getRoles(runOwner, promptCallBackId);
     }
 
     function addFunctionCall(
