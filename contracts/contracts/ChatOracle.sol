@@ -5,7 +5,13 @@ pragma solidity ^0.8.13;
 // import "hardhat/console.sol";
 
 interface IChatGpt {
-    function addResponse(string memory response, address runOwner, uint promptId) external;
+    function addResponse(
+        string memory response,
+        // chat || function_call || function_result || error(?)
+        string memory responseType,
+        address runOwner,
+        uint promptId
+    ) external;
 }
 
 contract ChatOracle {
@@ -18,6 +24,15 @@ contract ChatOracle {
     mapping(uint => bool) public isPromptProcessed;
     uint private promptsCount;
 
+    mapping(uint => string) public functionInputs;
+    mapping(uint => string) public functionType;
+    mapping(uint => address) public functionOwners;
+    mapping(uint => address) public functionCallbackAddresses;
+    mapping(uint => uint) public functionCallbackIds;
+    mapping(uint => bool) public isFunctionProcessed;
+    uint private functionsCount;
+
+
     address private owner;
 
     event PromptAdded(
@@ -27,9 +42,19 @@ contract ChatOracle {
         address indexed runOwner
     );
 
+
+    event FunctionAdded(
+        uint indexed functionId,
+        string indexed functionInput,
+        uint functionCallbackId,
+        address sender,
+        address indexed runOwner
+    );
+
     constructor() {
         owner = msg.sender;
         promptsCount = 0;
+        functionsCount = 0;
     }
 
     modifier onlyOwner() {
@@ -47,7 +72,7 @@ contract ChatOracle {
     }
 
 
-    function addPrompt(address runOwner, uint promptCallbackId) public returns (uint i) {
+    function addPrompt(address runOwner, string memory _promptType, uint promptCallbackId) public returns (uint i) {
         uint promptId = promptsCount;
         callbackAddresses[promptId] = msg.sender;
         runOwners[promptId] = runOwner;
@@ -61,10 +86,54 @@ contract ChatOracle {
         return promptId;
     }
 
-    function addResponse(uint promptId, string memory response, uint promptCallBackId) public onlyWhitelisted {
+    function addResponse(
+        uint promptId,
+        string memory response,
+        string memory responseType,
+        uint promptCallBackId
+    ) public onlyWhitelisted {
+        require(!isPromptProcessed[promptId], "Prompt already processed");
         isPromptProcessed[promptId] = true;
         address runOwner = runOwners[promptId];
-        IChatGpt(callbackAddresses[promptId]).addResponse(response, runOwner, promptCallBackId);
+        IChatGpt(callbackAddresses[promptId]).addResponse(response, responseType, runOwner, promptCallBackId);
     }
 
+    function addFunctionCall(
+        address runOwner,
+        string memory functionType,
+        string memory functionInput,
+        uint functionCallbackId
+    ) public returns (uint i) {
+        uint functionId = functionsCount;
+        functionOwners[functionId] = runOwner;
+        functionInputs[functionId] = functionType;
+        functionInputs[functionId] = functionInput;
+        functionCallbackIds[functionId] = functionCallbackId;
+
+        functionCallbackAddresses[functionId] = msg.sender;
+        isFunctionProcessed[functionId] = false;
+
+        functionsCount++;
+
+        emit FunctionAdded(functionId, functionInput, functionCallbackId, msg.sender, runOwner);
+
+        return functionId;
+    }
+
+    function addFunctionResponse(
+        uint functionId,
+        string memory response,
+        string memory responseType,
+        uint functionCallBackId
+    ) public onlyWhitelisted {
+        require(!isFunctionProcessed[functionId], "Function already processed");
+        isFunctionProcessed[functionId] = true;
+        address runOwner = functionOwners[functionId];
+        IChatGpt(functionCallbackAddresses[functionId]).addResponse(
+            response,
+            responseType,
+            runOwner,
+            functionCallBackId
+        );
+    }
 }
