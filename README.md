@@ -2,7 +2,7 @@
 
 ## Contracts setup
 
-**Install foundry**
+**Install dependencies**
 ```
 cd contracts
 cp template.env .env
