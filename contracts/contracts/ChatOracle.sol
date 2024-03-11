@@ -36,12 +36,12 @@ contract ChatOracle {
     uint public promptsCount;
 
     mapping(uint => string) public functionInputs;
-    mapping(uint => string) public functionType;
+    mapping(uint => string) public functionTypes;
     mapping(uint => address) public functionOwners;
     mapping(uint => address) public functionCallbackAddresses;
     mapping(uint => uint) public functionCallbackIds;
     mapping(uint => bool) public isFunctionProcessed;
-    uint private functionsCount;
+    uint public functionsCount;
 
 
     address private owner;
@@ -133,7 +133,7 @@ contract ChatOracle {
     ) public returns (uint i) {
         uint functionId = functionsCount;
         functionOwners[functionId] = runOwner;
-        functionInputs[functionId] = functionType;
+        functionTypes[functionId] = functionType;
         functionInputs[functionId] = functionInput;
         functionCallbackIds[functionId] = functionCallbackId;
 
