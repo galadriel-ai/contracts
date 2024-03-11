@@ -1,7 +1,9 @@
 import asyncio
 from src.repositories.oracle_repository import OracleRepository
 from src.domain.llm import generate_response_use_case
+from src.domain.search import web_search_use_case
 from src.domain.image_generation import generate_image_use_case
+from src.domain.storage import reupload_to_gcp_use_case
 from src.entities import Chat
 from src.entities import FunctionCall
 
@@ -45,13 +47,20 @@ async def _answer_unanswered_chats():
 
 async def _call_function(function_call: FunctionCall):
     try:
+        response = None
         if function_call.function_type == "image_generation":
             response = await generate_image_use_case.execute(
                 function_call.function_input
             )
+            response = response.url if response else None
             if response:
-                function_call.response = response.url
-                await repository.send_function_call_response(function_call, response.url)
+                response = await reupload_to_gcp_use_case.execute(response)
+        elif function_call.function_type == "web_search":
+            response = await web_search_use_case.execute(function_call.function_input)
+        if response:
+            await repository.send_function_call_response(function_call, response)
+        else:
+            function_call.response = "Failed to execute function"
     except Exception as ex:
         print(f"Failed to call function {function_call.id}, exc: {ex}")
 
