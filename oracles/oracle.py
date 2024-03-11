@@ -1,6 +1,8 @@
 import asyncio
 from src.repositories.oracle_repository import OracleRepository
 from src.domain.llm import generate_response_use_case
+from src.domain.image_generation import generate_image_use_case
+from src.domain.ipfs import reupload_to_ipfs_use_case
 from src.entities import Chat
 from src.entities import FunctionCall
 
@@ -42,14 +44,19 @@ async def _answer_unanswered_chats():
         await asyncio.sleep(2)
 
 
-async def _call_function(function: FunctionCall):
+async def _call_function(function_call: FunctionCall):
     try:
-        response = await generate_response_use_case.execute("gpt-4-turbo-preview", chat)
-        if response:
-            chat.response = response
-            await repository.send_chat_response(chat, response)
+        if function_call.function_type == "image_generation":
+            response = await generate_image_use_case.execute(
+                function_call.function_input
+            )
+            if response:
+                function_call.response = await reupload_to_ipfs_use_case.execute(
+                    response.url
+                )
+                await repository.send_function_call_response(function_call, response)
     except Exception as ex:
-        print(f"Failed to answer chat {chat.id}, exc: {ex}")
+        print(f"Failed to call function {function_call.id}, exc: {ex}")
 
 
 async def _process_function_calls():
