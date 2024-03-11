@@ -151,7 +151,7 @@ class OracleRepository:
             function_call.id,
             function_call.callback_id,
             response,
-            "function",
+            "function_result",
         ).build_transaction(tx_data)
         signed_tx = self.web3_client.eth.account.sign_transaction(
             tx, private_key=self.account.key
