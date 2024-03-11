@@ -2,7 +2,6 @@ import asyncio
 from src.repositories.oracle_repository import OracleRepository
 from src.domain.llm import generate_response_use_case
 from src.domain.image_generation import generate_image_use_case
-from src.domain.ipfs import reupload_to_ipfs_use_case
 from src.entities import Chat
 from src.entities import FunctionCall
 
@@ -51,10 +50,8 @@ async def _call_function(function_call: FunctionCall):
                 function_call.function_input
             )
             if response:
-                function_call.response = await reupload_to_ipfs_use_case.execute(
-                    response.url
-                )
-                await repository.send_function_call_response(function_call, response)
+                function_call.response = response.url
+                await repository.send_function_call_response(function_call, response.url)
     except Exception as ex:
         print(f"Failed to call function {function_call.id}, exc: {ex}")
 
