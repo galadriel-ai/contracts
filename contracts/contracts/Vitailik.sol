@@ -30,8 +30,8 @@ contract Vitailik {
 
     struct Game {
         address player;
-        Message[] messages;
         uint messagesCount;
+        Message[] messages;
         string[] imageUrls;
         uint imagesCount;
         bool isFinished;
@@ -92,7 +92,7 @@ contract Vitailik {
         uint currentId = gamesCount;
         gamesCount = currentId + 1;
 
-        IOracle(oracleAddress).addPrompt(msg.sender, "chat", 0);
+        IOracle(oracleAddress).addPrompt(msg.sender, "chat", currentId);
         emit GameCreated(msg.sender, currentId);
 
         return currentId;
@@ -108,14 +108,15 @@ contract Vitailik {
         require(
             !game.isFinished, "Game is finished"
         );
-        require(
-            compareStrings(game.messages[game.messagesCount - 1].role, "user"),
-            "No message to respond to"
-        );
         if (compareStrings(responseType, "function_result")) {
             game.imageUrls.push(response);
             game.imagesCount++;
         } else {
+            require(
+                compareStrings(game.messages[game.messagesCount - 1].role, "user"),
+                "No message to respond to"
+            );
+
             Message memory assistantMessage;
             assistantMessage.content = response;
             assistantMessage.role = "assistant";
@@ -195,7 +196,7 @@ contract Vitailik {
 
     function findImageLine(string memory input) public pure returns (string memory) {
         bytes memory inputBytes = bytes(input);
-        bytes memory imagePrefix = bytes("[IMAGE]");
+        bytes memory imagePrefix = bytes("[IMAGE");
         uint prefixLength = imagePrefix.length;
 
         bool found = false;

@@ -4,6 +4,7 @@ import os
 load_dotenv()
 
 OPEN_AI_API_KEY = os.getenv("OPEN_AI_API_KEY")
+NFT_STORAGE_API_KEY = os.getenv("NFT_STORAGE_API_KEY")
 
 CHAIN_ID = os.getenv("CHAIN_ID")
 WEB3_RPC_URL = os.getenv("WEB3_RPC_URL")
