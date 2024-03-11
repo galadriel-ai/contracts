@@ -21,7 +21,6 @@ async def _generate_image(prompt: str) -> Optional[ImageGenerationResult]:
 async def execute(prompt: str) -> Optional[ImageGenerationResult]:
     try:
         response = await _generate_image(prompt)
-
         return ImageGenerationResult(
             prompt=response.data[0].revised_prompt,
             url=response.data[0].url,
