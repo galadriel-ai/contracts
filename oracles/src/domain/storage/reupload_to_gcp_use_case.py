@@ -27,7 +27,7 @@ async def execute(download_url: str) -> Optional[str]:
 
                 storage_client = storage.Client()
                 bucket = storage_client.bucket(settings.GCS_BUCKET_NAME)
-                blob = bucket.blob(original_image_name)
+                blob = bucket.blob(new_image_name)
                 blob.upload_from_string(
                     image_data, content_type=response.headers["Content-Type"]
                 )
