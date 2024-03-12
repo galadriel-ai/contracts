@@ -95,6 +95,29 @@ describe("Vitailik", function () {
       expect(messages[2]).to.equal("oracle response");
       expect(roles[2]).to.equal("assistant");
     });
+    it("Oracle can respond to multiple games", async () => {
+      const {
+        agent,
+        oracle,
+        allSigners
+      } = await loadFixture(deploy);
+
+      const oracleAccount = allSigners[6];
+      await oracle.updateWhitelist(oracleAccount, true);
+
+      await agent.startGame();
+      await oracle.connect(oracleAccount).addResponse(0, 0, "oracle response", "chat");
+
+      await agent.startGame();
+      await oracle.connect(oracleAccount).addResponse(1, 1, "oracle response2", "chat");
+
+      const messages = await oracle.getMessages(1, 1);
+      const roles = await oracle.getRoles(1, 1);
+
+      expect(messages.length).to.equal(3);
+      expect(messages[2]).to.equal("oracle response2");
+      expect(roles[2]).to.equal("assistant");
+    });
     it("User can select answer", async () => {
       const {
         agent,
