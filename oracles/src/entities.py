@@ -9,6 +9,7 @@ class Chat:
     is_processed: bool
     messages: dict
     response: Optional[str] = None
+    transaction_receipt: dict = None
 
 
 @dataclass
@@ -19,3 +20,4 @@ class FunctionCall:
     function_type: str
     function_input: str
     response: Optional[str] = None
+    transaction_receipt: dict = None

@@ -89,6 +89,7 @@ class OracleRepository:
             signed_tx.rawTransaction
         )
         tx_receipt = await self.web3_client.eth.wait_for_transaction_receipt(tx_hash)
+        chat.transaction_receipt = tx_receipt
         chat.is_processed = bool(tx_receipt.get("status"))
         return bool(tx_receipt.get("status"))
 
@@ -160,5 +161,6 @@ class OracleRepository:
             signed_tx.rawTransaction
         )
         tx_receipt = await self.web3_client.eth.wait_for_transaction_receipt(tx_hash)
+        function_call.transaction_receipt = tx_receipt
         function_call.is_processed = bool(tx_receipt.get("status"))
         return bool(tx_receipt.get("status"))
