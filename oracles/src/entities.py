@@ -1,3 +1,4 @@
+from typing import List
 from typing import Optional
 from dataclasses import dataclass
 
@@ -7,7 +8,7 @@ class Chat:
     id: int
     callback_id: int
     is_processed: bool
-    messages: dict
+    messages: List[dict]
     response: Optional[str] = None
     transaction_receipt: dict = None
 

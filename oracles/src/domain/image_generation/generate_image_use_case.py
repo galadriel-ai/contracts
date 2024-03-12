@@ -1,9 +1,12 @@
+import backoff
 import settings
 from typing import Optional
 from openai import AsyncOpenAI
+from openai import RateLimitError
 from src.domain.image_generation.entities import ImageGenerationResult
 
 
+@backoff.on_exception(backoff.expo, RateLimitError)
 async def _generate_image(prompt: str) -> Optional[ImageGenerationResult]:
     client = AsyncOpenAI(
         api_key=settings.OPEN_AI_API_KEY,
