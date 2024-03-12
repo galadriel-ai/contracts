@@ -7,10 +7,6 @@ const galadrielDevnet = []
 if (process.env.PRIVATE_KEY_CUSTOM) {
   galadrielDevnet.push(process.env.PRIVATE_KEY_CUSTOM)
 }
-const seiDevnet = []
-if (process.env.PRIVATE_KEY_SEI_DEVNET) {
-  seiDevnet.push(process.env.PRIVATE_KEY_SEI_DEVNET)
-}
 const localhostPrivateKeys = []
 if (process.env.PRIVATE_KEY_LOCALHOST) {
   localhostPrivateKeys.push(process.env.PRIVATE_KEY_LOCALHOST)
@@ -24,12 +20,6 @@ const config: HardhatUserConfig = {
       url: "https://testnet.galadriel.com/",
       accounts: galadrielDevnet,
     },
-    devnet: {
-      chainId: 713715,
-      url: "https://evm-rpc.arctic-1.seinetwork.io",
-      accounts: seiDevnet,
-    },
-    // TODO: add SEI etc
     hardhat: {
       chainId: 1337,
     },
