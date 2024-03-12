@@ -20,7 +20,7 @@ const config: HardhatUserConfig = {
   solidity: "0.8.20",
   networks: {
     galadriel: {
-      chainId: 713715, //TODO: update chainID
+      chainId: 696969,
       url: "https://testnet.galadriel.com/",
       accounts: galadrielDevnet,
     },
