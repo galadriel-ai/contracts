@@ -9,7 +9,7 @@
     "test": "yarn hardhat test",
     "send": "node scripts/sendFunds.ts",
     "deploy:localhost": "yarn hardhat run scripts/deploy.ts --network localhost",
-    "deploy:galadriel": "yarn hardhat run scripts/deploy.ts --network galadriel",
+    "deploy:galadriel": "yarn hardhat run scripts/deploy.ts --network galadriel"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
