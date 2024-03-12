@@ -76,12 +76,17 @@ class OracleRepository:
         }
         if chain_id := settings.CHAIN_ID:
             tx_data["chainId"] = int(chain_id)
-        tx = await self.oracle_contract.functions.addResponse(
-            chat.id,
-            chat.callback_id,
-            response,
-            "assistant",
-        ).build_transaction(tx_data)
+        try:
+            tx = await self.oracle_contract.functions.addResponse(
+                chat.id,
+                chat.callback_id,
+                response,
+                "assistant",
+            ).build_transaction(tx_data)
+        except Exception as e:
+            chat.is_processed = True
+            chat.transaction_receipt = {"error": str(e)}
+            return False
         signed_tx = self.web3_client.eth.account.sign_transaction(
             tx, private_key=self.account.key
         )
@@ -148,12 +153,17 @@ class OracleRepository:
         }
         if chain_id := settings.CHAIN_ID:
             tx_data["chainId"] = int(chain_id)
-        tx = await self.oracle_contract.functions.addFunctionResponse(
-            function_call.id,
-            function_call.callback_id,
-            response,
-            "function_result",
-        ).build_transaction(tx_data)
+        try:
+            tx = await self.oracle_contract.functions.addFunctionResponse(
+                function_call.id,
+                function_call.callback_id,
+                response,
+                "function_result",
+            ).build_transaction(tx_data)
+        except Exception as e:
+            function_call.is_processed = True
+            function_call.transaction_receipt = {"error": str(e)}
+            return False
         signed_tx = self.web3_client.eth.account.sign_transaction(
             tx, private_key=self.account.key
         )
