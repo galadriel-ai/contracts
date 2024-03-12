@@ -7,11 +7,10 @@ import {ERC721URIStorage, ERC721} from "@openzeppelin/contracts/token/ERC721/ext
 
 
 interface IOracle {
-    function addFunctionCall(
-        address runOwner,
+    function createFunctionCall(
+        uint functionCallbackId,
         string memory functionType,
-        string memory functionInput,
-        uint functionCallbackId
+        string memory functionInput
     ) external returns (uint i);
 }
 
@@ -24,8 +23,8 @@ contract DalleNft is ERC721URIStorage {
         bool isMinted;
     }
 
-    mapping(address => mapping(uint => MintInput)) public mintInputs;
-    mapping(address => uint) private mintInputsCount;
+    mapping(uint => MintInput) public mintInputs;
+    uint private mintsCount;
 
     event MintInputCreated(address indexed owner, uint indexed chatId);
 
@@ -67,42 +66,34 @@ contract DalleNft is ERC721URIStorage {
     }
 
     function initializeMint(string memory message) public returns (uint i) {
-        uint mintsCount = mintInputsCount[msg.sender];
-        MintInput storage mintInput = mintInputs[msg.sender][mintsCount];
+        MintInput storage mintInput = mintInputs[mintsCount];
 
         mintInput.owner = msg.sender;
         mintInput.prompt = message;
         mintInput.isMinted = false;
 
-        uint currentId = mintInputsCount[msg.sender];
-        mintInputsCount[msg.sender] = currentId + 1;
+        uint currentId = mintsCount;
+        mintsCount = currentId + 1;
 
         string memory fullPrompt = prompt;
         fullPrompt = string.concat(fullPrompt, message);
         fullPrompt = string.concat(fullPrompt, "\"");
-        IOracle(oracleAddress).addFunctionCall(
-            msg.sender,
+        IOracle(oracleAddress).createFunctionCall(
+            currentId,
             "image_generation",
-            fullPrompt,
-            currentId
+            fullPrompt
         );
         emit MintInputCreated(msg.sender, currentId);
 
         return currentId;
     }
 
-    function addResponse(
-        string memory response,
-        string memory responseType,
-        address chatOwner,
-        uint runId
+    function onOracleFunctionResponse(
+        uint runId,
+        string memory response
     ) public onlyOracle {
-        MintInput storage mintInput = mintInputs[chatOwner][runId];
+        MintInput storage mintInput = mintInputs[runId];
         require(!mintInput.isMinted, "NFT already minted");
-        require(
-            keccak256(abi.encodePacked(responseType)) == keccak256(abi.encodePacked("function_result")),
-            "Expecting function_result"
-        );
 
         mintInput.isMinted = true;
 
@@ -111,10 +102,10 @@ contract DalleNft is ERC721URIStorage {
         _setTokenURI(tokenId, response);
     }
 
-    function getMessages(address _owner, uint chatId) public view returns (string[] memory) {
+    function getMessageHistoryContents(uint chatId) public view returns (string[] memory) {
         string[] memory promptsArray = new string[](1);
         string memory fullPrompt = prompt;
-        fullPrompt = string.concat(fullPrompt, mintInputs[owner][chatId].prompt);
+        fullPrompt = string.concat(fullPrompt, mintInputs[chatId].prompt);
         fullPrompt = string.concat(fullPrompt, "\"");
         promptsArray[0] = fullPrompt;
         return promptsArray;

@@ -81,7 +81,6 @@ class OracleRepository:
                 chat.id,
                 chat.callback_id,
                 response,
-                "assistant",
             ).build_transaction(tx_data)
         except Exception as e:
             chat.is_processed = True
@@ -158,7 +157,6 @@ class OracleRepository:
                 function_call.id,
                 function_call.callback_id,
                 response,
-                "function_result",
             ).build_transaction(tx_data)
         except Exception as e:
             function_call.is_processed = True
