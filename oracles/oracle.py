@@ -17,9 +17,9 @@ async def _answer_chat(chat: Chat):
                 "gpt-4-turbo-preview", chat
             )
         if chat.response and chat.transaction_receipt is None:
-            await repository.send_chat_response(chat, chat.response)
+            success = await repository.send_chat_response(chat, chat.response)
             print(
-                f"Chat {chat.id} {'' if chat.is_processed == True else 'not '}replied, tx: {chat.transaction_receipt}"
+                f"Chat {chat.id} {'' if success else 'not '}replied, tx: {chat.transaction_receipt}"
             )
     except Exception as ex:
         print(f"Failed to answer chat {chat.id}, exc: {ex}")
@@ -68,11 +68,11 @@ async def _call_function(function_call: FunctionCall):
                 response = f"Unknown function '{function_call.function_type}'"
             function_call.response = response
         if function_call.response and function_call.transaction_receipt is None:
-            print(
-                f"Function {function_call.id} {'' if function_call.is_processed == True else 'not '}called, tx: {function_call.transaction_receipt}"
-            )
-            await repository.send_function_call_response(
+            success = await repository.send_function_call_response(
                 function_call, function_call.response
+            )
+            print(
+                f"Function {function_call.id} {'' if success else 'not '}called, tx: {function_call.transaction_receipt}"
             )
     except Exception as ex:
         print(f"Failed to call function {function_call.id}, exc: {ex}")
