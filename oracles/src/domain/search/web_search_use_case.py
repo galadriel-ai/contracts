@@ -1,10 +1,10 @@
 import aiohttp
 import json
 import settings
-from typing import Optional
+from src.domain.search.entities import WebSearchResult
 
 
-async def execute(query: str) -> Optional[str]:
+async def execute(query: str) -> WebSearchResult:
     try:
         async with aiohttp.ClientSession() as session:
             async with session.post(
@@ -17,7 +17,13 @@ async def execute(query: str) -> Optional[str]:
             ) as response:
                 response.raise_for_status()
                 data = await response.json()
-                return json.dumps(data["organic"])
+                result = json.dumps(data["organic"])
+                return WebSearchResult(
+                    result=result,
+                    error="",
+                )
     except Exception as e:
-        print(f"Web search failed: {e}")
-    return None
+        return WebSearchResult(
+            result="",
+            error=str(e),
+        )

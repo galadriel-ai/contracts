@@ -4,8 +4,10 @@ from typing import Optional
 
 from openai import AsyncOpenAI
 from openai import RateLimitError
+from openai import APIError
 from openai.types.chat import ChatCompletion
 from src.entities import Chat
+from src.domain.llm.entities import LLMResult
 
 import settings
 
@@ -22,8 +24,22 @@ async def _generate(model: str, messages: List[dict]) -> Optional[str]:
     return chat_completion.choices[0].message.content
 
 
-async def execute(model: str, chat: Chat) -> Optional[str]:
+async def execute(model: str, chat: Chat) -> LLMResult:
     try:
-        return await _generate(model=model, messages=chat.messages)
-    except Exception as exc:
-        print(f"Exception: {exc}", flush=True)
+        response = await _generate(model=model, messages=chat.messages)
+        return LLMResult(
+            content=response,
+            error="",
+        )
+    except APIError as api_error:
+        print(f"OpenAI API error: {api_error}", flush=True)
+        return LLMResult(
+            content="",
+            error=api_error.message,
+        )
+    except Exception as e:
+        print(f"LLM generation error: {e}", flush=True)
+        return LLMResult(
+            content="",
+            error=str(e),
+        )

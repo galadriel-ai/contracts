@@ -3,6 +3,7 @@ import settings
 from typing import Optional
 from openai import AsyncOpenAI
 from openai import RateLimitError
+from openai import APIError
 from src.domain.image_generation.entities import ImageGenerationResult
 
 
@@ -25,11 +26,21 @@ async def execute(prompt: str) -> Optional[ImageGenerationResult]:
     try:
         response = await _generate_image(prompt)
         return ImageGenerationResult(
-            prompt=response.data[0].revised_prompt,
             url=response.data[0].url,
+            error="",
         )
-    except Exception as exc:
-        print(f"Image Generation Exception: {exc}", flush=True)
+    except APIError as api_error:
+        print(f"OpenAI API error: {api_error}", flush=True)
+        return ImageGenerationResult(
+            url="",
+            error=api_error.message,
+        )
+    except Exception as e:
+        print(f"Image generation error: {e}", flush=True)
+        return ImageGenerationResult(
+            url="",
+            error=str(e),
+        )
 
 
 if __name__ == "__main__":

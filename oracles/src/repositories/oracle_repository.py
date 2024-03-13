@@ -64,7 +64,7 @@ class OracleRepository:
         ]
         return unanswered_chats
 
-    async def send_chat_response(self, chat: Chat, response: str) -> bool:
+    async def send_chat_response(self, chat: Chat) -> bool:
         nonce = await self.web3_client.eth.get_transaction_count(self.account.address)
         tx_data = {
             "from": self.account.address,
@@ -80,8 +80,8 @@ class OracleRepository:
             tx = await self.oracle_contract.functions.addResponse(
                 chat.id,
                 chat.callback_id,
-                response,
-                "",
+                chat.response,
+                chat.error_message,
             ).build_transaction(tx_data)
         except Exception as e:
             chat.is_processed = True
@@ -140,7 +140,7 @@ class OracleRepository:
         return unanswered_function_calls
 
     async def send_function_call_response(
-        self, function_call: FunctionCall, response: str
+        self, function_call: FunctionCall, response: str, error_message: str = ""
     ) -> bool:
         nonce = await self.web3_client.eth.get_transaction_count(self.account.address)
         tx_data = {
@@ -158,8 +158,7 @@ class OracleRepository:
                 function_call.id,
                 function_call.callback_id,
                 response,
-                # TODO: handle errors here: if this next string is present contract can know request errored
-                "",
+                error_message,
             ).build_transaction(tx_data)
         except Exception as e:
             function_call.is_processed = True

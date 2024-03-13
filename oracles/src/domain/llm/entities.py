@@ -2,6 +2,6 @@ from dataclasses import dataclass
 
 
 @dataclass
-class ImageGenerationResult:
-    url: str
+class LLMResult:
+    content: str
     error: str
