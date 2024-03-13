@@ -5,22 +5,24 @@ pragma solidity ^0.8.13;
 // import "hardhat/console.sol";
 
 interface IChatGpt {
-    function addResponse(
+    function onOracleFunctionResponse(
+        uint callbackId,
         string memory response,
-    // chat || function_call || function_result || error(?)
-        string memory responseType,
-        address runOwner,
-        uint promptId
+        string memory errorMessage
     ) external;
 
-    function getMessages(
-        address owner,
-        uint chatId
+    function onOracleLlmResponse(
+        uint callbackId,
+        string memory response,
+        string memory errorMessage
+    ) external;
+
+    function getMessageHistoryContents(
+        uint callbackId
     ) external view returns (string[] memory);
 
-    function getRoles(
-        address owner,
-        uint chatId
+    function getMessageHistoryRoles(
+        uint callbackId
     ) external view returns (string[] memory);
 
 }
@@ -29,15 +31,16 @@ contract ChatOracle {
 
     mapping(address => bool) whitelistedAddresses;
 
+    mapping(address => string) public attestations;
+    address public latestAttestationOwner;
+
     mapping(uint => address) public callbackAddresses;
-    mapping(uint => address) public runOwners;
     mapping(uint => uint) public promptCallbackIds;
     mapping(uint => bool) public isPromptProcessed;
     uint public promptsCount;
 
     mapping(uint => string) public functionInputs;
     mapping(uint => string) public functionTypes;
-    mapping(uint => address) public functionOwners;
     mapping(uint => address) public functionCallbackAddresses;
     mapping(uint => uint) public functionCallbackIds;
     mapping(uint => bool) public isFunctionProcessed;
@@ -49,17 +52,14 @@ contract ChatOracle {
     event PromptAdded(
         uint indexed promptId,
         uint indexed promptCallbackId,
-        address sender,
-        address indexed runOwner
+        address sender
     );
-
 
     event FunctionAdded(
         uint indexed functionId,
         string indexed functionInput,
         uint functionCallbackId,
-        address sender,
-        address indexed runOwner
+        address sender
     );
 
     constructor() {
@@ -82,17 +82,20 @@ contract ChatOracle {
         whitelistedAddresses[_addressToWhitelist] = isWhitelisted;
     }
 
+    function addAttestation(address owner, string memory attestation) public onlyOwner {
+        attestations[owner] = attestation;
+        latestAttestationOwner = owner;
+    }
 
-    function addPrompt(address runOwner, string memory _promptType, uint promptCallbackId) public returns (uint i) {
+    function createLlmCall(uint promptCallbackId) public returns (uint i) {
         uint promptId = promptsCount;
         callbackAddresses[promptId] = msg.sender;
-        runOwners[promptId] = runOwner;
         promptCallbackIds[promptId] = promptCallbackId;
         isPromptProcessed[promptId] = false;
 
         promptsCount++;
 
-        emit PromptAdded(promptId, promptCallbackId, msg.sender, runOwner);
+        emit PromptAdded(promptId, promptCallbackId, msg.sender);
 
         return promptId;
     }
@@ -101,38 +104,37 @@ contract ChatOracle {
         uint promptId,
         uint promptCallBackId,
         string memory response,
-        string memory responseType
+        string memory errorMessage
     ) public onlyWhitelisted {
         require(!isPromptProcessed[promptId], "Prompt already processed");
         isPromptProcessed[promptId] = true;
-        address runOwner = runOwners[promptId];
-        IChatGpt(callbackAddresses[promptId]).addResponse(response, responseType, runOwner, promptCallBackId);
+        IChatGpt(callbackAddresses[promptId]).onOracleLlmResponse(
+            promptCallBackId,
+            response,
+            errorMessage
+        );
     }
 
     function getMessages(
         uint promptId,
         uint promptCallBackId
     ) public view returns (string[] memory) {
-        address runOwner = runOwners[promptId];
-        return IChatGpt(callbackAddresses[promptId]).getMessages(runOwner, promptCallBackId);
+        return IChatGpt(callbackAddresses[promptId]).getMessageHistoryContents(promptCallBackId);
     }
 
     function getRoles(
         uint promptId,
         uint promptCallBackId
     ) public view returns (string[] memory) {
-        address runOwner = runOwners[promptId];
-        return IChatGpt(callbackAddresses[promptId]).getRoles(runOwner, promptCallBackId);
+        return IChatGpt(callbackAddresses[promptId]).getMessageHistoryRoles(promptCallBackId);
     }
 
-    function addFunctionCall(
-        address runOwner,
+    function createFunctionCall(
+        uint functionCallbackId,
         string memory functionType,
-        string memory functionInput,
-        uint functionCallbackId
+        string memory functionInput
     ) public returns (uint i) {
         uint functionId = functionsCount;
-        functionOwners[functionId] = runOwner;
         functionTypes[functionId] = functionType;
         functionInputs[functionId] = functionInput;
         functionCallbackIds[functionId] = functionCallbackId;
@@ -142,7 +144,7 @@ contract ChatOracle {
 
         functionsCount++;
 
-        emit FunctionAdded(functionId, functionInput, functionCallbackId, msg.sender, runOwner);
+        emit FunctionAdded(functionId, functionInput, functionCallbackId, msg.sender);
 
         return functionId;
     }
@@ -151,16 +153,14 @@ contract ChatOracle {
         uint functionId,
         uint functionCallBackId,
         string memory response,
-        string memory responseType
+        string memory errorMessage
     ) public onlyWhitelisted {
         require(!isFunctionProcessed[functionId], "Function already processed");
         isFunctionProcessed[functionId] = true;
-        address runOwner = functionOwners[functionId];
-        IChatGpt(functionCallbackAddresses[functionId]).addResponse(
+        IChatGpt(functionCallbackAddresses[functionId]).onOracleFunctionResponse(
+            functionCallBackId,
             response,
-            responseType,
-            runOwner,
-            functionCallBackId
+            errorMessage
         );
     }
 }

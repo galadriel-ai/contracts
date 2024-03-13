@@ -5,17 +5,14 @@ pragma solidity ^0.8.9;
 // import "hardhat/console.sol";
 
 interface IOracle {
-    function addPrompt(
-        address runOwner,
-        string memory promptType,
+    function createLlmCall(
         uint promptId
     ) external returns (uint);
 
-    function addFunctionCall(
-        address runOwner,
+    function createFunctionCall(
+        uint functionCallbackId,
         string memory functionType,
-        string memory functionInput,
-        uint functionCallbackId
+        string memory functionInput
     ) external returns (uint i);
 }
 
@@ -92,53 +89,63 @@ contract Vitailik {
         uint currentId = gamesCount;
         gamesCount = currentId + 1;
 
-        IOracle(oracleAddress).addPrompt(msg.sender, "chat", currentId);
+        IOracle(oracleAddress).createLlmCall(currentId);
         emit GameCreated(msg.sender, currentId);
 
         return currentId;
     }
 
-    function addResponse(
+
+    function onOracleFunctionResponse(
+        uint runId,
         string memory response,
-        string memory responseType,
-        address chatOwner,
-        uint runId
+        string memory errorMessage
     ) public onlyOracle {
         Game storage game = games[runId];
         require(
             !game.isFinished, "Game is finished"
         );
-        if (compareStrings(responseType, "function_result")) {
-            game.imageUrls.push(response);
-            game.imagesCount++;
+        if (!compareStrings(errorMessage, "")) {
+            game.imageUrls.push("error");
         } else {
-            require(
-                compareStrings(game.messages[game.messagesCount - 1].role, "user"),
-                "No message to respond to"
+            game.imageUrls.push(response);
+        }
+        game.imagesCount++;
+    }
+
+    function onOracleLlmResponse(
+        uint runId,
+        string memory response,
+        string memory errorMessage
+    ) public onlyOracle {
+        Game storage game = games[runId];
+        require(
+            !game.isFinished, "Game is finished"
+        );
+        require(
+            compareStrings(game.messages[game.messagesCount - 1].role, "user"),
+            "No message to respond to"
+        );
+
+        Message memory assistantMessage;
+        assistantMessage.content = response;
+        assistantMessage.role = "assistant";
+        game.messages.push(assistantMessage);
+        game.messagesCount++;
+
+        string[2] memory hpValues = findHPInstances(response);
+
+        if (compareStrings(hpValues[0], "0") || compareStrings(hpValues[1], "0")) {
+            game.isFinished = true;
+        }
+
+        string memory imageDescription = findImageLine(response);
+        if (!compareStrings(imageDescription, "")) {
+            IOracle(oracleAddress).createFunctionCall(
+                runId,
+                "image_generation",
+                imageDescription
             );
-
-            Message memory assistantMessage;
-            assistantMessage.content = response;
-            assistantMessage.role = "assistant";
-            game.messages.push(assistantMessage);
-            game.messagesCount++;
-
-            string[2] memory hpValues = findHPInstances(response);
-
-            if (compareStrings(hpValues[0], "0") || compareStrings(hpValues[1], "0")) {
-                game.isFinished = true;
-            }
-
-            string memory imageDescription = findImageLine(response);
-            if (!compareStrings(imageDescription, "")) {
-                IOracle(oracleAddress).addFunctionCall(
-                    msg.sender,
-                    "image_generation",
-                    imageDescription,
-                    runId
-                );
-            }
-
         }
     }
 
@@ -167,14 +174,14 @@ contract Vitailik {
         game.messages.push(userMessage);
         game.messagesCount++;
 
-        IOracle(oracleAddress).addPrompt(msg.sender, "chat", gameId);
+        IOracle(oracleAddress).createLlmCall(gameId);
     }
 
     function getSystemPrompt() public view returns (string memory) {
         return prompt;
     }
 
-    function getMessages(address owner, uint chatId) public view returns (string[] memory) {
+    function getMessageHistoryContents(uint chatId) public view returns (string[] memory) {
         string[] memory messages = new string[](games[chatId].messages.length);
         for (uint i = 0; i < games[chatId].messages.length; i++) {
             messages[i] = games[chatId].messages[i].content;
@@ -182,7 +189,7 @@ contract Vitailik {
         return messages;
     }
 
-    function getRoles(address owner, uint chatId) public view returns (string[] memory) {
+    function getMessageHistoryRoles(uint chatId) public view returns (string[] memory) {
         string[] memory roles = new string[](games[chatId].messages.length);
         for (uint i = 0; i < games[chatId].messages.length; i++) {
             roles[i] = games[chatId].messages[i].role;

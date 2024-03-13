@@ -32,7 +32,7 @@ describe("DalleNft", function () {
 
       const userInput: string = "red wolf"
       await dalleNft.initializeMint("red wolf");
-      const messages = await dalleNft.getMessages(owner.address, 0)
+      const messages = await dalleNft.getMessageHistoryContents(0)
       expect(messages.length).to.equal(1)
       // Prompt to use!!
       expect(messages[0]).to.equal(`${PROMPT}${userInput}"`)
@@ -49,7 +49,7 @@ describe("DalleNft", function () {
 
       await dalleNft.initializeMint("funky gorilla");
 
-      await oracle.connect(oracleAccount).addFunctionResponse(0, 0, "ipfs://CID", "function_result");
+      await oracle.connect(oracleAccount).addFunctionResponse(0, 0, "ipfs://CID", "");
 
       const tokenUri = await dalleNft.tokenURI(0)
       expect(tokenUri).to.equal("ipfs://CID")
@@ -68,31 +68,15 @@ describe("DalleNft", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await dalleNft.initializeMint("funky gorilla");
-      await oracle.connect(oracleAccount).addFunctionResponse(0, 0, "ipfs://CID", "function_result");
+      await oracle.connect(oracleAccount).addFunctionResponse(0, 0, "ipfs://CID", "");
 
       // Ultimate edge-case, user whitelisted some random address
       const randomAccount = allSigners[7];
       await dalleNft.setOracleAddress(randomAccount);
 
       await expect(
-        dalleNft.connect(randomAccount).addResponse("Hi", "function_result", owner.address, 0)
+        dalleNft.connect(randomAccount).onOracleFunctionResponse(0, "Hi", "")
       ).to.be.revertedWith("NFT already minted");
-    });
-    it("Cannot call with wrong response type", async () => {
-      const {
-        dalleNft,
-        oracle,
-        allSigners,
-        owner,
-      } = await loadFixture(deploy);
-      const oracleAccount = allSigners[6];
-      await dalleNft.setOracleAddress(oracle.target);
-      await oracle.updateWhitelist(oracleAccount, true);
-
-      await dalleNft.initializeMint("funky gorilla");
-      await expect(
-        oracle.connect(oracleAccount).addFunctionResponse(0, 0, "ipfs://CID", "chat")
-      ).to.be.revertedWith("Expecting function_result");
     });
   })
 });

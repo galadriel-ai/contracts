@@ -18,6 +18,9 @@ async function deployOracle(): Promise<string> {
   console.log(
     `Oracle deployed to ${oracle.target}`
   );
+  // only for local dev
+  // await oracle.updateWhitelist((await ethers.getSigners())[0].address, true)
+
   return oracle.target as string;
 }
 
