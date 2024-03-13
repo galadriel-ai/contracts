@@ -7,7 +7,7 @@
     "node": "yarn hardhat node",
     "compile": "yarn hardhat compile",
     "test": "yarn hardhat test",
-    "send": "node scripts/sendFunds.ts",
+    "whitelist": "npx hardhat run scripts/whitelist.ts --network galadriel",
     "deploy:localhost": "yarn hardhat run scripts/deploy.ts --network localhost",
     "deploy:galadriel": "yarn hardhat run scripts/deploy.ts --network galadriel"
   },
