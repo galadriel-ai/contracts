@@ -98,19 +98,25 @@ contract Vitailik {
 
     function onOracleFunctionResponse(
         uint runId,
-        string memory response
+        string memory response,
+        string memory errorMessage
     ) public onlyOracle {
         Game storage game = games[runId];
         require(
             !game.isFinished, "Game is finished"
         );
-        game.imageUrls.push(response);
+        if (!compareStrings(errorMessage, "")) {
+            game.imageUrls.push("error");
+        } else {
+            game.imageUrls.push(response);
+        }
         game.imagesCount++;
     }
 
     function onOracleLlmResponse(
         uint runId,
-        string memory response
+        string memory response,
+        string memory errorMessage
     ) public onlyOracle {
         Game storage game = games[runId];
         require(

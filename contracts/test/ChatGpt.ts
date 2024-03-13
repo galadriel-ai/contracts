@@ -43,7 +43,7 @@ describe("ChatGpt", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await chatGpt.startChat("Hello");
-      await oracle.connect(oracleAccount).addResponse(0, 0, "Hi");
+      await oracle.connect(oracleAccount).addResponse(0, 0, "Hi", "");
       const messages = await oracle.getMessages(0, 0)
       expect(messages.length).to.equal(2)
       expect(messages[1]).to.equal("Hi")
@@ -60,7 +60,7 @@ describe("ChatGpt", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await chatGpt.startChat("Hello");
-      await oracle.connect(oracleAccount).addResponse(0, 0, "Hi");
+      await oracle.connect(oracleAccount).addResponse(0, 0, "Hi", "");
       await chatGpt.addMessage("message", 0);
 
       const messages = await oracle.getMessages(0, 0)
@@ -85,9 +85,9 @@ describe("ChatGpt", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await chatGpt.startChat("Hello");
-      await oracle.connect(oracleAccount).addResponse(0, 0, "Hi");
+      await oracle.connect(oracleAccount).addResponse(0, 0, "Hi", "");
       await expect(
-        oracle.connect(oracleAccount).addResponse(0, 0, "Hi")
+        oracle.connect(oracleAccount).addResponse(0, 0, "Hi", "")
       ).to.be.revertedWith("Prompt already processed");
     });
     it("Oracle cannot add 2 responses", async () => {
@@ -102,14 +102,14 @@ describe("ChatGpt", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await chatGpt.startChat("Hello");
-      await oracle.connect(oracleAccount).addResponse(0, 0, "Hi");
+      await oracle.connect(oracleAccount).addResponse(0, 0, "Hi", "");
 
       // Ultimate edge-case, user whitelisted some random address
       const randomAccount = allSigners[7];
       await chatGpt.setOracleAddress(randomAccount);
 
       await expect(
-        chatGpt.connect(randomAccount).onOracleLlmResponse(0, "Hi")
+        chatGpt.connect(randomAccount).onOracleLlmResponse(0, "Hi", "")
       ).to.be.revertedWith("No message to respond to");
     });
 

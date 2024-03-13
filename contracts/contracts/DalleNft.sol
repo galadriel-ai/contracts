@@ -90,7 +90,8 @@ contract DalleNft is ERC721URIStorage {
 
     function onOracleFunctionResponse(
         uint runId,
-        string memory response
+        string memory response,
+        string memory errorMessage
     ) public onlyOracle {
         MintInput storage mintInput = mintInputs[runId];
         require(!mintInput.isMinted, "NFT already minted");

@@ -49,7 +49,7 @@ describe("DalleNft", function () {
 
       await dalleNft.initializeMint("funky gorilla");
 
-      await oracle.connect(oracleAccount).addFunctionResponse(0, 0, "ipfs://CID");
+      await oracle.connect(oracleAccount).addFunctionResponse(0, 0, "ipfs://CID", "");
 
       const tokenUri = await dalleNft.tokenURI(0)
       expect(tokenUri).to.equal("ipfs://CID")
@@ -68,14 +68,14 @@ describe("DalleNft", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await dalleNft.initializeMint("funky gorilla");
-      await oracle.connect(oracleAccount).addFunctionResponse(0, 0, "ipfs://CID");
+      await oracle.connect(oracleAccount).addFunctionResponse(0, 0, "ipfs://CID", "");
 
       // Ultimate edge-case, user whitelisted some random address
       const randomAccount = allSigners[7];
       await dalleNft.setOracleAddress(randomAccount);
 
       await expect(
-        dalleNft.connect(randomAccount).onOracleFunctionResponse(0, "Hi")
+        dalleNft.connect(randomAccount).onOracleFunctionResponse(0, "Hi", "")
       ).to.be.revertedWith("NFT already minted");
     });
   })
