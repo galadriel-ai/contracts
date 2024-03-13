@@ -7,12 +7,14 @@ pragma solidity ^0.8.13;
 interface IChatGpt {
     function onOracleFunctionResponse(
         uint callbackId,
-        string memory response
+        string memory response,
+        string memory errorMessage
     ) external;
 
     function onOracleLlmResponse(
         uint callbackId,
-        string memory response
+        string memory response,
+        string memory errorMessage
     ) external;
 
     function getMessageHistoryContents(
@@ -101,11 +103,16 @@ contract ChatOracle {
     function addResponse(
         uint promptId,
         uint promptCallBackId,
-        string memory response
+        string memory response,
+        string memory errorMessage
     ) public onlyWhitelisted {
         require(!isPromptProcessed[promptId], "Prompt already processed");
         isPromptProcessed[promptId] = true;
-        IChatGpt(callbackAddresses[promptId]).onOracleLlmResponse(promptCallBackId, response);
+        IChatGpt(callbackAddresses[promptId]).onOracleLlmResponse(
+            promptCallBackId,
+            response,
+            errorMessage
+        );
     }
 
     function getMessages(
@@ -145,13 +152,15 @@ contract ChatOracle {
     function addFunctionResponse(
         uint functionId,
         uint functionCallBackId,
-        string memory response
+        string memory response,
+        string memory errorMessage
     ) public onlyWhitelisted {
         require(!isFunctionProcessed[functionId], "Function already processed");
         isFunctionProcessed[functionId] = true;
         IChatGpt(functionCallbackAddresses[functionId]).onOracleFunctionResponse(
             functionCallBackId,
-            response
+            response,
+            errorMessage
         );
     }
 }

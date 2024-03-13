@@ -86,7 +86,7 @@ describe("Vitailik", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await agent.startGame();
-      await oracle.connect(oracleAccount).addResponse(0, 0, "oracle response");
+      await oracle.connect(oracleAccount).addResponse(0, 0, "oracle response", "");
 
       const messages = await oracle.getMessages(0, 0);
       const roles = await oracle.getRoles(0, 0);
@@ -106,10 +106,10 @@ describe("Vitailik", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await agent.startGame();
-      await oracle.connect(oracleAccount).addResponse(0, 0, "oracle response");
+      await oracle.connect(oracleAccount).addResponse(0, 0, "oracle response", "");
 
       await agent.startGame();
-      await oracle.connect(oracleAccount).addResponse(1, 1, "oracle response2");
+      await oracle.connect(oracleAccount).addResponse(1, 1, "oracle response2", "");
 
       const messages = await oracle.getMessages(1, 1);
       const roles = await oracle.getRoles(1, 1);
@@ -129,7 +129,7 @@ describe("Vitailik", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await agent.startGame();
-      await oracle.connect(oracleAccount).addResponse(0, 0, "oracle response");
+      await oracle.connect(oracleAccount).addResponse(0, 0, "oracle response", "");
       const gameId: number = 0;
       await agent.addSelection(2, gameId);
 
@@ -155,7 +155,7 @@ describe("Vitailik", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await agent.startGame();
-      await oracle.connect(oracleAccount).addResponse(0, 0, "oracle response\nYour HP: 0");
+      await oracle.connect(oracleAccount).addResponse(0, 0, "oracle response\nYour HP: 0", "");
       const gameId: number = 0;
 
       const game = await agent.games(0);
@@ -173,7 +173,7 @@ describe("Vitailik", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await agent.startGame();
-      await oracle.connect(oracleAccount).addResponse(0, 0, "oracle response\n[IMAGE] fun image\n");
+      await oracle.connect(oracleAccount).addResponse(0, 0, "oracle response\n[IMAGE] fun image\n", "");
 
       const functionInput = await oracle.functionInputs(0);
 
@@ -190,7 +190,7 @@ describe("Vitailik", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await agent.startGame();
-      await oracle.connect(oracleAccount).addResponse(0, 0, "oracle response\n");
+      await oracle.connect(oracleAccount).addResponse(0, 0, "oracle response\n", "");
 
       const functionsCount = await oracle.functionsCount();
 
@@ -207,13 +207,32 @@ describe("Vitailik", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await agent.startGame();
-      await oracle.connect(oracleAccount).addResponse(0, 0, "asd\n[IMAGE] Description\n");
-      await oracle.connect(oracleAccount).addFunctionResponse(0, 0, "URL");
+      await oracle.connect(oracleAccount).addResponse(0, 0, "asd\n[IMAGE] Description\n", "");
+      await oracle.connect(oracleAccount).addFunctionResponse(0, 0, "URL", "");
 
       const game = await agent.games(0);
       const images = await agent.getImages(0);
       expect(game.imagesCount).to.equal(1);
       expect(images[0]).to.equal("URL");
+    });
+    it("Adds error image url to list", async () => {
+      const {
+        agent,
+        oracle,
+        allSigners
+      } = await loadFixture(deploy);
+
+      const oracleAccount = allSigners[6];
+      await oracle.updateWhitelist(oracleAccount, true);
+
+      await agent.startGame();
+      await oracle.connect(oracleAccount).addResponse(0, 0, "asd\n[IMAGE] Description\n", "");
+      await oracle.connect(oracleAccount).addFunctionResponse(0, 0, "", "Error");
+
+      const game = await agent.games(0);
+      const images = await agent.getImages(0);
+      expect(game.imagesCount).to.equal(1);
+      expect(images[0]).to.equal("error");
     });
   });
 
@@ -229,11 +248,11 @@ describe("Vitailik", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await agent.startGame();
-      await oracle.connect(oracleAccount).addResponse(0, 0, "oracle response");
+      await oracle.connect(oracleAccount).addResponse(0, 0, "oracle response", "");
       const randomAddress = allSigners[7];
       await agent.setOracleAddress(randomAddress);
       await expect(
-        agent.connect(randomAddress).onOracleLlmResponse(0, "oracle response 2")
+        agent.connect(randomAddress).onOracleLlmResponse(0, "oracle response 2", "")
       ).to.be.revertedWith("No message to respond to");
     })
     it("Cannot add selection for finished game", async () => {
@@ -247,7 +266,7 @@ describe("Vitailik", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await agent.startGame();
-      await oracle.connect(oracleAccount).addResponse(0, 0, "oracle response HP: 0");
+      await oracle.connect(oracleAccount).addResponse(0, 0, "oracle response HP: 0", "");
       await expect(
         agent.addSelection(3, 0)
       ).to.be.revertedWith("Game is finished");
@@ -263,7 +282,7 @@ describe("Vitailik", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await agent.startGame();
-      await oracle.connect(oracleAccount).addResponse(0, 0, "oracle response");
+      await oracle.connect(oracleAccount).addResponse(0, 0, "oracle response", "");
       await expect(
         agent.addSelection(8, 0)
       ).to.be.revertedWith("Selection needs to be 0-3");
