@@ -31,10 +31,10 @@ Chain ID: 1337
 
 Take some private key from local node and add to .env `PRIVATE_KEY_LOCALHOST`
 
-**Deploy contracts**
+**Deploy all contracts**
 
 ```
-npm run deploy:localhost
+npm run deployAll:localhost
 ```
 
 ### Galadriel testnet
@@ -42,8 +42,8 @@ npm run deploy:localhost
 Update .env
 Add your private key to .env `PRIVATE_KEY_CUSTOM`
 
-**Deploy to Galadriel testnet**
+**Deploy all to Galadriel testnet**
 
 ```
-npm run deploy:galadriel
+npm run deployAll:galadriel
 ```

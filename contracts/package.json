@@ -8,8 +8,9 @@
     "compile": "yarn hardhat compile",
     "test": "yarn hardhat test",
     "whitelist": "npx hardhat run scripts/whitelist.ts --network galadriel",
-    "deploy:localhost": "yarn hardhat run scripts/deploy.ts --network localhost",
-    "deploy:galadriel": "yarn hardhat run scripts/deploy.ts --network galadriel"
+    "deployAll:localhost": "yarn hardhat run scripts/deployAll.ts --network localhost",
+    "deployAll:galadriel": "yarn hardhat run scripts/deployAll.ts --network galadriel",
+    "deployQuickstart": "yarn hardhat run scripts/deployQuickstart.ts --network galadriel"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
