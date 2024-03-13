@@ -1,15 +1,17 @@
 # Galadriel
 
+For more details check the [DOCS](https://docs.galadriel.com/)
+
 ## Contracts
 
-For contracts, check the contracts [README](contracts/README.md)
+For contracts, check [contracts/README](contracts/README.md)
 
 ## Oracle
 
-To run an oracle locally, check the oracles [README](oracles/README.md)
+To run an oracle locally, check [oracles/README](oracles/README.md)
 
 ## Run examples
 
-To run examples check [README](examples/README.md)
+To run examples check [examples/README](examples/README.md)
 
-And e2e example [VitAIlik game](https://github.com/galadriel-ai/example-vitailik-game)
+To see an end to end Dapp example check out our [VitAIlik game](https://github.com/galadriel-ai/example-vitailik-game)
