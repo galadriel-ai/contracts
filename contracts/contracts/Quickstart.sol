@@ -17,6 +17,7 @@ contract Quickstart {
     address private owner;
     address public oracleAddress;
     string public prompt;
+    string public lastResponse;
     uint private callsCount;
 
     event PromptUpdated(string indexed newPrompt);
@@ -72,7 +73,6 @@ contract Quickstart {
         string memory response,
         string memory errorMessage
     ) public onlyOracle {
-        // Callback intentionally blank -- we are simply sending a
-        // request to the oracle and not reacting to the response.
+        lastResponse = response;
     }
 }

@@ -20,10 +20,24 @@ async function main() {
     const message = "a cat with two heads";
 
     // Call the startChat function
-    const transactionResponse = await contract.initializeDalleCall(message);
-    await transactionResponse.wait();
+    //const transactionResponse = await contract.initializeDalleCall(message);
+    //await transactionResponse.wait();
 
     console.log(`Image generation started with message: "${message}"`);
+
+    // loop and sleep by 1000ms, and keep printing `lastResponse` in the contract.
+    // lastResponse is a string field, not a function
+    let lastResponse = await contract.lastResponse;
+    
+    console.log("lastResponse: '" + lastResponse + "'");
+    while (true) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const newResponse = await contract.lastResponse;
+        if (newResponse !== lastResponse) {
+        console.log("lastResponse: '" + lastResponse + "'");
+        lastResponse = newResponse;
+        }
+    }
 }
 
 main()
