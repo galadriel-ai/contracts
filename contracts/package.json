@@ -10,7 +10,8 @@
     "whitelist": "npx hardhat run scripts/whitelist.ts --network galadriel",
     "deployAll:localhost": "yarn hardhat run scripts/deployAll.ts --network localhost",
     "deployAll:galadriel": "yarn hardhat run scripts/deployAll.ts --network galadriel",
-    "deployQuickstart": "yarn hardhat run scripts/deployQuickstart.ts --network galadriel"
+    "deployQuickstart": "yarn hardhat run scripts/deployQuickstart.ts --network galadriel",
+    "callQuickstart": "yarn hardhat run scripts/callQuickstart.ts --network galadriel"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
