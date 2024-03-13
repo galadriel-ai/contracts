@@ -13,14 +13,16 @@ repository = OracleRepository()
 async def _answer_chat(chat: Chat):
     try:
         if chat.response is None:
-            chat.response = await generate_response_use_case.execute(
+            response = await generate_response_use_case.execute(
                 "gpt-4-turbo-preview", chat
             )
-        if chat.response and chat.transaction_receipt is None:
-            success = await repository.send_chat_response(chat, chat.response)
-            print(
-                f"Chat {chat.id} {'' if success else 'not '}replied, tx: {chat.transaction_receipt}"
-            )
+            chat.response = response.content
+            chat.error_message = response.error
+
+        success = await repository.send_chat_response(chat)
+        print(
+            f"Chat {chat.id} {'' if success else 'not '}replied, tx: {chat.transaction_receipt}"
+        )
     except Exception as ex:
         print(f"Failed to answer chat {chat.id}, exc: {ex}")
 
@@ -46,28 +48,37 @@ async def _answer_unanswered_chats():
                 del chat_tasks[index]
         except Exception as exc:
             print(f"Chat loop raised an exception: {exc}")
-        await asyncio.sleep(2)
+        await asyncio.sleep(1)
 
 
 async def _call_function(function_call: FunctionCall):
     try:
-        response = None
+        response = ""
+        error_message = ""
         if function_call.response is None:
             if function_call.function_type == "image_generation":
-                response = await generate_image_use_case.execute(
+                image = await generate_image_use_case.execute(
                     function_call.function_input
                 )
-                response = response.url if response else None
-                if response:
-                    response = await reupload_to_gcp_use_case.execute(response)
+                response = (
+                    await reupload_to_gcp_use_case.execute(image.url)
+                    if image.url != ""
+                    else ""
+                )
+                error_message = image.error
             elif function_call.function_type == "web_search":
-                response = await web_search_use_case.execute(
+                web_search_result = await web_search_use_case.execute(
                     function_call.function_input
                 )
+                response = web_search_result.result
+                error_message = web_search_result.error
             else:
-                response = f"Unknown function '{function_call.function_type}'"
+                response = ""
+                error_message = f"Unknown function '{function_call.function_type}'"
             function_call.response = response
-        if function_call.response and function_call.transaction_receipt is None:
+            function_call.error_message = error_message
+
+        if not function_call.is_processed:
             success = await repository.send_function_call_response(
                 function_call, function_call.response
             )
@@ -99,7 +110,7 @@ async def _process_function_calls():
                 del function_tasks[index]
         except Exception as exc:
             print(f"Function loop raised an exception: {exc}")
-        await asyncio.sleep(2)
+        await asyncio.sleep(1)
 
 
 async def main():

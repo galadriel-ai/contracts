@@ -10,6 +10,7 @@ class Chat:
     is_processed: bool
     messages: List[dict]
     response: Optional[str] = None
+    error_message: Optional[str] = None
     transaction_receipt: dict = None
 
 
@@ -21,4 +22,5 @@ class FunctionCall:
     function_type: str
     function_input: str
     response: Optional[str] = None
+    error_message: Optional[str] = None
     transaction_receipt: dict = None
