@@ -2,6 +2,7 @@
 
 
 ## Setup
+
 ```
 cd oracles
 cp template.env .env
@@ -16,7 +17,10 @@ venv example:
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-python oracle.py
 ```
 
+**Run the oracle**
+```
+python oracle.py
+```
 
