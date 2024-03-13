@@ -1,7 +1,13 @@
 import {Contract, ethers, Wallet} from "ethers";
 import ABI from "./abis/ChatGpt.json";
+import * as readline from 'readline';
 
 require("dotenv").config()
+
+interface Message {
+  role: string,
+  content: string,
+}
 
 async function main() {
   const rpcUrl = process.env.RPC_URL
@@ -11,20 +17,21 @@ async function main() {
   const contractAddress = process.env.CHAT_ADDRESS
   if (!contractAddress) throw Error("Missing CHAT_ADDRESS in .env")
 
-  const provider = new ethers.JsonRpcProvider(rpcUrl);
+  const provider = new ethers.JsonRpcProvider(rpcUrl)
   const wallet = new Wallet(
     privateKey, provider
-  );
-  const contract = new Contract(contractAddress, ABI, wallet);
+  )
+  const contract = new Contract(contractAddress, ABI, wallet)
 
   // The message you want to start the chat with
-  const message = "Say 3 dog names!";
+  const message = await getUserInput()
 
   // Call the startChat function
-  const transactionResponse = await contract.startChat(message);
-  const receipt = await transactionResponse.wait();
+  const transactionResponse = await contract.startChat(message)
+  const receipt = await transactionResponse.wait()
+  console.log(`Message sent, tx hash: ${receipt.hash}`)
 
-  console.log(`Chat started with message: "${message}"`);
+  console.log(`Chat started with message: "${message}"`)
 
   // Get the chat ID from receipt logs
   let chatId
@@ -36,41 +43,67 @@ async function main() {
       }
     } catch (error) {
       // This log might not have been from your contract, or it might be an anonymous log
-      console.log("Could not parse log:", log);
+      console.log("Could not parse log:", log)
     }
   }
   console.log(`Created chat ID: ${chatId}`)
-  if (!chatId) {
+  if (!chatId && chatId !== 0) {
     return
   }
 
-  let chatHistory = []
+  let allMessages: Message[] = []
   while (true) {
+    const messages = await contract.getMessageHistoryContents(wallet.address, chatId)
+    const roles = await contract.getMessageHistoryRoles(wallet.address, chatId)
 
-    const messages = await contract.getMessages(wallet.address, chatId)
-    const roles = await contract.getRoles(wallet.address, chatId)
-    for (let i = 0; i < messages.length; i++) {
-      // Skip system prompt and first user "start" message
-      if (i > 1) {
-        if (roles[i] !== "user") {
-          const newMessage: Message = {
-            role: roles[i],
-            content: messages[i]
-          }
-          if (images.length > imageIndex && newMessage.content.includes("[IMAGE")) {
-            newMessage.imageUrl = images[imageIndex]
-            imageIndex++
-          }
-          formattedMessages.push(newMessage)
-        } else if (formattedMessages.length) {
-          formattedMessages[formattedMessages.length - 1].selection = messages[i]
+    const newMessages: Message[] = []
+    messages.forEach((message: any, i: number) => {
+      if (i >= allMessages.length) {
+        newMessages.push({
+          role: roles[i],
+          content: messages[i]
+        })
+      }
+    })
+    if (newMessages) {
+      for (let message of newMessages) {
+        console.log(`${message.role}: ${message.content}`)
+        allMessages.push(message)
+        if (allMessages.at(-1)?.role == "assistant") {
+          const message = getUserInput()
+          const transactionResponse = await contract.startChat(message)
+          const receipt = await transactionResponse.wait()
+          console.log(`Message sent, tx hash: ${receipt.hash}`)
         }
       }
     }
-
     await new Promise(resolve => setTimeout(resolve, 2000))
   }
 
+}
+
+async function getUserInput(): Promise<string | undefined> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  })
+
+  const question = (query: string): Promise<string> => {
+    return new Promise((resolve) => {
+      rl.question(query, (answer) => {
+        resolve(answer)
+      })
+    })
+  }
+
+  try {
+    const input = await question("Message ChatGPT: ")
+    rl.close()
+    return input
+  } catch (err) {
+    console.error('Error getting user input:', err)
+    rl.close()
+  }
 }
 
 main()
