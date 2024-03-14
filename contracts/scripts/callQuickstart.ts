@@ -28,11 +28,17 @@ async function main() {
 
   // loop and sleep by 1000ms, and keep printing `lastResponse` in the contract.
   let lastResponse = await contract.lastResponse();
-  while (!lastResponse) {
+  let newResponse = lastResponse;
+
+  // print w/o newline
+  console.log("Waiting for response: ");
+  while (newResponse === lastResponse) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    lastResponse = await contract.lastResponse()
+    newResponse = await contract.lastResponse();
+    console.log(".");
   }
-  console.log(`Response: ${lastResponse}`)
+
+  console.log(`Response: ${newResponse}`)
 
 }
 
