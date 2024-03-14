@@ -25,7 +25,7 @@ async function main() {
   // Call the startChat function
   const transactionResponse = await contract.initializeDalleCall(message);
   const receipt = await transactionResponse.wait();
-  console.log(`Transaction sent, hash: ${receipt.hash}`)
+  console.log(`Transaction sent, hash: ${receipt.hash}.\nExplorer: https://explorer.galadriel.com/transaction/${receipt.hash}`)
   console.log(`Image generation started with message: "${message}"`);
 
   // loop and sleep by 1000ms, and keep printing `lastResponse` in the contract.
