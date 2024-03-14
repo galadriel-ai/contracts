@@ -1,6 +1,5 @@
 import {ethers} from "hardhat";
 
-const QUICKSTART_PROMPT = "make an image in the style of orange and blue oil painting. The subject is: \""
 
 async function main() {
   if (!process.env.ORACLE_ADDRESS) {
@@ -12,12 +11,7 @@ async function main() {
 
 
 async function deployQuickstart(oracleAddress: string) {
-  const agent = await ethers.deployContract(
-    "Quickstart",
-    [
-      oracleAddress,
-      QUICKSTART_PROMPT,
-    ], {});
+  const agent = await ethers.deployContract("Quickstart", [oracleAddress], {});
 
   await agent.waitForDeployment();
 

@@ -1,4 +1,6 @@
 // Import ethers from Hardhat package
+import readline from "readline";
+
 const {ethers} = require("hardhat");
 
 async function main() {
@@ -18,12 +20,12 @@ async function main() {
   const contract = new ethers.Contract(contractAddress, contractABI, signer);
 
   // The content of the image you want to generate
-  const message = "a cat with two heads";
+  const message = await getUserInput();
 
   // Call the startChat function
   const transactionResponse = await contract.initializeDalleCall(message);
   const receipt = await transactionResponse.wait();
-  console.log(`Transaction status: ${receipt.status}`)
+  console.log(`Transaction sent, hash: ${receipt.hash}`)
   console.log(`Image generation started with message: "${message}"`);
 
   // loop and sleep by 1000ms, and keep printing `lastResponse` in the contract.
@@ -38,8 +40,32 @@ async function main() {
     console.log(".");
   }
 
-  console.log(`Response: ${newResponse}`)
+  console.log(`Image generation completed, image URL: ${newResponse}`)
 
+}
+
+async function getUserInput(): Promise<string | undefined> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  })
+
+  const question = (query: string): Promise<string> => {
+    return new Promise((resolve) => {
+      rl.question(query, (answer) => {
+        resolve(answer)
+      })
+    })
+  }
+
+  try {
+    const input = await question("Enter an image description: ")
+    rl.close()
+    return input
+  } catch (err) {
+    console.error('Error getting user input:', err)
+    rl.close()
+  }
 }
 
 main()
