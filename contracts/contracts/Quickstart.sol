@@ -61,6 +61,10 @@ contract Quickstart {
         string memory response,
         string memory errorMessage
     ) public onlyOracle {
-        lastResponse = response;
+        if (keccak256(abi.encodePacked(errorMessage)) != keccak256(abi.encodePacked(""))) {
+            lastResponse = errorMessage;
+        } else {
+            lastResponse = response;
+        }
     }
 }
