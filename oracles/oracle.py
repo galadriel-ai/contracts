@@ -83,7 +83,7 @@ async def _call_function(function_call: FunctionCall):
 
         if not function_call.is_processed:
             success = await repository.send_function_call_response(
-                function_call, function_call.response
+                function_call, function_call.response, function_call.error_message
             )
             print(
                 f"Function {function_call.id} {'' if success else 'not '}called, tx: {function_call.transaction_receipt}"
