@@ -4,6 +4,7 @@ import os
 load_dotenv()
 
 ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
+SERVE_METRICS = os.getenv("SERVE_METRICS", "False").lower() == "true"
 
 OPEN_AI_API_KEY = os.getenv("OPEN_AI_API_KEY")
 
