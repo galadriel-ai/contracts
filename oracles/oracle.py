@@ -1,4 +1,5 @@
 import asyncio
+import settings
 from src.repositories.oracle_repository import OracleRepository
 from src.domain.llm import generate_response_use_case
 from src.domain.search import web_search_use_case
@@ -8,6 +9,9 @@ from src.entities import Chat
 from src.entities import FunctionCall
 
 repository = OracleRepository()
+
+CHAT_TASKS = {}
+FUNCTION_TASKS = {}
 
 
 async def _answer_chat(chat: Chat):
@@ -28,24 +32,23 @@ async def _answer_chat(chat: Chat):
 
 
 async def _answer_unanswered_chats():
-    chat_tasks = {}
     while True:
         try:
             chats = await repository.get_unanswered_chats()
             for chat in chats:
-                if chat.id not in chat_tasks:
+                if chat.id not in CHAT_TASKS:
                     print(f"Answering chat {chat.id}")
                     task = asyncio.create_task(_answer_chat(chat))
-                    chat_tasks[chat.id] = task
+                    CHAT_TASKS[chat.id] = task
             completed_tasks = [
-                index for index, task in chat_tasks.items() if task.done()
+                index for index, task in CHAT_TASKS.items() if task.done()
             ]
             for index in completed_tasks:
                 try:
-                    await chat_tasks[index]
+                    await CHAT_TASKS[index]
                 except Exception as e:
                     print(f"Task for chat {index} raised an exception: {e}")
-                del chat_tasks[index]
+                del CHAT_TASKS[index]
         except Exception as exc:
             print(f"Chat loop raised an exception: {exc}")
         await asyncio.sleep(1)
@@ -90,34 +93,58 @@ async def _call_function(function_call: FunctionCall):
 
 
 async def _process_function_calls():
-    function_tasks = {}
     while True:
         try:
             function_calls = await repository.get_unanswered__function_calls()
             for function_call in function_calls:
-                if function_call.id not in function_tasks:
+                if function_call.id not in FUNCTION_TASKS:
                     print(f"Calling function {function_call.id}")
                     task = asyncio.create_task(_call_function(function_call))
-                    function_tasks[function_call.id] = task
+                    FUNCTION_TASKS[function_call.id] = task
             completed_tasks = [
-                index for index, task in function_tasks.items() if task.done()
+                index for index, task in FUNCTION_TASKS.items() if task.done()
             ]
             for index in completed_tasks:
                 try:
-                    await function_tasks[index]
+                    await FUNCTION_TASKS[index]
                 except Exception as e:
                     print(f"Task for function {index} raised an exception: {e}")
-                del function_tasks[index]
+                del FUNCTION_TASKS[index]
         except Exception as exc:
             print(f"Function loop raised an exception: {exc}")
         await asyncio.sleep(1)
 
 
+async def _serve_metrics():
+    try:
+        from fastapi import FastAPI
+        from starlette.responses import PlainTextResponse
+        import uvicorn
+
+        app = FastAPI()
+
+        @app.get("/metrics", response_class=PlainTextResponse)
+        async def metrics():
+            return f'sei_oracle_chat_tasks{{chain="testnet"}} {len(CHAT_TASKS)}\nsei_oracle_function_tasks{{chain="testnet"}} {len(FUNCTION_TASKS)}\n'
+
+        config = uvicorn.Config(app, host="0.0.0.0", port=8000)
+        server = uvicorn.Server(config)
+        await server.serve()
+    except ImportError as e:
+        print(f"Required module not found: {e}. FastAPI server will not start.")
+
+
 async def main():
-    await asyncio.gather(
+    tasks = [
         _answer_unanswered_chats(),
         _process_function_calls(),
-    )
+    ]
+
+    if settings.SERVE_METRICS:
+        print("Serving metrics")
+        tasks.append(_serve_metrics())
+
+    await asyncio.gather(*tasks)
 
 
 if __name__ == "__main__":
