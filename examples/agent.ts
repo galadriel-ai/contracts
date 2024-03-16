@@ -50,11 +50,11 @@ async function main() {
         allMessages.push(message)
       }
     }
+    await new Promise(resolve => setTimeout(resolve, 2000))
     if (await contract.isRunFinished(agentRunID)) {
       console.log(`agent run ID ${agentRunID} finished!`)
       break;
     }
-    await new Promise(resolve => setTimeout(resolve, 2000))
   }
 
 }

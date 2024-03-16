@@ -5,6 +5,11 @@
         "internalType": "address",
         "name": "initialOracleAddress",
         "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "systemPrompt",
+        "type": "string"
       }
     ],
     "stateMutability": "nonpayable",
@@ -79,6 +84,49 @@
   {
     "inputs": [
       {
+        "internalType": "string",
+        "name": "input",
+        "type": "string"
+      }
+    ],
+    "name": "containsFinalAnswer",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "input",
+        "type": "string"
+      }
+    ],
+    "name": "findActionAndInput",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "action",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "actionInput",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "agentId",
         "type": "uint256"
@@ -136,6 +184,48 @@
   {
     "inputs": [
       {
+        "internalType": "string",
+        "name": "response",
+        "type": "string"
+      }
+    ],
+    "name": "makeObservation",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "runId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "response",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "errorMessage",
+        "type": "string"
+      }
+    ],
+    "name": "onOracleFunctionResponse",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "runId",
         "type": "uint256"
@@ -170,10 +260,23 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "prompt",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "string",
-        "name": "prompt",
+        "name": "query",
         "type": "string"
       },
       {
