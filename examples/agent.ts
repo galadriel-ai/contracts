@@ -50,6 +50,10 @@ async function main() {
         allMessages.push(message)
       }
     }
+    if (await contract.isRunFinished(agentRunID)) {
+      console.log(`agent run ID ${agentRunID} finished!`)
+      break;
+    }
     await new Promise(resolve => setTimeout(resolve, 2000))
   }
 
@@ -81,29 +85,29 @@ async function getUserInput(query: string): Promise<string | undefined> {
 
 
 function getAgentRunId(receipt: TransactionReceipt, contract: Contract) {
-  let agentRunId
+  let agentRunID
   for (const log of receipt.logs) {
     try {
       const parsedLog = contract.interface.parseLog(log)
       if (parsedLog && parsedLog.name === "AgentRunCreated") {
         // Second event argument
-        agentRunId = ethers.toNumber(parsedLog.args[1])
+        agentRunID = ethers.toNumber(parsedLog.args[1])
       }
     } catch (error) {
       // This log might not have been from your contract, or it might be an anonymous log
       console.log("Could not parse log:", log)
     }
   }
-  return agentRunId;
+  return agentRunID;
 }
 
 async function getNewMessages(
   contract: Contract,
-  chatId: number,
+  agentRunID: number,
   currentMessagesCount: number
 ): Promise<Message[]> {
-  const messages = await contract.getMessageHistoryContents(chatId)
-  const roles = await contract.getMessageHistoryRoles(chatId)
+  const messages = await contract.getMessageHistoryContents(agentRunID)
+  const roles = await contract.getMessageHistoryRoles(agentRunID)
 
   const newMessages: Message[] = []
   messages.forEach((message: any, i: number) => {

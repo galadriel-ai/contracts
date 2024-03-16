@@ -120,6 +120,25 @@
         "internalType": "uint256",
         "name": "runId",
         "type": "uint256"
+      }
+    ],
+    "name": "isRunFinished",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "runId",
+        "type": "uint256"
       },
       {
         "internalType": "string",

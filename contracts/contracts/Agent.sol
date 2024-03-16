@@ -119,4 +119,8 @@ contract Agent {
         }
         return roles;
     }
+
+    function isRunFinished(uint runId) public view returns (bool) {
+        return agentRuns[runId].is_finished;
+    }
 }
