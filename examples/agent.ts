@@ -24,8 +24,8 @@ async function main() {
   const contract = new Contract(contractAddress, ABI, wallet)
 
   // The query you want to start the agent with
-  const query = await getUserInput("Agent's task:")
-  const maxIterations = await getUserInput("Max iterations:")
+  const query = await getUserInput("Agent's task: ")
+  const maxIterations = await getUserInput("Max iterations: ")
 
   // Call the startChat function
   const transactionResponse = await contract.runAgent(query, Number(maxIterations));
@@ -47,7 +47,9 @@ async function main() {
     const newMessages: Message[] = await getNewMessages(contract, agentRunID, allMessages.length);
     if (newMessages) {
       for (let message of newMessages) {
-        console.log(`${message.role}: ${message.content}`)
+        let roleDisplay = message.role === 'assistant' ? 'THOUGHT' : 'STEP';
+        let color = message.role === 'assistant' ? '\x1b[36m' : '\x1b[33m'; // Cyan for thought, yellow for step
+        console.log(`${color}${roleDisplay}\x1b[0m: ${message.content}`);
         allMessages.push(message)
       }
     }
