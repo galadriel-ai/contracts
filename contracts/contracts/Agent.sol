@@ -109,7 +109,6 @@ contract Agent {
         run.messages.push(assistantMessage);
         run.responsesCount++;
 
-        // TODO: some actual prompting logic for next request etc
         if (run.responsesCount >= run.max_iterations) {
             run.is_finished = true;
         } else {
