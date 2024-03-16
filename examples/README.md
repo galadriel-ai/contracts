@@ -20,3 +20,8 @@ Rest of this README assumes you are in the `examples` directory
 ```
 npm run chat
 ```
+
+**Agent example**
+```
+npm run agent
+```
