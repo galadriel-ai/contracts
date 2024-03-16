@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "chat": "ts-node chat.ts"
+    "chat": "ts-node chat.ts",
+    "agent": "ts-node agent.ts"
   },
   "author": "",
   "license": "ISC",
