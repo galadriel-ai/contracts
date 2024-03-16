@@ -1,0 +1,190 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "initialOracleAddress",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "runId",
+        "type": "uint256"
+      }
+    ],
+    "name": "AgentRunCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOracleAddress",
+        "type": "address"
+      }
+    ],
+    "name": "OracleAddressUpdated",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "agentRuns",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "responsesCount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint8",
+        "name": "max_iterations",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bool",
+        "name": "is_finished",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "agentId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getMessageHistoryContents",
+    "outputs": [
+      {
+        "internalType": "string[]",
+        "name": "",
+        "type": "string[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "agentId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getMessageHistoryRoles",
+    "outputs": [
+      {
+        "internalType": "string[]",
+        "name": "",
+        "type": "string[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "runId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "response",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "errorMessage",
+        "type": "string"
+      }
+    ],
+    "name": "onOracleLlmResponse",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "oracleAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "prompt",
+        "type": "string"
+      },
+      {
+        "internalType": "uint8",
+        "name": "max_iterations",
+        "type": "uint8"
+      }
+    ],
+    "name": "runAgent",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "i",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOracleAddress",
+        "type": "address"
+      }
+    ],
+    "name": "setOracleAddress",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

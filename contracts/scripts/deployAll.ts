@@ -8,6 +8,7 @@ async function main() {
   await deployChatGpt(oracleAddress);
   await deployDalle(oracleAddress);
   await deployVitailik(oracleAddress);
+  await deployAgent(oracleAddress);
 }
 
 async function deployOracle(): Promise<string> {
@@ -31,6 +32,16 @@ async function deployChatGpt(oracleAddress: string) {
 
   console.log(
     `ChatGPT deployed to ${agent.target}`
+  );
+}
+
+async function deployAgent(oracleAddress: string) {
+  const agent = await ethers.deployContract("Agent", [oracleAddress], {});
+
+  await agent.waitForDeployment();
+
+  console.log(
+    `Agent deployed to ${agent.target}`
   );
 }
 
