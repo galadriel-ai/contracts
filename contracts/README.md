@@ -54,3 +54,13 @@ npm run deployQuickstart
 ```
 npm run deployAll:galadriel
 ```
+
+
+## Whitelisting a Wallet in the Oracle Contract
+
+To whitelist an address in the Oracle contract, allowing it to write responses on-chain, you can use the `whitelist` Hardhat task.
+
+Run the following command, replacing `[oracle_address]` with the Oracle contract's address and `[wallet_address]` with the address you want to whitelist:
+
+```bash
+npx hardhat whitelist --oracle-address [oracle_address] --whitelist-address [wallet_address] --network galadriel
