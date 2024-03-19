@@ -2,15 +2,19 @@
 
 ## Prerequisites
 
-### Dependencies 
-- Docker and Docker Compose (for Docker setup only)
-- Python 3.11+ (for Manual setup)
-- Funded wallet and matching private key
-- [Deployed oracle contract address](https://github.com/galadriel-ai/contracts/blob/main/contracts/README.md)
-- [Serper API key](https://serper.dev) - required by `web_search` tool
-- [OpenAI API key](https://openai.com) - LLM inference
+Before you begin, ensure you have the following prerequisites:
 
-Ensure all necessary API keys are acquired and the Oracle smart contract is deployed.
+- **Docker and Docker Compose**: Required for the Docker setup method.
+- **Python 3.11+**: Necessary for the manual setup approach.
+- **A Funded Wallet and Corresponding Private Key**: Your wallet should be funded enough to cover transaction fees.
+- **Deployed oracle contract address**: Make sure you have deployed the Oracle contract. For guidance, refer to the [Oracle contract deployment instructions].(https://github.com/galadriel-ai/contracts/blob/main/contracts/README.md)
+- **Serper API key**: Needed for the `web_search` tool. Obtain your key from [Serper](https://serper.dev).
+- **OpenAI API key**: Required for Large Language Model (LLM) inference. Get your API key from [OpenAI](https://openai.com)
+
+### Oracle smart contract and Whitelisting
+
+Ensure that your Oracle smart contract is deployed and your wallet address is [whitelisted](https://github.com/galadriel-ai/contracts/blob/main/contracts/README.md#whitelisting-a-wallet-in-the-oracle-contract) to interact with it.
+
 
 ### Configuration
 
