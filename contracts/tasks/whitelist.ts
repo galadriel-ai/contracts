@@ -1,5 +1,5 @@
 // Define the task with the name 'whitelist-address'
-task("whitelist", "Whitelists an address in the Oracle contract")
+export const whitelistTask = task("whitelist", "Whitelists an address in the Oracle contract")
   .addParam("oracleAddress", "The address of the Oracle contract")
   .addParam("whitelistAddress", "The address to whitelist")
   .setAction(async (taskArgs, hre) => {
@@ -27,4 +27,3 @@ task("whitelist", "Whitelists an address in the Oracle contract")
     await attestationTx.wait();
     console.log(`Attestation added for: "${whitelistAddress}"`);
   });
-module.exports = {};

@@ -1,9 +1,8 @@
 import {HardhatUserConfig} from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+import "./tasks/whitelist";
 
 require('dotenv').config()
-
-require("./tasks/whitelist");
 
 const galadrielDevnet = []
 if (process.env.PRIVATE_KEY_CUSTOM) {
