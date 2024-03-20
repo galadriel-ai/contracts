@@ -5,6 +5,7 @@ from src.domain.llm import generate_response_use_case
 from src.domain.search import web_search_use_case
 from src.domain.image_generation import generate_image_use_case
 from src.domain.storage import reupload_to_gcp_use_case
+from src.domain.code_interpreter import python_interpreter_use_case
 from src.entities import Chat
 from src.entities import FunctionCall
 
@@ -75,6 +76,12 @@ async def _call_function(function_call: FunctionCall):
                 )
                 response = web_search_result.result
                 error_message = web_search_result.error
+            elif function_call.function_type == "python_interpreter":
+                python_interpreter_result = await python_interpreter_use_case.execute(
+                    function_call.function_input
+                )
+                response = python_interpreter_result.stdout
+                error_message = python_interpreter_result.stderr
             else:
                 response = ""
                 error_message = f"Unknown function '{function_call.function_type}'"
