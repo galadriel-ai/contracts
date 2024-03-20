@@ -15,7 +15,7 @@ describe("Agent", function () {
     const oracle = await Oracle.deploy();
 
     const Agent = await ethers.getContractFactory("Agent");
-    const agent = await Agent.deploy("0x0000000000000000000000000000000000000000");
+    const agent = await Agent.deploy("0x0000000000000000000000000000000000000000", "system prompt");
 
     return {agent, oracle, owner, allSigners};
   }
@@ -28,8 +28,9 @@ describe("Agent", function () {
       await agent.runAgent("which came first: the chicken or the egg?", 2);
       // promptId: 0, callbackId: 0
       const messages = await oracle.getMessages(0, 0)
-      expect(messages.length).to.equal(1)
-      expect(messages[0]).to.equal("which came first: the chicken or the egg?")
+      expect(messages.length).to.equal(2)
+      expect(messages[0]).to.equal("system prompt")
+      expect(messages[1]).to.equal("which came first: the chicken or the egg?")
     });
     it("Oracle adds response and agents asks a follow-up question", async () => {
       const {
@@ -46,8 +47,8 @@ describe("Agent", function () {
       await oracle.connect(oracleAccount).addResponse(0, 0, "The Chicken", "");
       const messages = await oracle.getMessages(0, 0)
       expect(messages.length).to.equal(3)
-      expect(messages[1]).to.equal("The Chicken")
-      expect(messages[2]).to.equal("Please elaborate!")
+      expect(messages[1]).to.equal("which came first: the chicken or the egg?")
+      expect(messages[2]).to.equal("The Chicken")
     });
   });
 });
