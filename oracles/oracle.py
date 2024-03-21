@@ -7,11 +7,13 @@ from src.domain.image_generation import generate_image_use_case
 from src.domain.storage import reupload_to_gcp_use_case
 from src.entities import Chat
 from src.entities import FunctionCall
+from src.entities import KnowledgeBaseIndexingRequest
 
 repository = OracleRepository()
 
 CHAT_TASKS = {}
 FUNCTION_TASKS = {}
+KB_INDEXING_TASKS = {}
 
 
 async def _answer_chat(chat: Chat):
@@ -95,7 +97,7 @@ async def _call_function(function_call: FunctionCall):
 async def _process_function_calls():
     while True:
         try:
-            function_calls = await repository.get_unanswered__function_calls()
+            function_calls = await repository.get_unanswered_function_calls()
             for function_call in function_calls:
                 if function_call.id not in FUNCTION_TASKS:
                     print(f"Calling function {function_call.id}")
@@ -112,6 +114,51 @@ async def _process_function_calls():
                 del FUNCTION_TASKS[index]
         except Exception as exc:
             print(f"Function loop raised an exception: {exc}")
+        await asyncio.sleep(1)
+
+
+async def _index_knowledgebase_function(request: KnowledgeBaseIndexingRequest):
+    try:
+        index_cid = "DINO TODO"
+        error_message = ""
+        success = await repository.send_kb_indexing_response(
+            request, index_cid=index_cid, error_message=error_message
+        )
+        print(
+            f"Knowledge base indexing {request.id} {'' if success else 'not '} indexed, tx: {request.transaction_receipt}"
+        )
+    except Exception as ex:
+        print(
+            f"Failed to index knowledge base {request.id}, cid {request.cid}, exc: {ex}"
+        )
+
+
+async def _process_knowledge_base_indexing():
+    while True:
+        try:
+            kb_indexing_requests = await repository.get_unindexed_knowledge_bases()
+            for kb_indexing_request in kb_indexing_requests:
+                if kb_indexing_request.id not in KB_INDEXING_TASKS:
+                    print(
+                        f"Indexing knowledge base {kb_indexing_request.id}, cid {kb_indexing_request.cid}"
+                    )
+                    task = asyncio.create_task(
+                        _index_knowledgebase_function(kb_indexing_request)
+                    )
+                    KB_INDEXING_TASKS[kb_indexing_request.id] = task
+            completed_tasks = [
+                index for index, task in KB_INDEXING_TASKS.items() if task.done()
+            ]
+            for index in completed_tasks:
+                try:
+                    await KB_INDEXING_TASKS[index]
+                except Exception as e:
+                    print(
+                        f"Task for kb indexing request {index} raised an exception: {e}"
+                    )
+                del KB_INDEXING_TASKS[index]
+        except Exception as exc:
+            print(f"Kb indexing loop raised an exception: {exc}")
         await asyncio.sleep(1)
 
 
@@ -138,6 +185,7 @@ async def main():
     tasks = [
         _answer_unanswered_chats(),
         _process_function_calls(),
+        _process_knowledge_base_indexing(),
     ]
 
     if settings.SERVE_METRICS:

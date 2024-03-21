@@ -17,6 +17,12 @@ interface IChatGpt {
         string memory errorMessage
     ) external;
 
+    function onOracleKbQueryResponse(
+        uint callbackId,
+        string [] memory documents,
+        string memory errorMessage
+    ) external;
+
     function getMessageHistoryContents(
         uint callbackId
     ) external view returns (string[] memory);
@@ -24,7 +30,6 @@ interface IChatGpt {
     function getMessageHistoryRoles(
         uint callbackId
     ) external view returns (string[] memory);
-
 }
 
 contract ChatOracle {
@@ -46,6 +51,16 @@ contract ChatOracle {
     mapping(uint => bool) public isFunctionProcessed;
     uint public functionsCount;
 
+    mapping(uint => string) public kbIndexingRequests;
+    mapping(string => string) public kbIndexes;
+    uint public kbIndexingRequestCount;
+
+    mapping(uint => string) public kbQueryCids;
+    mapping(uint => string) public kbQueries;
+    mapping(uint => address) public kbQueryCallbackAddresses;
+    mapping(uint => uint) public kbQueryCallbackIds;
+    mapping(uint => bool) public isKbQueryProcessed;
+    uint public kbQueryCount;
 
     address private owner;
 
@@ -59,6 +74,21 @@ contract ChatOracle {
         uint indexed functionId,
         string indexed functionInput,
         uint functionCallbackId,
+        address sender
+    );
+
+    event KnowledgeBaseIndexRequestAdded(
+        uint indexed id,
+        address sender
+    );
+
+    event KnowledgeBaseIndexed(
+        string indexed cid,
+        string indexed indexCid
+    );
+
+    event knowledgeBaseQueryAdded(
+        uint indexed kbQueryId,
         address sender
     );
 
@@ -160,6 +190,55 @@ contract ChatOracle {
         IChatGpt(functionCallbackAddresses[functionId]).onOracleFunctionResponse(
             functionCallBackId,
             response,
+            errorMessage
+        );
+    }
+
+    function addKnowledgeBase(string memory cid) public {
+        require(bytes(kbIndexes[cid]).length == 0, "Index already set for this CID");
+        uint kbIndexingRequestId = kbIndexingRequestCount;
+        kbIndexingRequests[kbIndexingRequestId] = cid;
+        kbIndexingRequestCount++;
+        emit KnowledgeBaseIndexRequestAdded(kbIndexingRequestId, msg.sender);
+    }
+
+    function addKnowledgeBaseIndex(uint kbIndexingRequestId, string memory indexCid) public onlyWhitelisted {
+        require(bytes(kbIndexes[kbIndexingRequests[kbIndexingRequestId]]).length == 0, "Index already set for this CID");
+        kbIndexes[kbIndexingRequests[kbIndexingRequestId]] = indexCid;
+        emit KnowledgeBaseIndexed(kbIndexingRequests[kbIndexingRequestId], indexCid);
+    }
+
+    function createKnowledgeBaseQuery(
+        uint kbQueryCallbackId,
+        string memory indexCid,
+        string memory query
+    ) public returns (uint i) {
+        uint kbQueryId = kbQueryCount;
+        kbQueryCids[kbQueryId] = indexCid;
+        kbQueries[kbQueryId] = query;
+        kbQueryCallbackIds[kbQueryId] = kbQueryCallbackId;
+
+        kbQueryCallbackAddresses[kbQueryId] = msg.sender;
+        isKbQueryProcessed[kbQueryId] = false;
+
+        kbQueryCount++;
+
+        emit knowledgeBaseQueryAdded(kbQueryId, msg.sender);
+
+        return kbQueryId;
+    }
+
+    function addKnowledgeBaseQueryResponse(
+        uint kbQueryId,
+        uint kbQueryCallbackId,
+        string [] memory documents,
+        string memory errorMessage
+    ) public onlyWhitelisted {
+        require(!isKbQueryProcessed[kbQueryId], "Knowledge base query already processed");
+        isKbQueryProcessed[kbQueryId] = true;
+        IChatGpt(kbQueryCallbackAddresses[kbQueryId]).onOracleKbQueryResponse(
+            kbQueryCallbackId,
+            documents,
             errorMessage
         );
     }

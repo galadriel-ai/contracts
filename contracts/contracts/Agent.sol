@@ -50,7 +50,6 @@ contract Agent {
         owner = msg.sender;
         oracleAddress = initialOracleAddress;
         prompt = systemPrompt;
-        agentRunCount = 0;
     }
 
     modifier onlyOwner() {

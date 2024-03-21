@@ -24,3 +24,12 @@ class FunctionCall:
     response: Optional[str] = None
     error_message: Optional[str] = None
     transaction_receipt: dict = None
+
+
+@dataclass
+class KnowledgeBaseIndexingRequest:
+    id: int
+    cid: str
+    is_processed: bool
+    index_cid: Optional[str] = None
+    transaction_receipt: dict = None
