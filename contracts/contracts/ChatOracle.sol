@@ -11,21 +11,21 @@ interface IOracleTypes {
         string model;
         // int -20 - 20? Mapped to float -2.0 - 2.0? If bigger than 20 then null?
         int8 frequencyPenalty;
+        // JSON string or empty string
         string logitBias;
         // 0 for null
         uint32 maxTokens;
         // int -20 - 20? Mapped to float -2.0 - 2.0? If bigger than 20 then null?
         int8 presencePenalty;
-        // "" ,"text" or "json_object". In docs its actually '{"type": "json_object"}'
+        // JSON string or empty string
         string responseFormat;
         // 0 for null
         uint seed;
-        // string / array / null - Up to 4 sequences where the API will stop generating further tokens.
+        // empty str for null
         string stop;
         // 0-20 >20 for null
         uint temperature;
-        // Not supported here? or list of str maybe of our supported tools?
-        // tools
+        // "none", "auto" or empty str which defaults to auto on OpenAI side
         string toolChoice;
         string user;
     }
@@ -72,7 +72,7 @@ interface IChatGpt {
     ) external view returns (string[] memory);
 
 
-    function onOpenAiOracleLlmResponse(
+    function onOracleOpenAiLlmResponse(
         uint callbackId,
         IOracleTypes.OpenAiResponse memory response,
         string memory errorMessage
@@ -80,6 +80,12 @@ interface IChatGpt {
 }
 
 contract ChatOracle {
+
+    struct PromptTypes {
+        string defaultType;
+        string openAi;
+    }
+    PromptTypes public promptTypes;
 
     mapping(address => bool) whitelistedAddresses;
 
@@ -126,6 +132,8 @@ contract ChatOracle {
         owner = msg.sender;
         promptsCount = 0;
         functionsCount = 0;
+
+        promptTypes = PromptTypes("default", "OpenAi");
     }
 
     modifier onlyOwner() {
@@ -152,7 +160,7 @@ contract ChatOracle {
         callbackAddresses[promptId] = msg.sender;
         promptCallbackIds[promptId] = promptCallbackId;
         isPromptProcessed[promptId] = false;
-        promptType[promptId] = "default";
+        promptType[promptId] = promptTypes.defaultType;
 
         promptsCount++;
 
@@ -230,7 +238,7 @@ contract ChatOracle {
         callbackAddresses[promptId] = msg.sender;
         promptCallbackIds[promptId] = promptCallbackId;
         isPromptProcessed[promptId] = false;
-        promptType[promptId] = "OpenAI";
+        promptType[promptId] = promptTypes.openAi;
 
         promptsCount++;
 
@@ -248,7 +256,7 @@ contract ChatOracle {
     ) public onlyWhitelisted {
         require(!isPromptProcessed[promptId], "Prompt already processed");
         isPromptProcessed[promptId] = true;
-        IChatGpt(callbackAddresses[promptId]).onOpenAiOracleLlmResponse(
+        IChatGpt(callbackAddresses[promptId]).onOracleOpenAiLlmResponse(
             promptCallBackId,
             response,
             errorMessage
