@@ -81,9 +81,15 @@ contract Vitailik {
         game.messagesCount++;
 
         Message memory userMessage;
-        userMessage.content = "start";
+        userMessage.content = "Start now!";
         userMessage.role = "user";
         game.messages.push(userMessage);
+        game.messagesCount++;
+
+        Message memory assistantMessage;
+        assistantMessage.content = "I'll first describe the scene and then give 4 options (a,b,c,d) for player to choose what character to play as. I'll come up with animals to select from, and add 2 adjectives to combine as the character name. I'll keep it short. I'll structure it as following:\n\n<short scene description>\n\n<4 character choices>\n\n<image description>\n\n<HPs>";
+        assistantMessage.role = "assistant";
+        game.messages.push(assistantMessage);
         game.messagesCount++;
 
         uint currentId = gamesCount;
@@ -123,7 +129,7 @@ contract Vitailik {
             !game.isFinished, "Game is finished"
         );
         require(
-            compareStrings(game.messages[game.messagesCount - 1].role, "user"),
+            compareStrings(game.messages[game.messagesCount - 1].role, "user") || game.messagesCount == 3,
             "No message to respond to"
         );
 
@@ -139,13 +145,22 @@ contract Vitailik {
             game.isFinished = true;
         }
 
-        string memory imageDescription = findImageLine(response);
+        string memory imageDescription = findImageLine(response, "<IMAGE");
         if (!compareStrings(imageDescription, "")) {
             IOracle(oracleAddress).createFunctionCall(
                 runId,
                 "image_generation",
                 imageDescription
             );
+        } else {
+//            string memory imageDescription2 = findImageLine(response, "[IMAGE");
+//            if (!compareStrings(imageDescription2, "")) {
+//                IOracle(oracleAddress).createFunctionCall(
+//                    runId,
+//                    "image_generation",
+//                    imageDescription2
+//                );
+//            }
         }
     }
 
@@ -201,9 +216,9 @@ contract Vitailik {
         return games[chatId].imageUrls;
     }
 
-    function findImageLine(string memory input) public pure returns (string memory) {
+    function findImageLine(string memory input, string memory lineStart) public pure returns (string memory) {
         bytes memory inputBytes = bytes(input);
-        bytes memory imagePrefix = bytes("[IMAGE");
+        bytes memory imagePrefix = bytes(lineStart);
         uint prefixLength = imagePrefix.length;
 
         bool found = false;
