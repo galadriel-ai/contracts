@@ -1,7 +1,7 @@
 
 <p align="center">
     <a href="https://galadriel.com" style="max-width: 100px;" target="_blank">
-        <img src="https://mintlify.s3-us-west-1.amazonaws.com/opencopilot/logo/light.png">
+        <img src="header.png">
     </a>
 </p>
 <p align="center">
