@@ -1,7 +1,7 @@
 
 <p align="center">
     <a href="https://galadriel.com" style="max-width: 100px;" target="_blank">
-        <img src="header.png">
+        <img src="Galadriel.svg">
     </a>
 </p>
 <p align="center">
@@ -20,6 +20,8 @@ Galadriel is the first L1 for AI.
 
 Ethereum enabled writing smart contracts to build dApps. Similarly, Galadriel enables developers to build AI apps & agents like smart contracts — decentralized and on-chain. We support a range of AI usage: from simple LLM features in existing dApps to highly capable AI agents like on-chain AI hedge funds, in-game AI NPCs and AI-generated NFTs.
 
+Galadriel makes it possible to build AI applications and agents as Solidity contracts on our high-throughput EVM-compatible layer 1 chain.
+
 ## Quickstart
 
 Please follow [this guide](https://docs.galadriel.com/quickstart) to get started with Galadriel.
@@ -32,13 +34,23 @@ Example on-chain AI applications you can try already:
 
 See more in our documentation: [use cases](https://docs.galadriel.com/use-cases).
 
+## How it works
+
+To put LLM (and other) calls on-chain, we introduce an oracle. The oracle consists of an on-chain part (which you call when developing a Solidity contract) and an off-chain part (which makes the off-chain call and produces the response in a callback to your contract).
+
+See the high-level execution flow in below, or read more about how Galadriel works in [our documentation](https://docs.galadriel.com/how-it-works).
+
+![](architecture.jpg)
+
+
+
 ## This repository
 
 This repository contains the basic building blocks of Galadriel's on-chain AI:
 
 * Quickstart contracts and scripts: see the [quickstart documentation](https://docs.galadriel.com/quickstart);
-* Example dApp [contracts](/contracts/contracts) like on-chain ChatGPT, AI agents, generative-AI NFT collections;
-* Example [integrations](/examples);
+* [Contract examples](/contracts/contracts) for dApps like on-chain ChatGPT, AI agents, generative-AI NFT collections;
+* [End-to-end examples](/examples) of integrating Galadriel into your project;
 * Oracle [contract](/contracts/contracts/ChatOracle.sol) and back-end [implementation](/oracles).
 
 
