@@ -50,6 +50,44 @@ interface IOracleTypes {
         uint32 promptTokens;
         uint32 totalTokens;
     }
+
+    struct GroqRequest {
+        // "llama2-70b-4096", "mixtral-8x7b-32768" or "gemma-7b-it"
+        string model;
+        // int -20 - 20? Mapped to float -2.0 - 2.0? If bigger than 20 then null?
+        int8 frequencyPenalty;
+        // JSON string or empty string
+        string logitBias;
+        // 0 for null
+        uint32 maxTokens;
+        // int -20 - 20? Mapped to float -2.0 - 2.0? If bigger than 20 then null?
+        int8 presencePenalty;
+        // JSON string or empty string
+        string responseFormat;
+        // 0 for null
+        uint seed;
+        // empty str for null
+        string stop;
+        // 0-20 >20 for null
+        uint temperature;
+        string user;
+    }
+
+    struct GroqResponse {
+        string id;
+
+        string content;
+
+        uint64 created;
+        string model;
+        string systemFingerprint;
+        // kind of pointless since its always "chat.completion"?
+        string object;
+
+        uint32 completionTokens;
+        uint32 promptTokens;
+        uint32 totalTokens;
+    }
 }
 
 interface IChatGpt {
@@ -73,10 +111,15 @@ interface IChatGpt {
         uint callbackId
     ) external view returns (string[] memory);
 
-
     function onOracleOpenAiLlmResponse(
         uint callbackId,
         IOracleTypes.OpenAiResponse memory response,
+        string memory errorMessage
+    ) external;
+
+    function onOracleGroqLlmResponse(
+        uint callbackId,
+        IOracleTypes.GroqResponse memory response,
         string memory errorMessage
     ) external;
 }
@@ -86,7 +129,9 @@ contract ChatOracle {
     struct PromptTypes {
         string defaultType;
         string openAi;
+        string groq;
     }
+
     PromptTypes public promptTypes;
 
     mapping(address => bool) whitelistedAddresses;
@@ -103,6 +148,7 @@ contract ChatOracle {
     mapping(uint => string) public promptType;
 
     mapping(uint => IOracleTypes.OpenAiRequest) public openAiConfigurations;
+    mapping(uint => IOracleTypes.GroqRequest) public groqConfigurations;
 
 
     uint public promptsCount;
@@ -135,7 +181,7 @@ contract ChatOracle {
         promptsCount = 0;
         functionsCount = 0;
 
-        promptTypes = PromptTypes("default", "OpenAI");
+        promptTypes = PromptTypes("default", "OpenAI", "Groq");
     }
 
     modifier onlyOwner() {
@@ -259,6 +305,36 @@ contract ChatOracle {
         require(!isPromptProcessed[promptId], "Prompt already processed");
         isPromptProcessed[promptId] = true;
         IChatGpt(callbackAddresses[promptId]).onOracleOpenAiLlmResponse(
+            promptCallBackId,
+            response,
+            errorMessage
+        );
+    }
+
+    function createGroqLlmCall(uint promptCallbackId, IOracleTypes.GroqRequest memory config) public returns (uint i) {
+        uint promptId = promptsCount;
+        callbackAddresses[promptId] = msg.sender;
+        promptCallbackIds[promptId] = promptCallbackId;
+        isPromptProcessed[promptId] = false;
+        promptType[promptId] = promptTypes.groq;
+
+        promptsCount++;
+
+        groqConfigurations[promptId] = config;
+        emit PromptAdded(promptId, promptCallbackId, msg.sender);
+
+        return promptId;
+    }
+
+    function addGroqResponse(
+        uint promptId,
+        uint promptCallBackId,
+        IOracleTypes.GroqResponse memory response,
+        string memory errorMessage
+    ) public onlyWhitelisted {
+        require(!isPromptProcessed[promptId], "Prompt already processed");
+        isPromptProcessed[promptId] = true;
+        IChatGpt(callbackAddresses[promptId]).onOracleGroqLlmResponse(
             promptCallBackId,
             response,
             errorMessage
