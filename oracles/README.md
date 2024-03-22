@@ -57,6 +57,11 @@ With the virtual environment active, run:
 python oracle.py
 ```
 
+### Running unit tests
+```
+python -m pytest tests/unit
+```
+
 ## Troubleshooting
 
 Verify your API keys and network connectivity if encountering issues with Serper or OpenAI APIs. For Docker or Python setup errors, ensure all prerequisites are correctly installed.

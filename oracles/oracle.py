@@ -1,12 +1,14 @@
 import asyncio
+
 import settings
-from src.repositories.oracle_repository import OracleRepository
 from src.domain.llm import generate_response_use_case
-from src.domain.search import web_search_use_case
-from src.domain.image_generation import generate_image_use_case
 from src.domain.storage import reupload_to_gcp_use_case
+from src.domain.tools import utils
+from src.domain.tools.image_generation import generate_image_use_case
+from src.domain.tools.search import web_search_use_case
 from src.entities import Chat
 from src.entities import FunctionCall
+from src.repositories.oracle_repository import OracleRepository
 
 repository = OracleRepository()
 
@@ -59,9 +61,10 @@ async def _call_function(function_call: FunctionCall):
         response = ""
         error_message = ""
         if function_call.response is None:
+            formatted_input = utils.format_tool_input(function_call.function_input)
             if function_call.function_type == "image_generation":
                 image = await generate_image_use_case.execute(
-                    function_call.function_input
+                    formatted_input
                 )
                 response = (
                     await reupload_to_gcp_use_case.execute(image.url)
@@ -71,7 +74,7 @@ async def _call_function(function_call: FunctionCall):
                 error_message = image.error
             elif function_call.function_type == "web_search":
                 web_search_result = await web_search_use_case.execute(
-                    function_call.function_input
+                    formatted_input
                 )
                 response = web_search_result.result
                 error_message = web_search_result.error
