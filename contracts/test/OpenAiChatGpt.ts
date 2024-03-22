@@ -38,7 +38,7 @@ describe("OpenAiChatGpt", function () {
       await chatGpt.startChat("Hello");
       // promptId: 0, callbackId: 0
       const openAiConf = await oracle.openAiConfigurations(0)
-      expect(openAiConf.toString()).to.equal("gpt-4-turbo-preview,21,,0,21,text,0,,10,default,")
+      expect(openAiConf.toString()).to.equal("gpt-4-turbo-preview,21,,1000,21,{\"type\":\"text\"},0,,10,[{\"type\":\"function\",\"function\":{\"name\":\"web_search\",\"description\":\"Search the internet\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"Search query\"}},\"required\":[\"query\"]}}}],none,")
     });
     it("Oracle can add response", async () => {
       const {chatGpt, oracle, allSigners} = await loadFixture(deploy);

@@ -25,6 +25,8 @@ interface IOracleTypes {
         string stop;
         // 0-20 >20 for null
         uint temperature;
+        // JSON list for tools in OpenAI format, empty for null, names have to match the supported tools
+        string tools;
         // "none", "auto" or empty str which defaults to auto on OpenAI side
         string toolChoice;
         string user;
@@ -133,7 +135,7 @@ contract ChatOracle {
         promptsCount = 0;
         functionsCount = 0;
 
-        promptTypes = PromptTypes("default", "OpenAi");
+        promptTypes = PromptTypes("default", "OpenAI");
     }
 
     modifier onlyOwner() {

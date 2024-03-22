@@ -1,10 +1,23 @@
 import json
+from typing import Any
+from typing import Dict
 from typing import List
+from typing import Optional
+from typing import get_args
+
+from openai.types.chat import ChatCompletion
+from openai.types.chat import ChatCompletionToolParam
+from pydantic import TypeAdapter
 from web3 import AsyncWeb3
-from src.entities import Chat
-from src.entities import FunctionCall
 
 import settings
+from src.entities import ALLOWED_FUNCTION_NAMES
+from src.entities import Chat
+from src.entities import FunctionCall
+from src.entities import OpenAiConfig
+from src.entities import OpenAiModelType
+from src.entities import OpenaiToolChoiceType
+from src.entities import PromptType
 
 
 class OracleRepository:
@@ -24,6 +37,7 @@ class OracleRepository:
 
     async def _index_new_chats(self):
         chats_count = await self.oracle_contract.functions.promptsCount().call()
+        config = None
         if chats_count > self.last_chats_count:
             print(f"Indexing new prompts from {self.last_chats_count} to {chats_count}")
             for i in range(self.last_chats_count, chats_count):
@@ -33,6 +47,9 @@ class OracleRepository:
                 is_prompt_processed = (
                     await self.oracle_contract.functions.isPromptProcessed(i).call()
                 )
+                prompt_type = await self._get_prompt_type(i)
+                if prompt_type == PromptType.OPENAI:
+                    config = await self._get_openai_config(i)
                 messages = []
                 contents = await self.oracle_contract.functions.getMessages(
                     i, callback_id
@@ -53,6 +70,8 @@ class OracleRepository:
                         messages=messages,
                         callback_id=callback_id,
                         is_processed=is_prompt_processed,
+                        prompt_type=prompt_type,
+                        config=config,
                     )
                 )
             self.last_chats_count = chats_count
@@ -65,24 +84,8 @@ class OracleRepository:
         return unanswered_chats
 
     async def send_chat_response(self, chat: Chat) -> bool:
-        nonce = await self.web3_client.eth.get_transaction_count(self.account.address)
-        tx_data = {
-            "from": self.account.address,
-            "nonce": nonce,
-            # TODO: pick gas amount in a better way
-            # "gas": 1000000,
-            "maxFeePerGas": self.web3_client.to_wei("2", "gwei"),
-            "maxPriorityFeePerGas": self.web3_client.to_wei("1", "gwei"),
-        }
-        if chain_id := settings.CHAIN_ID:
-            tx_data["chainId"] = int(chain_id)
         try:
-            tx = await self.oracle_contract.functions.addResponse(
-                chat.id,
-                chat.callback_id,
-                chat.response,
-                chat.error_message,
-            ).build_transaction(tx_data)
+            tx = await self._build_response_tx(chat)
         except Exception as e:
             chat.is_processed = True
             chat.transaction_receipt = {"error": str(e)}
@@ -97,6 +100,35 @@ class OracleRepository:
         chat.transaction_receipt = tx_receipt
         chat.is_processed = bool(tx_receipt.get("status"))
         return bool(tx_receipt.get("status"))
+
+    async def _build_response_tx(self, chat: Chat):
+        nonce = await self.web3_client.eth.get_transaction_count(self.account.address)
+        tx_data = {
+            "from": self.account.address,
+            "nonce": nonce,
+            # TODO: pick gas amount in a better way
+            # "gas": 1000000,
+            "maxFeePerGas": self.web3_client.to_wei("2", "gwei"),
+            "maxPriorityFeePerGas": self.web3_client.to_wei("1", "gwei"),
+        }
+        if chain_id := settings.CHAIN_ID:
+            tx_data["chainId"] = int(chain_id)
+        if chat.prompt_type == PromptType.OPENAI:
+            tx = await self.oracle_contract.functions.addOpenAiResponse(
+                chat.id,
+                chat.callback_id,
+                _format_openai_response(chat.response),
+                chat.error_message,
+            ).build_transaction(tx_data)
+        # Eventually more options here
+        else:
+            tx = await self.oracle_contract.functions.addResponse(
+                chat.id,
+                chat.callback_id,
+                chat.response,
+                chat.error_message,
+            ).build_transaction(tx_data)
+        return tx
 
     async def _index_new_function_calls(self):
         function_calls_count = (
@@ -174,3 +206,94 @@ class OracleRepository:
         function_call.transaction_receipt = tx_receipt
         function_call.is_processed = bool(tx_receipt.get("status"))
         return bool(tx_receipt.get("status"))
+
+    async def _get_openai_config(self, i: int) -> Optional[OpenAiConfig]:
+        config = await self.oracle_contract.functions.openAiConfigurations(i).call()
+        if not config or not config[0] or not config[0] in get_args(OpenAiModelType):
+            return None
+        try:
+            return OpenAiConfig(
+                model=config[0],
+                frequency_penalty=_parse_float_from_int(config[1], -20, 20),
+                logit_bias=_parse_json_string(config[2]),
+                # Check max value?
+                max_tokens=_value_or_none(config[3]),
+                presence_penalty=_parse_float_from_int(config[4], -20, 20),
+                response_format=_get_response_format(config[5]),
+                seed=_value_or_none(config[6]),
+                stop=_value_or_none(config[7]),
+                temperature=_parse_float_from_int(config[8], 0, 20),
+                tools=_parse_tools(config[9]),
+                tool_choice=config[10] if (config[10] and config[10] in get_args(OpenaiToolChoiceType)) else None,
+                user=_value_or_none(config[11]),
+            )
+        except:
+            return None
+
+    async def _get_prompt_type(self, i) -> PromptType:
+        prompt_type: Optional[str] = await self.oracle_contract.functions.promptType(i).call()
+        if not prompt_type:
+            return PromptType.DEFAULT
+        try:
+            return PromptType(prompt_type)
+        except:
+            return PromptType.DEFAULT
+
+
+def _value_or_none(value: Any) -> Optional[Any]:
+    return value if value else None
+
+
+def _parse_float_from_int(value: Optional[float], min_value: int, max_value: int) -> Optional[int]:
+    return round(value / 10, 1) if (min_value <= value <= max_value) else None
+
+
+def _parse_json_string(value: Optional[str]) -> Optional[Dict]:
+    if not value:
+        return None
+    try:
+        return json.loads(value)
+    except:
+        return None
+
+
+def _get_response_format(value: Optional[str]):
+    parsed = _parse_json_string(value)
+    if parsed and (parsed.get("type") or "") in ["text", "json_object"]:
+        return parsed
+    return None
+
+
+def _format_openai_response(completion: ChatCompletion) -> Dict:
+    choice = completion.choices[0].message
+    return {
+        "id": completion.id,
+        "content": choice.content if choice.content else "",
+        "functionid": choice.tool_calls[0].id if choice.tool_calls else "",
+        "functionName": choice.tool_calls[0].function.name if choice.tool_calls else "",
+        "functionArguments": choice.tool_calls[0].function.arguments if choice.tool_calls else "",
+        "created": completion.created,
+        "model": completion.model,
+        "systemFingerprint": completion.system_fingerprint,
+        "object": completion.object,
+        "completionTokens": completion.usage.completion_tokens,
+        "promptTokens": completion.usage.prompt_tokens,
+        "totalTokens": completion.usage.total_tokens,
+    }
+
+
+def _parse_tools(value: str) -> Optional[List[ChatCompletionToolParam]]:
+    if not value:
+        return None
+    try:
+        tools = []
+        parsed = json.loads(value)
+        dict_validator = TypeAdapter(ChatCompletionToolParam)
+        [tools.append(dict_validator.validate_python(p)) for p in parsed]
+        filtered_tools: List[ChatCompletionToolParam] = []
+        for tool in tools:
+            if tool["function"]["name"] in ALLOWED_FUNCTION_NAMES:
+                filtered_tools.append(tool)
+        return filtered_tools
+    except:
+        return None

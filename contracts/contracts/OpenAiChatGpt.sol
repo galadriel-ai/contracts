@@ -15,6 +15,7 @@ interface IOracle {
         uint seed;
         string stop;
         uint temperature;
+        string tools;
         string toolChoice;
         string user;
     }
@@ -40,6 +41,12 @@ interface IOracle {
         uint promptId,
         OpenAiRequest memory request
     ) external returns (uint);
+
+    function createFunctionCall(
+        uint functionCallbackId,
+        string memory functionType,
+        string memory functionInput
+    ) external returns (uint i);
 }
 
 contract OpenAiChatGpt {
@@ -76,14 +83,15 @@ contract OpenAiChatGpt {
         model : "gpt-4-turbo-preview",
         frequencyPenalty : 21, // > 20 for null
         logitBias : "", // empty str for null
-        maxTokens : 0, // 0 for null
+        maxTokens : 1000, // 0 for null
         presencePenalty : 21, // > 20 for null
-        responseFormat : "text", // Example response format
-        seed : 0, // Example seed, use a specific value if you want deterministic responses
-        stop : "", // Example stopping condition
-        temperature : 10, // Example temperature (scaled up, assuming 10 means 1.0)
-        toolChoice : "default", // Example tool choice
-        user : "" // Example user
+        responseFormat : "{\"type\":\"text\"}",
+        seed : 0, // null
+        stop : "", // null
+        temperature : 10, // Example temperature (scaled up, 10 means 1.0)
+        tools : "[{\"type\":\"function\",\"function\":{\"name\":\"web_search\",\"description\":\"Search the internet\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"Search query\"}},\"required\":[\"query\"]}}}]",
+        toolChoice : "none",
+        user : "" // null
         });
     }
 
@@ -121,23 +129,47 @@ contract OpenAiChatGpt {
         return currentId;
     }
 
-    function onOpenAiOracleLlmResponse(
+    function onOracleOpenAiLlmResponse(
         uint runId,
         IOracle.OpenAiResponse memory response,
         string memory errorMessage
     ) public onlyOracle {
-        // TODO: use the response in a better way
         ChatRun storage run = chatRuns[runId];
         require(
             keccak256(abi.encodePacked(run.messages[run.messagesCount - 1].role)) == keccak256(abi.encodePacked("user")),
             "No message to respond to"
         );
 
-        Message memory newMessage;
-        newMessage.content = response.content;
-        newMessage.role = "assistant";
-        run.messages.push(newMessage);
-        run.messagesCount++;
+        if (compareStrings(response.content, "")) {
+            IOracle(oracleAddress).createFunctionCall(runId, response.functionName, response.functionArguments);
+        } else {
+            Message memory newMessage;
+            newMessage.role = "assistant";
+            newMessage.content = response.content;
+            run.messages.push(newMessage);
+            run.messagesCount++;
+        }
+
+    }
+
+    function onOracleFunctionResponse(
+        uint runId,
+        string memory response,
+        string memory errorMessage
+    ) public onlyOracle {
+        ChatRun storage run = chatRuns[runId];
+        require(
+            compareStrings(run.messages[run.messagesCount - 1].role, "user"),
+            "No function to respond to"
+        );
+        if (compareStrings(errorMessage, "")) {
+            Message memory newMessage;
+            newMessage.role = "user";
+            newMessage.content = response;
+            run.messages.push(newMessage);
+            run.messagesCount++;
+            IOracle(oracleAddress).createOpenAiLlmCall(runId, config);
+        }
     }
 
     function addMessage(string memory message, uint runId) public {
@@ -155,7 +187,7 @@ contract OpenAiChatGpt {
         newMessage.role = "user";
         run.messages.push(newMessage);
         run.messagesCount++;
-        // TODO:
+
         IOracle(oracleAddress).createOpenAiLlmCall(runId, config);
     }
 
@@ -173,5 +205,9 @@ contract OpenAiChatGpt {
             roles[i] = chatRuns[chatId].messages[i].role;
         }
         return roles;
+    }
+
+    function compareStrings(string memory a, string memory b) private pure returns (bool) {
+        return (keccak256(abi.encodePacked((a))) == keccak256(abi.encodePacked((b))));
     }
 }

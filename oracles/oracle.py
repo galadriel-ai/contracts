@@ -20,7 +20,7 @@ async def _answer_chat(chat: Chat):
             response = await generate_response_use_case.execute(
                 "gpt-4-turbo-preview", chat
             )
-            chat.response = response.content
+            chat.response = response.chat_completion
             chat.error_message = response.error
 
         success = await repository.send_chat_response(chat)
