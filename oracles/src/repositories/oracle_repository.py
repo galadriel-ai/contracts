@@ -1,5 +1,7 @@
 import json
 from typing import List
+from typing import Optional
+
 from web3 import AsyncWeb3
 from src.entities import Chat
 from src.entities import FunctionCall
@@ -174,3 +176,9 @@ class OracleRepository:
         function_call.transaction_receipt = tx_receipt
         function_call.is_processed = bool(tx_receipt.get("status"))
         return bool(tx_receipt.get("status"))
+
+    async def get_callback_address(self, callback_id: int) -> Optional[str]:
+        try:
+            return await self.oracle_contract.functions.callbackAddresses(callback_id).call()
+        except:
+            return None

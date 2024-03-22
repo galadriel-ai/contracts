@@ -7,6 +7,7 @@ ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
 SERVE_METRICS = os.getenv("SERVE_METRICS", "False").lower() == "true"
 
 OPEN_AI_API_KEY = os.getenv("OPEN_AI_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 CHAIN_ID = os.getenv("CHAIN_ID", "696969")
 WEB3_RPC_URL = os.getenv("WEB3_RPC_URL", "https://testnet.galadriel.com")
