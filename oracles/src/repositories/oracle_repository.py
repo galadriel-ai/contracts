@@ -11,9 +11,9 @@ import settings
 
 class OracleRepository:
     def __init__(self) -> None:
-        self.last_chats_count = 0
+        self.last_chats_count = 2700
         self.indexed_chats = []
-        self.last_function_calls_count = 0
+        self.last_function_calls_count = 1900
         self.indexed_function_calls = []
         self.web3_client = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(settings.WEB3_RPC_URL))
         self.account = self.web3_client.eth.account.from_key(settings.PRIVATE_KEY)
