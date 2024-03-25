@@ -35,12 +35,14 @@ class OpenAiConfig:
     seed: Optional[int]
     stop: Optional[str]
     temperature: Optional[float]
+    top_p: Optional[float]
     tools: Optional[List[ChatCompletionToolParam]]
     tool_choice: Optional[OpenaiToolChoiceType]
     user: Optional[str]
 
 
 GroqModelType = Literal["llama2-70b-4096", "mixtral-8x7b-32768", "gemma-7b-it"]
+
 
 @dataclass
 class GroqConfig:
@@ -53,6 +55,7 @@ class GroqConfig:
     seed: Optional[int]
     stop: Optional[str]
     temperature: Optional[float]
+    top_p: Optional[float]
     user: Optional[str]
 
 

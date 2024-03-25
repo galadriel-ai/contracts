@@ -23,8 +23,10 @@ interface IOracleTypes {
         uint seed;
         // empty str for null
         string stop;
-        // 0-20 >20 for null
+        // 0-20, > 20 for null
         uint temperature;
+        // 0-100  percentage, > 100 for null
+        uint topP;
         // JSON list for tools in OpenAI format, empty for null, names have to match the supported tools
         string tools;
         // "none", "auto" or empty str which defaults to auto on OpenAI side
@@ -68,8 +70,10 @@ interface IOracleTypes {
         uint seed;
         // empty str for null
         string stop;
-        // 0-20 >20 for null
+        // 0-20, > 20 for null
         uint temperature;
+        // 0-100  percentage, > 100 for null
+        uint topP;
         string user;
     }
 

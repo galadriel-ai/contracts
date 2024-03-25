@@ -38,7 +38,7 @@ describe("GroqChatGpt", function () {
       await chatGpt.startChat("Hello");
       // promptId: 0, callbackId: 0
       const groqConf = await oracle.groqConfigurations(0)
-      expect(groqConf.toString()).to.equal("mixtral-8x7b-32768,21,,1000,21,{\"type\":\"text\"},0,,10,")
+      expect(groqConf.toString()).to.equal("mixtral-8x7b-32768,21,,1000,21,{\"type\":\"text\"},0,,10,101,")
     });
     it("Oracle can add response", async () => {
       const {chatGpt, oracle, allSigners} = await loadFixture(deploy);

@@ -235,9 +235,10 @@ class OracleRepository:
                 seed=_value_or_none(config[6]),
                 stop=_value_or_none(config[7]),
                 temperature=_parse_float_from_int(config[8], 0, 20),
-                tools=_parse_tools(config[9]),
-                tool_choice=config[10] if (config[10] and config[10] in get_args(OpenaiToolChoiceType)) else None,
-                user=_value_or_none(config[11]),
+                top_p=_parse_float_from_int(config[9], 0, 100, decimals=2),
+                tools=_parse_tools(config[10]),
+                tool_choice=config[11] if (config[11] and config[11] in get_args(OpenaiToolChoiceType)) else None,
+                user=_value_or_none(config[12]),
             )
         except:
             return None
@@ -258,7 +259,8 @@ class OracleRepository:
                 seed=_value_or_none(config[6]),
                 stop=_value_or_none(config[7]),
                 temperature=_parse_float_from_int(config[8], 0, 20),
-                user=_value_or_none(config[9]),
+                top_p=_parse_float_from_int(config[9], 0, 100, decimals=2),
+                user=_value_or_none(config[10]),
             )
         except:
             return None
@@ -277,8 +279,8 @@ def _value_or_none(value: Any) -> Optional[Any]:
     return value if value else None
 
 
-def _parse_float_from_int(value: Optional[float], min_value: int, max_value: int) -> Optional[int]:
-    return round(value / 10, 1) if (min_value <= value <= max_value) else None
+def _parse_float_from_int(value: Optional[float], min_value: int, max_value: int, decimals: int = 1) -> Optional[int]:
+    return round(value / (10**decimals), 1) if (min_value <= value <= max_value) else None
 
 
 def _parse_json_string(value: Optional[str]) -> Optional[Dict]:

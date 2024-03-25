@@ -14,7 +14,16 @@ if (process.env.PRIVATE_KEY_LOCALHOST) {
 }
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.20",
+  solidity: {
+    version: "0.8.20",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200
+      },
+      viaIR: true  // Enable the IR optimization to work around the "Stack too deep" error
+    }
+  },
   networks: {
     galadriel: {
       chainId: 696969,

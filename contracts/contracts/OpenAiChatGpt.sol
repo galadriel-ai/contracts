@@ -15,6 +15,7 @@ interface IOracle {
         uint seed;
         string stop;
         uint temperature;
+        uint topP;
         string tools;
         string toolChoice;
         string user;
@@ -88,7 +89,8 @@ contract OpenAiChatGpt {
         responseFormat : "{\"type\":\"text\"}",
         seed : 0, // null
         stop : "", // null
-        temperature : 10, // Example temperature (scaled up, 10 means 1.0)
+        temperature : 10, // Example temperature (scaled up, 10 means 1.0), > 20 means null
+        topP: 101, // Percentage 0-100, > 100 means null
         tools : "[{\"type\":\"function\",\"function\":{\"name\":\"web_search\",\"description\":\"Search the internet\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"Search query\"}},\"required\":[\"query\"]}}}]",
         toolChoice : "auto", // "none" or "auto"
         user : "" // null
