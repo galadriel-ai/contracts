@@ -5,3 +5,4 @@ web3==6.15.1
 google-cloud-storage==2.14.0
 pytest==8.1.1
 pytest-cov==4.1.0
+groq==0.4.2

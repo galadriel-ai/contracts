@@ -6,12 +6,15 @@ const AGENT_PROMPT = "Answer the following questions as best you can. You have a
 
 async function main() {
   const oracleAddress: string = await deployOracle();
-  await deployChatGpt(oracleAddress);
+  console.log()
   await deployDalle(oracleAddress);
   await deployVitailik(oracleAddress);
   await deployAgent(oracleAddress);
+  console.log()
 
-  await deployOpenAiChatGpt(oracleAddress);
+  for (let contractName of ["ChatGpt", "OpenAiChatGpt", "GroqChatGpt"]) {
+    await deployChatGpt(contractName, oracleAddress)
+  }
 }
 
 async function deployOracle(): Promise<string> {
@@ -26,16 +29,6 @@ async function deployOracle(): Promise<string> {
   // await oracle.updateWhitelist((await ethers.getSigners())[0].address, true)
 
   return oracle.target as string;
-}
-
-async function deployChatGpt(oracleAddress: string) {
-  const agent = await ethers.deployContract("ChatGpt", [oracleAddress], {});
-
-  await agent.waitForDeployment();
-
-  console.log(
-    `ChatGPT deployed to ${agent.target}`
-  );
 }
 
 async function deployAgent(oracleAddress: string) {
@@ -83,15 +76,16 @@ async function deployVitailik(oracleAddress: string) {
   );
 }
 
-async function deployOpenAiChatGpt(oracleAddress: string) {
-  const agent = await ethers.deployContract("OpenAiChatGpt", [oracleAddress], {});
+async function deployChatGpt(contractName: string, oracleAddress: string) {
+  const agent = await ethers.deployContract(contractName, [oracleAddress], {});
 
   await agent.waitForDeployment();
 
   console.log(
-    `OpenAiChatGPT deployed to ${agent.target}`
+    `${contractName} deployed to ${agent.target}`
   );
 }
+
 
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.

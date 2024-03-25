@@ -16,6 +16,7 @@ OpenAiModelType = Literal["gpt-4-turbo-preview", "gpt-3.5-turbo-1106"]
 class PromptType(str, Enum):
     DEFAULT = "default"
     OPENAI = "OpenAI"
+    GROQ = "Groq"
 
 
 PromptTypeLiteral = Literal[PromptType.DEFAULT, PromptType.OPENAI]
@@ -28,7 +29,7 @@ class OpenAiConfig:
     model: OpenAiModelType
     frequency_penalty: Optional[float]
     logit_bias: Optional[Dict]
-    max_tokens: Optional[str]
+    max_tokens: Optional[int]
     presence_penalty: Optional[float]
     response_format: Optional[Union[str, Dict]]
     seed: Optional[int]
@@ -39,13 +40,29 @@ class OpenAiConfig:
     user: Optional[str]
 
 
+GroqModelType = Literal["llama2-70b-4096", "mixtral-8x7b-32768", "gemma-7b-it"]
+
+@dataclass
+class GroqConfig:
+    model: OpenAiModelType
+    frequency_penalty: Optional[float]
+    logit_bias: Optional[Dict]
+    max_tokens: Optional[int]
+    presence_penalty: Optional[float]
+    response_format: Optional[Union[str, Dict]]
+    seed: Optional[int]
+    stop: Optional[str]
+    temperature: Optional[float]
+    user: Optional[str]
+
+
 @dataclass
 class Chat:
     id: int
     callback_id: int
     is_processed: bool
     prompt_type: PromptTypeLiteral
-    config: Optional[Union[OpenAiConfig]]
+    config: Optional[Union[OpenAiConfig, GroqConfig]]
     messages: List[dict]
     response: Optional[Union[str, ChatCompletion]] = None
     error_message: Optional[str] = None

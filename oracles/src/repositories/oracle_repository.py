@@ -5,6 +5,7 @@ from typing import List
 from typing import Optional
 from typing import get_args
 
+from groq.types.chat import ChatCompletion as GroqChatCompletion
 from openai.types.chat import ChatCompletion
 from openai.types.chat import ChatCompletionToolParam
 from pydantic import TypeAdapter
@@ -14,6 +15,8 @@ import settings
 from src.entities import ALLOWED_FUNCTION_NAMES
 from src.entities import Chat
 from src.entities import FunctionCall
+from src.entities import GroqConfig
+from src.entities import GroqModelType
 from src.entities import OpenAiConfig
 from src.entities import OpenAiModelType
 from src.entities import OpenaiToolChoiceType
@@ -50,6 +53,8 @@ class OracleRepository:
                 prompt_type = await self._get_prompt_type(i)
                 if prompt_type == PromptType.OPENAI:
                     config = await self._get_openai_config(i)
+                elif prompt_type == PromptType.GROQ:
+                    config = await self._get_groq_config(i)
                 messages = []
                 contents = await self.oracle_contract.functions.getMessages(
                     i, callback_id
@@ -118,6 +123,13 @@ class OracleRepository:
                 chat.id,
                 chat.callback_id,
                 _format_openai_response(chat.response),
+                chat.error_message,
+            ).build_transaction(tx_data)
+        elif chat.prompt_type == PromptType.GROQ:
+            tx = await self.oracle_contract.functions.addGroqResponse(
+                chat.id,
+                chat.callback_id,
+                _format_groq_response(chat.response),
                 chat.error_message,
             ).build_transaction(tx_data)
         # Eventually more options here
@@ -230,6 +242,27 @@ class OracleRepository:
         except:
             return None
 
+    async def _get_groq_config(self, i: int) -> Optional[GroqConfig]:
+        config = await self.oracle_contract.functions.groqConfigurations(i).call()
+        if not config or not config[0] or not config[0] in get_args(GroqModelType):
+            return None
+        try:
+            return GroqConfig(
+                model=config[0],
+                frequency_penalty=_parse_float_from_int(config[1], -20, 20),
+                logit_bias=_parse_json_string(config[2]),
+                # Check max value?
+                max_tokens=_value_or_none(config[3]),
+                presence_penalty=_parse_float_from_int(config[4], -20, 20),
+                response_format=_get_response_format(config[5]),
+                seed=_value_or_none(config[6]),
+                stop=_value_or_none(config[7]),
+                temperature=_parse_float_from_int(config[8], 0, 20),
+                user=_value_or_none(config[9]),
+            )
+        except:
+            return None
+
     async def _get_prompt_type(self, i) -> PromptType:
         prompt_type: Optional[str] = await self.oracle_contract.functions.promptType(i).call()
         if not prompt_type:
@@ -272,6 +305,21 @@ def _format_openai_response(completion: ChatCompletion) -> Dict:
         "functionid": choice.tool_calls[0].id if choice.tool_calls else "",
         "functionName": choice.tool_calls[0].function.name if choice.tool_calls else "",
         "functionArguments": choice.tool_calls[0].function.arguments if choice.tool_calls else "",
+        "created": completion.created,
+        "model": completion.model,
+        "systemFingerprint": completion.system_fingerprint,
+        "object": completion.object,
+        "completionTokens": completion.usage.completion_tokens,
+        "promptTokens": completion.usage.prompt_tokens,
+        "totalTokens": completion.usage.total_tokens,
+    }
+
+
+def _format_groq_response(completion: GroqChatCompletion) -> Dict:
+    choice = completion.choices[0].message
+    return {
+        "id": completion.id,
+        "content": choice.content if choice.content else "",
         "created": completion.created,
         "model": completion.model,
         "systemFingerprint": completion.system_fingerprint,

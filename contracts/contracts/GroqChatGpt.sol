@@ -70,7 +70,7 @@ contract GroqChatGpt {
         chatRunsCount = 0;
 
         config = IOracle.GroqRequest({
-        model : "gpt-4-turbo-preview",
+        model : "mixtral-8x7b-32768",
         frequencyPenalty : 21, // > 20 for null
         logitBias : "", // empty str for null
         maxTokens : 1000, // 0 for null
