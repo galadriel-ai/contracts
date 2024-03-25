@@ -4,6 +4,7 @@ from web3 import AsyncWeb3
 from src.entities import Chat
 from src.entities import FunctionCall
 from src.entities import KnowledgeBaseIndexingRequest
+from src.entities import KnowledgeBaseQuery
 
 import settings
 
@@ -16,6 +17,8 @@ class OracleRepository:
         self.indexed_function_calls = []
         self.last_kb_index_request_count = 0
         self.indexed_kb_index_requests = []
+        self.last_kb_query_count = 0
+        self.indexed_kb_queries = []
         self.web3_client = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(settings.WEB3_RPC_URL))
         self.account = self.web3_client.eth.account.from_key(settings.PRIVATE_KEY)
         with open(settings.ORACLE_ABI_PATH, "r", encoding="utf-8") as f:
@@ -178,15 +181,6 @@ class OracleRepository:
         function_call.is_processed = bool(tx_receipt.get("status"))
         return bool(tx_receipt.get("status"))
 
-    async def get_unindexed_knowledge_bases(self) -> List[KnowledgeBaseIndexingRequest]:
-        await self._index_new_kb_index_requests()
-        unanswered_kb_indexing_requests = [
-            kb_indexing_request
-            for kb_indexing_request in self.indexed_kb_index_requests
-            if not kb_indexing_request.is_processed
-        ]
-        return unanswered_kb_indexing_requests
-
     async def _index_new_kb_index_requests(self):
         kb_index_request_count = (
             await self.oracle_contract.functions.kbIndexingRequestCount().call()
@@ -207,6 +201,15 @@ class OracleRepository:
                     )
                 )
             self.last_kb_index_request_count = kb_index_request_count
+
+    async def get_unindexed_knowledge_bases(self) -> List[KnowledgeBaseIndexingRequest]:
+        await self._index_new_kb_index_requests()
+        unanswered_kb_indexing_requests = [
+            kb_indexing_request
+            for kb_indexing_request in self.indexed_kb_index_requests
+            if not kb_indexing_request.is_processed
+        ]
+        return unanswered_kb_indexing_requests
 
     async def send_kb_indexing_response(
         self,
@@ -229,6 +232,77 @@ class OracleRepository:
             tx = await self.oracle_contract.functions.addKnowledgeBaseIndex(
                 request.id,
                 index_cid,
+            ).build_transaction(tx_data)
+        except Exception as e:
+            request.is_processed = True
+            request.transaction_receipt = {"error": str(e)}
+            return False
+        signed_tx = self.web3_client.eth.account.sign_transaction(
+            tx, private_key=self.account.key
+        )
+        tx_hash = await self.web3_client.eth.send_raw_transaction(
+            signed_tx.rawTransaction
+        )
+        tx_receipt = await self.web3_client.eth.wait_for_transaction_receipt(tx_hash)
+        request.transaction_receipt = tx_receipt
+        request.is_processed = bool(tx_receipt.get("status"))
+        return bool(tx_receipt.get("status"))
+
+    async def _index_new_kb_queries(self):
+        kb_query_count = await self.oracle_contract.functions.kbQueryCount().call()
+        if kb_query_count > self.last_kb_query_count:
+            print(
+                f"Indexing new knowledge base queries from {self.last_kb_query_count} to {kb_query_count}"
+            )
+            for i in range(self.last_kb_query_count, kb_query_count):
+                callback_id = await self.oracle_contract.functions.kbQueryCallbackIds(
+                    i
+                ).call()
+                is_processed = await self.oracle_contract.functions.isKbQueryProcessed(
+                    i
+                ).call()
+                index_cid = await self.oracle_contract.functions.kbQueryCids(i).call()
+                query = await self.oracle_contract.functions.kbQueries(i).call()
+                self.indexed_kb_queries.append(
+                    KnowledgeBaseQuery(
+                        id=i,
+                        callback_id=callback_id,
+                        is_processed=is_processed,
+                        index_cid=index_cid,
+                        query=query,
+                    )
+                )
+            self.last_kb_query_count = kb_query_count
+
+    async def get_unanswered_kb_queries(self) -> List[KnowledgeBaseQuery]:
+        await self._index_new_kb_queries()
+        unanswered_kb_queries = [
+            kb_query
+            for kb_query in self.indexed_kb_queries
+            if not kb_query.is_processed
+        ]
+        return unanswered_kb_queries
+
+    async def send_kb_query_response(
+        self,
+        request: KnowledgeBaseQuery,
+        documents: List[str],
+        error_message: str = "",
+    ) -> bool:
+        nonce = await self.web3_client.eth.get_transaction_count(self.account.address)
+        tx_data = {
+            "from": self.account.address,
+            "nonce": nonce,
+            # TODO: pick gas amount in a better way
+            # "gas": 1000000,
+            "maxFeePerGas": self.web3_client.to_wei("2", "gwei"),
+            "maxPriorityFeePerGas": self.web3_client.to_wei("1", "gwei"),
+        }
+        if chain_id := settings.CHAIN_ID:
+            tx_data["chainId"] = int(chain_id)
+        try:
+            tx = await self.oracle_contract.functions.addKnowledgeBaseQueryResponse(
+                request.id, request.callback_id, documents, error_message
             ).build_transaction(tx_data)
         except Exception as e:
             request.is_processed = True

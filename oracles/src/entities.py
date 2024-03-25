@@ -1,5 +1,6 @@
 from typing import List
 from typing import Optional
+from dataclasses import field
 from dataclasses import dataclass
 
 
@@ -32,4 +33,16 @@ class KnowledgeBaseIndexingRequest:
     cid: str
     is_processed: bool
     index_cid: Optional[str] = None
+    transaction_receipt: dict = None
+
+
+@dataclass
+class KnowledgeBaseQuery:
+    id: int
+    callback_id: int
+    is_processed: bool
+    index_cid: str
+    query: str
+    documents: List[str] = field(default_factory=list)
+    error_message: Optional[str] = None
     transaction_receipt: dict = None

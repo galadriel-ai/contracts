@@ -1,19 +1,25 @@
 import asyncio
 import settings
-from src.repositories.oracle_repository import OracleRepository
 from src.domain.llm import generate_response_use_case
 from src.domain.search import web_search_use_case
 from src.domain.image_generation import generate_image_use_case
 from src.domain.storage import reupload_to_gcp_use_case
+from src.domain.knowledge_base import index_knowledge_base_use_case
+from src.domain.knowledge_base import query_knowledge_base_use_case
 from src.entities import Chat
 from src.entities import FunctionCall
 from src.entities import KnowledgeBaseIndexingRequest
+from src.entities import KnowledgeBaseQuery
+from src.repositories.ipfs_repository import IpfsRepository
+from src.repositories.oracle_repository import OracleRepository
+from src.repositories.knowledge_base_repository import KnowledgeBaseRepository
 
 repository = OracleRepository()
 
 CHAT_TASKS = {}
 FUNCTION_TASKS = {}
 KB_INDEXING_TASKS = {}
+KB_QUERY_TASKS = {}
 
 
 async def _answer_chat(chat: Chat):
@@ -117,10 +123,16 @@ async def _process_function_calls():
         await asyncio.sleep(1)
 
 
-async def _index_knowledgebase_function(request: KnowledgeBaseIndexingRequest):
+async def _index_knowledgebase_function(
+    request: KnowledgeBaseIndexingRequest,
+    ipfs_repository: IpfsRepository,
+    kb_repository: KnowledgeBaseRepository,
+):
     try:
-        index_cid = "DINO TODO"
         error_message = ""
+        index_cid = await index_knowledge_base_use_case.execute(
+            request, ipfs_repository, kb_repository
+        )
         success = await repository.send_kb_indexing_response(
             request, index_cid=index_cid, error_message=error_message
         )
@@ -134,6 +146,9 @@ async def _index_knowledgebase_function(request: KnowledgeBaseIndexingRequest):
 
 
 async def _process_knowledge_base_indexing():
+    ipfs_repository = IpfsRepository()
+    kb_repository = KnowledgeBaseRepository()
+
     while True:
         try:
             kb_indexing_requests = await repository.get_unindexed_knowledge_bases()
@@ -143,7 +158,9 @@ async def _process_knowledge_base_indexing():
                         f"Indexing knowledge base {kb_indexing_request.id}, cid {kb_indexing_request.cid}"
                     )
                     task = asyncio.create_task(
-                        _index_knowledgebase_function(kb_indexing_request)
+                        _index_knowledgebase_function(
+                            kb_indexing_request, ipfs_repository, kb_repository
+                        )
                     )
                     KB_INDEXING_TASKS[kb_indexing_request.id] = task
             completed_tasks = [
@@ -159,6 +176,54 @@ async def _process_knowledge_base_indexing():
                 del KB_INDEXING_TASKS[index]
         except Exception as exc:
             print(f"Kb indexing loop raised an exception: {exc}")
+        await asyncio.sleep(1)
+
+
+async def _query_knowledge_base(
+    request: KnowledgeBaseQuery, ipfs_repository: IpfsRepository, kb_repository: KnowledgeBaseRepository
+):
+    try:
+        error_message = ""
+        documents = await query_knowledge_base_use_case.execute(
+            request, ipfs_repository, kb_repository
+        )
+        print(documents)
+        success = await repository.send_kb_query_response(
+            request, documents, error_message=error_message
+        )
+        print(
+            f"Knowledge base query {request.id} {'' if success else 'not '} answered, tx: {request.transaction_receipt}"
+        )
+    except Exception as ex:
+        print(
+            f"Failed to query knowledge base {request.id}, cid {request.index_cid}, exc: {ex}"
+        )
+
+
+async def _process_knowledge_base_queries():
+    ipfs_repository = IpfsRepository()
+    kb_repository = KnowledgeBaseRepository()
+    while True:
+        try:
+            kb_queries = await repository.get_unanswered_kb_queries()
+            for kb_query in kb_queries:
+                if kb_query.id not in KB_QUERY_TASKS:
+                    print(f"Querying knowledge base {kb_query.id}, cid {kb_query.index_cid}")
+                    task = asyncio.create_task(
+                        _query_knowledge_base(kb_query, ipfs_repository, kb_repository)
+                    )
+                    KB_QUERY_TASKS[kb_query.id] = task
+            completed_tasks = [
+                query for query, task in KB_QUERY_TASKS.items() if task.done()
+            ]
+            for index in completed_tasks:
+                try:
+                    await KB_QUERY_TASKS[index]
+                except Exception as e:
+                    print(f"Task for kb query {index} raised an exception: {e}")
+                del KB_QUERY_TASKS[index]
+        except Exception as exc:
+            print(f"Kb query loop raised an exception: {exc}")
         await asyncio.sleep(1)
 
 
@@ -186,6 +251,7 @@ async def main():
         _answer_unanswered_chats(),
         _process_function_calls(),
         _process_knowledge_base_indexing(),
+        _process_knowledge_base_queries(),
     ]
 
     if settings.SERVE_METRICS:
