@@ -29,15 +29,18 @@ async def _generate(model: str, messages: List[dict]) -> Optional[str]:
 
 
 @backoff.on_exception(backoff.expo, RateLimitError)
-async def _generate_groq(messages: List[dict]) -> Optional[str]:
-    client = AsyncGroq(
-        api_key=settings.GROQ_API_KEY,
-    )
-    chat_completion: ChatCompletion = await client.chat.completions.create(
-        messages=messages,
-        model="mixtral-8x7b-32768",
-    )
-    return chat_completion.choices[0].message.content
+async def _generate_groq(model: str, messages: List[dict]) -> Optional[str]:
+    try:
+        client = AsyncGroq(
+            api_key=settings.GROQ_API_KEY,
+        )
+        chat_completion: ChatCompletion = await client.chat.completions.create(
+            messages=messages,
+            model="mixtral-8x7b-32768",
+        )
+        return chat_completion.choices[0].message.content
+    except:
+        return await _generate(model, messages)
 
 
 async def execute(model: str, chat: Chat) -> LLMResult:
@@ -51,10 +54,9 @@ async def execute(model: str, chat: Chat) -> LLMResult:
     except:
         pass
 
-
     try:
         if is_call_groq:
-            response = await _generate_groq(messages=chat.messages)
+            response = await _generate_groq(model=model, messages=chat.messages)
         else:
             response = await _generate(model=model, messages=chat.messages)
         return LLMResult(
