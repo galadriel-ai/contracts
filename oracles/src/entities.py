@@ -21,7 +21,7 @@ class PromptType(str, Enum):
 
 PromptTypeLiteral = Literal[PromptType.DEFAULT, PromptType.OPENAI]
 
-OpenaiToolChoiceType = Optional[Literal["none", "auto"]]
+OpenaiToolChoiceType = Literal["none", "auto"]
 
 
 @dataclass
@@ -36,7 +36,7 @@ class OpenAiConfig:
     stop: Optional[str]
     temperature: Optional[float]
     tools: Optional[List[ChatCompletionToolParam]]
-    tool_choice: OpenaiToolChoiceType
+    tool_choice: Optional[OpenaiToolChoiceType]
     user: Optional[str]
 
 

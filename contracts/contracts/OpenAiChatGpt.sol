@@ -90,7 +90,7 @@ contract OpenAiChatGpt {
         stop : "", // null
         temperature : 10, // Example temperature (scaled up, 10 means 1.0)
         tools : "[{\"type\":\"function\",\"function\":{\"name\":\"web_search\",\"description\":\"Search the internet\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"Search query\"}},\"required\":[\"query\"]}}}]",
-        toolChoice : "none",
+        toolChoice : "auto", // "none" or "auto"
         user : "" // null
         });
     }
