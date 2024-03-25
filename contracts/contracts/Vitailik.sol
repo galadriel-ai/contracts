@@ -145,22 +145,13 @@ contract Vitailik {
             game.isFinished = true;
         }
 
-        string memory imageDescription = findImageLine(response, "<IMAGE");
+        string memory imageDescription = findImageLine(response);
         if (!compareStrings(imageDescription, "")) {
             IOracle(oracleAddress).createFunctionCall(
                 runId,
                 "image_generation",
                 imageDescription
             );
-        } else {
-//            string memory imageDescription2 = findImageLine(response, "[IMAGE");
-//            if (!compareStrings(imageDescription2, "")) {
-//                IOracle(oracleAddress).createFunctionCall(
-//                    runId,
-//                    "image_generation",
-//                    imageDescription2
-//                );
-//            }
         }
     }
 
@@ -216,23 +207,36 @@ contract Vitailik {
         return games[chatId].imageUrls;
     }
 
-    function findImageLine(string memory input, string memory lineStart) public pure returns (string memory) {
+    function findImageLine(string memory input) public pure returns (string memory) {
         bytes memory inputBytes = bytes(input);
-        bytes memory imagePrefix = bytes(lineStart);
-        uint prefixLength = imagePrefix.length;
+        bytes memory imagePrefix1 = bytes("<IMAGE");
+        bytes memory imagePrefix2 = bytes("[IMAGE");
+        uint prefixLength1 = imagePrefix1.length;
+        uint prefixLength2 = imagePrefix2.length;
 
         bool found = false;
         uint startIndex = 0;
 
-        for (uint i = 0; i <= inputBytes.length - prefixLength; i++) {
-            bool isMatch = true;
-            for (uint j = 0; j < prefixLength && isMatch; j++) {
-                if (inputBytes[i + j] != imagePrefix[j]) {
-                    isMatch = false;
+        for (uint i = 0; i <= inputBytes.length - prefixLength1; i++) {
+            bool isMatch1 = true;
+            bool isMatch2 = true;
+
+            for (uint j = 0; j < prefixLength1 && (isMatch1 || isMatch2); j++) {
+                if (i + j < inputBytes.length) {// Prevent out-of-bounds access
+                    if (isMatch1 && inputBytes[i + j] != imagePrefix1[j]) {
+                        isMatch1 = false;
+                    }
+                    if (j < prefixLength2 && isMatch2 && inputBytes[i + j] != imagePrefix2[j]) {
+                        isMatch2 = false;
+                    }
+                } else {
+                    // If the current index goes beyond the inputBytes length, no match is possible
+                    isMatch1 = false;
+                    isMatch2 = false;
                 }
             }
 
-            if (isMatch) {
+            if (isMatch1 || isMatch2) {
                 found = true;
                 startIndex = i;
                 break;
@@ -259,6 +263,7 @@ contract Vitailik {
 
         return string(line);
     }
+
 
     function findHPInstances(string memory input) public pure returns (string[2] memory) {
         bytes memory inputBytes = bytes(input);

@@ -55,7 +55,7 @@ describe("Vitailik", function () {
         "d) A neon-lit python with electric volts coursing through its scales.\n" +
         "\n" +
         "Choose your character and prepare for a battle unlike any other. Your destiny awaits.",
-        "<IMAGE"
+        // "<IMAGE"
       )
       expect(response).to.equal(imageLine);
     });
