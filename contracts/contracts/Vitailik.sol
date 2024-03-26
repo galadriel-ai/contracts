@@ -5,8 +5,38 @@ pragma solidity ^0.8.9;
 // import "hardhat/console.sol";
 
 interface IOracle {
-    function createLlmCall(
-        uint promptId
+    struct GroqRequest {
+        string model;
+        int8 frequencyPenalty;
+        string logitBias;
+        uint32 maxTokens;
+        int8 presencePenalty;
+        string responseFormat;
+        uint seed;
+        string stop;
+        uint temperature;
+        uint topP;
+        string user;
+    }
+
+    struct GroqResponse {
+        string id;
+
+        string content;
+
+        uint64 created;
+        string model;
+        string systemFingerprint;
+        string object;
+
+        uint32 completionTokens;
+        uint32 promptTokens;
+        uint32 totalTokens;
+    }
+
+    function createGroqLlmCall(
+        uint promptId,
+        GroqRequest memory request
     ) external returns (uint);
 
     function createFunctionCall(
@@ -42,6 +72,8 @@ contract Vitailik {
     address private owner;
     address public oracleAddress;
 
+    IOracle.GroqRequest private config;
+
     event OracleAddressUpdated(address indexed newOracleAddress);
 
     constructor(
@@ -52,6 +84,20 @@ contract Vitailik {
         oracleAddress = initialOracleAddress;
         prompt = initialPrompt;
         gamesCount = 0;
+
+        config = IOracle.GroqRequest({
+        model : "mixtral-8x7b-32768",
+        frequencyPenalty : 21, // > 20 for null
+        logitBias : "", // empty str for null
+        maxTokens : 1000, // 0 for null
+        presencePenalty : 21, // > 20 for null
+        responseFormat : "",
+        seed : 0, // null
+        stop : "", // null
+        temperature : 21, // Example temperature (scaled up, 10 means 1.0), > 20 means null
+        topP : 101, // Percentage 0-100, > 100 means null
+        user : "" // null
+        });
     }
 
     modifier onlyOwner() {
@@ -89,7 +135,7 @@ contract Vitailik {
         uint currentId = gamesCount;
         gamesCount = currentId + 1;
 
-        IOracle(oracleAddress).createLlmCall(currentId);
+        IOracle(oracleAddress).createGroqLlmCall(currentId, config);
         emit GameCreated(msg.sender, currentId);
 
         return currentId;
