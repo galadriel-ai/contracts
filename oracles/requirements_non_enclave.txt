@@ -5,3 +5,4 @@ web3==6.15.1
 google-cloud-storage==2.14.0
 uvicorn==0.28.0
 fastapi==0.110.0
+groq==0.4.2
