@@ -90,7 +90,7 @@ contract OpenAiChatGpt {
         seed : 0, // null
         stop : "", // null
         temperature : 10, // Example temperature (scaled up, 10 means 1.0), > 20 means null
-        topP: 101, // Percentage 0-100, > 100 means null
+        topP : 101, // Percentage 0-100, > 100 means null
         tools : "[{\"type\":\"function\",\"function\":{\"name\":\"web_search\",\"description\":\"Search the internet\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"Search query\"}},\"required\":[\"query\"]}}}]",
         toolChoice : "auto", // "none" or "auto"
         user : "" // null
@@ -142,16 +142,23 @@ contract OpenAiChatGpt {
             "No message to respond to"
         );
 
-        if (compareStrings(response.content, "")) {
-            IOracle(oracleAddress).createFunctionCall(runId, response.functionName, response.functionArguments);
-        } else {
+        if (!compareStrings(errorMessage, "")) {
             Message memory newMessage;
             newMessage.role = "assistant";
-            newMessage.content = response.content;
+            newMessage.content = errorMessage;
             run.messages.push(newMessage);
             run.messagesCount++;
+        } else {
+            if (compareStrings(response.content, "")) {
+                IOracle(oracleAddress).createFunctionCall(runId, response.functionName, response.functionArguments);
+            } else {
+                Message memory newMessage;
+                newMessage.role = "assistant";
+                newMessage.content = response.content;
+                run.messages.push(newMessage);
+                run.messagesCount++;
+            }
         }
-
     }
 
     function onOracleFunctionResponse(

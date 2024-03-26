@@ -80,7 +80,7 @@ contract GroqChatGpt {
         seed : 0, // null
         stop : "", // null
         temperature : 10, // Example temperature (scaled up, 10 means 1.0), > 20 means null
-        topP: 101, // Percentage 0-100, > 100 means null
+        topP : 101, // Percentage 0-100, > 100 means null
         user : "" // null
         });
     }
@@ -129,11 +129,19 @@ contract GroqChatGpt {
             keccak256(abi.encodePacked(run.messages[run.messagesCount - 1].role)) == keccak256(abi.encodePacked("user")),
             "No message to respond to"
         );
-        Message memory newMessage;
-        newMessage.role = "assistant";
-        newMessage.content = response.content;
-        run.messages.push(newMessage);
-        run.messagesCount++;
+        if (!compareStrings(errorMessage, "")) {
+            Message memory newMessage;
+            newMessage.role = "assistant";
+            newMessage.content = errorMessage;
+            run.messages.push(newMessage);
+            run.messagesCount++;
+        } else {
+            Message memory newMessage;
+            newMessage.role = "assistant";
+            newMessage.content = response.content;
+            run.messages.push(newMessage);
+            run.messagesCount++;
+        }
     }
 
     function addMessage(string memory message, uint runId) public {
