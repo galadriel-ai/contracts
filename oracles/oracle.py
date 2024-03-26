@@ -27,10 +27,11 @@ async def _answer_chat(chat: Chat):
 
         success = await repository.send_chat_response(chat)
         print(
-            f"Chat {chat.id} {'' if success else 'not '}replied, tx: {chat.transaction_receipt}"
+            f"Chat {chat.id} {'' if success else 'not '}replied, tx: {chat.transaction_receipt}",
+            flush=True
         )
     except Exception as ex:
-        print(f"Failed to answer chat {chat.id}, exc: {ex}")
+        print(f"Failed to answer chat {chat.id}, exc: {ex}", flush=True)
 
 
 async def _answer_unanswered_chats():
@@ -39,7 +40,7 @@ async def _answer_unanswered_chats():
             chats = await repository.get_unanswered_chats()
             for chat in chats:
                 if chat.id not in CHAT_TASKS:
-                    print(f"Answering chat {chat.id}")
+                    print(f"Answering chat {chat.id}", flush=True)
                     task = asyncio.create_task(_answer_chat(chat))
                     CHAT_TASKS[chat.id] = task
             completed_tasks = [
@@ -49,10 +50,10 @@ async def _answer_unanswered_chats():
                 try:
                     await CHAT_TASKS[index]
                 except Exception as e:
-                    print(f"Task for chat {index} raised an exception: {e}")
+                    print(f"Task for chat {index} raised an exception: {e}", flush=True)
                 del CHAT_TASKS[index]
         except Exception as exc:
-            print(f"Chat loop raised an exception: {exc}")
+            print(f"Chat loop raised an exception: {exc}", flush=True)
         await asyncio.sleep(1)
 
 
@@ -89,10 +90,11 @@ async def _call_function(function_call: FunctionCall):
                 function_call, function_call.response, function_call.error_message
             )
             print(
-                f"Function {function_call.id} {'' if success else 'not '}called, tx: {function_call.transaction_receipt}"
+                f"Function {function_call.id} {'' if success else 'not '}called, tx: {function_call.transaction_receipt}",
+                flush=True
             )
     except Exception as ex:
-        print(f"Failed to call function {function_call.id}, exc: {ex}")
+        print(f"Failed to call function {function_call.id}, exc: {ex}", flush=True)
 
 
 async def _process_function_calls():
@@ -101,7 +103,7 @@ async def _process_function_calls():
             function_calls = await repository.get_unanswered__function_calls()
             for function_call in function_calls:
                 if function_call.id not in FUNCTION_TASKS:
-                    print(f"Calling function {function_call.id}")
+                    print(f"Calling function {function_call.id}", flush=True)
                     task = asyncio.create_task(_call_function(function_call))
                     FUNCTION_TASKS[function_call.id] = task
             completed_tasks = [
@@ -111,10 +113,10 @@ async def _process_function_calls():
                 try:
                     await FUNCTION_TASKS[index]
                 except Exception as e:
-                    print(f"Task for function {index} raised an exception: {e}")
+                    print(f"Task for function {index} raised an exception: {e}", flush=True)
                 del FUNCTION_TASKS[index]
         except Exception as exc:
-            print(f"Function loop raised an exception: {exc}")
+            print(f"Function loop raised an exception: {exc}", flush=True)
         await asyncio.sleep(1)
 
 
@@ -134,7 +136,7 @@ async def _serve_metrics():
         server = uvicorn.Server(config)
         await server.serve()
     except ImportError as e:
-        print(f"Required module not found: {e}. FastAPI server will not start.")
+        print(f"Required module not found: {e}. FastAPI server will not start.", flush=True)
 
 
 async def main():
@@ -144,7 +146,7 @@ async def main():
     ]
 
     if settings.SERVE_METRICS:
-        print("Serving metrics")
+        print("Serving metrics", flush=True)
         tasks.append(_serve_metrics())
 
     await asyncio.gather(*tasks)

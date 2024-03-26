@@ -42,7 +42,7 @@ class OracleRepository:
         chats_count = await self.oracle_contract.functions.promptsCount().call()
         config = None
         if chats_count > self.last_chats_count:
-            print(f"Indexing new prompts from {self.last_chats_count} to {chats_count}")
+            print(f"Indexing new prompts from {self.last_chats_count} to {chats_count}", flush=True)
             for i in range(self.last_chats_count, chats_count):
                 callback_id = await self.oracle_contract.functions.promptCallbackIds(
                     i
@@ -148,7 +148,8 @@ class OracleRepository:
         )
         if function_calls_count > self.last_function_calls_count:
             print(
-                f"Indexing new function calls from {self.last_function_calls_count} to {function_calls_count}"
+                f"Indexing new function calls from {self.last_function_calls_count} to {function_calls_count}",
+                flush=True
             )
             for i in range(self.last_function_calls_count, function_calls_count):
                 callback_id = await self.oracle_contract.functions.functionCallbackIds(
