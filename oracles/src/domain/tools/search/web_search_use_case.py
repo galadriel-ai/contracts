@@ -1,7 +1,7 @@
 import aiohttp
 import json
 import settings
-from src.domain.search.entities import WebSearchResult
+from src.domain.tools.search.entities import WebSearchResult
 
 
 async def execute(query: str) -> WebSearchResult:

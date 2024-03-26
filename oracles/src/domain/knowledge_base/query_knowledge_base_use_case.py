@@ -21,16 +21,10 @@ async def execute(
                 request.cid, documents=documents, data=index
             )
         documents = await kb_repository.query(request.cid, request.query)
-        return KnowledgeBaseQueryResult(
-            documents=documents,
-            error=""
-        )
+        return KnowledgeBaseQueryResult(documents=documents, error="")
     except Exception as e:
         print(e)
-        return KnowledgeBaseQueryResult(
-            documents=[],
-            error=str(e)
-        )
+        return KnowledgeBaseQueryResult(documents=[], error=str(e))
 
 
 if __name__ == "__main__":
