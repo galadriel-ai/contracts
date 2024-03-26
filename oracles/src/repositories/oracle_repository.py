@@ -280,7 +280,7 @@ def _value_or_none(value: Any) -> Optional[Any]:
 
 
 def _parse_float_from_int(value: Optional[float], min_value: int, max_value: int, decimals: int = 1) -> Optional[int]:
-    return round(value / (10**decimals), 1) if (min_value <= value <= max_value) else None
+    return round(value / (10 ** decimals), 1) if (min_value <= value <= max_value) else None
 
 
 def _parse_json_string(value: Optional[str]) -> Optional[Dict]:
@@ -299,12 +299,25 @@ def _get_response_format(value: Optional[str]):
     return None
 
 
-def _format_openai_response(completion: ChatCompletion) -> Dict:
+def _format_openai_response(completion: Optional[ChatCompletion]) -> Dict:
+    if not completion:
+        return {
+            "id": "",
+            "content": "",
+            "functionName": "",
+            "functionArguments": "",
+            "created": 0,
+            "model": "",
+            "systemFingerprint": "",
+            "object": "",
+            "completionTokens": 0,
+            "promptTokens": 0,
+            "totalTokens": 0,
+        }
     choice = completion.choices[0].message
     return {
         "id": completion.id,
         "content": choice.content if choice.content else "",
-        "functionid": choice.tool_calls[0].id if choice.tool_calls else "",
         "functionName": choice.tool_calls[0].function.name if choice.tool_calls else "",
         "functionArguments": choice.tool_calls[0].function.arguments if choice.tool_calls else "",
         "created": completion.created,
@@ -317,7 +330,19 @@ def _format_openai_response(completion: ChatCompletion) -> Dict:
     }
 
 
-def _format_groq_response(completion: GroqChatCompletion) -> Dict:
+def _format_groq_response(completion: Optional[GroqChatCompletion]) -> Dict:
+    if not completion:
+        return {
+            "id": "",
+            "content": "",
+            "created": 0,
+            "model": "",
+            "systemFingerprint": "",
+            "object": "",
+            "completionTokens": 0,
+            "promptTokens": 0,
+            "totalTokens": 0,
+        }
     choice = completion.choices[0].message
     return {
         "id": completion.id,
