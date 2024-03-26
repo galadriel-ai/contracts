@@ -129,12 +129,11 @@ async def _index_knowledgebase_function(
     kb_repository: KnowledgeBaseRepository,
 ):
     try:
-        error_message = ""
-        index_cid = await index_knowledge_base_use_case.execute(
+        indexing_result = await index_knowledge_base_use_case.execute(
             request, ipfs_repository, kb_repository
         )
         success = await repository.send_kb_indexing_response(
-            request, index_cid=index_cid, error_message=error_message
+            request, index_cid=indexing_result.index_cid, error_message=indexing_result.index_cid
         )
         print(
             f"Knowledge base indexing {request.id} {'' if success else 'not '} indexed, tx: {request.transaction_receipt}"
@@ -180,16 +179,17 @@ async def _process_knowledge_base_indexing():
 
 
 async def _query_knowledge_base(
-    request: KnowledgeBaseQuery, ipfs_repository: IpfsRepository, kb_repository: KnowledgeBaseRepository
+    request: KnowledgeBaseQuery,
+    ipfs_repository: IpfsRepository,
+    kb_repository: KnowledgeBaseRepository,
 ):
     try:
         error_message = ""
-        documents = await query_knowledge_base_use_case.execute(
+        query_result = await query_knowledge_base_use_case.execute(
             request, ipfs_repository, kb_repository
         )
-        print(documents)
         success = await repository.send_kb_query_response(
-            request, documents, error_message=error_message
+            request, query_result.documents, error_message=query_result.error
         )
         print(
             f"Knowledge base query {request.id} {'' if success else 'not '} answered, tx: {request.transaction_receipt}"
@@ -208,7 +208,9 @@ async def _process_knowledge_base_queries():
             kb_queries = await repository.get_unanswered_kb_queries()
             for kb_query in kb_queries:
                 if kb_query.id not in KB_QUERY_TASKS:
-                    print(f"Querying knowledge base {kb_query.id}, cid {kb_query.index_cid}")
+                    print(
+                        f"Querying knowledge base {kb_query.id}, cid {kb_query.cid}, index_cid {kb_query.index_cid}"
+                    )
                     task = asyncio.create_task(
                         _query_knowledge_base(kb_query, ipfs_repository, kb_repository)
                     )

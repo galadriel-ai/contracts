@@ -18,13 +18,14 @@ def main(directory: str, chunk_size: int, chunk_overlap: int) -> None:
     documents = load_documents_use_case.execute(directory, text_splitter)
     print("Uploading documents, please wait...")
     cid: str = upload_documents_use_case.execute(documents)
-    print(f"Uploaded collection with CID: {cid}")
+    print(f"Uploaded collection to IPFS.")
     print("Requesting indexing, please wait...")
     index_cid = request_indexing_use_case.execute(cid)
     if index_cid:
-        print(f"Collection indexed with CID: {index_cid}")
-        return
-    print("Indexing request sent.")
+        print(f"Collection indexed, index CID {index_cid}.")
+        print(f"Use CID `{cid}` in your contract to query the indexed collection.")
+    else:
+        print(f"Failed to index collection.")
 
 
 if __name__ == "__main__":
@@ -32,7 +33,7 @@ if __name__ == "__main__":
         description="Upload a directory to IPFS as a vector Database",
     )
     parser.add_argument("-d", "--directory", required=True)
-    parser.add_argument("-s", "--chunk-size", type=int, default=1000)
+    parser.add_argument("-s", "--chunk-size", type=int, default=8000)
     parser.add_argument("-o", "--chunk-overlap", type=int, default=100)
     args = parser.parse_args()
 

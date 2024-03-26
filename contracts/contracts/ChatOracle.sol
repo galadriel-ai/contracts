@@ -210,11 +210,12 @@ contract ChatOracle {
 
     function createKnowledgeBaseQuery(
         uint kbQueryCallbackId,
-        string memory indexCid,
+        string memory cid,
         string memory query
     ) public returns (uint i) {
+        require(bytes(kbIndexes[cid]).length > 0, "Index not available for this CID");
         uint kbQueryId = kbQueryCount;
-        kbQueryCids[kbQueryId] = indexCid;
+        kbQueryCids[kbQueryId] = cid;
         kbQueries[kbQueryId] = query;
         kbQueryCallbackIds[kbQueryId] = kbQueryCallbackId;
 

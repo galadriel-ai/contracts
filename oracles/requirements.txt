@@ -1,5 +1,5 @@
 backoff==2.2.1
-chromadb==0.4.24
+faiss-cpu==1.8.0
 openai==1.11.1
 python-dotenv==1.0.1
 web3==6.15.1

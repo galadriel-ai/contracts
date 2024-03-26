@@ -20,4 +20,5 @@ def execute(documents: List[Document]) -> str:
 
 
 def _serialize_documents(documents: List[Document]) -> str:
-    return json.dumps([doc.dict(exclude={"type"}) for doc in documents])
+    docs_dict = [{"page_content": doc.page_content, "metadata": doc.metadata} for doc in documents]
+    return json.dumps(docs_dict)

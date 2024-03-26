@@ -41,6 +41,7 @@ class KnowledgeBaseQuery:
     id: int
     callback_id: int
     is_processed: bool
+    cid: str
     index_cid: str
     query: str
     documents: List[str] = field(default_factory=list)

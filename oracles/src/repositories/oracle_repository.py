@@ -261,13 +261,15 @@ class OracleRepository:
                 is_processed = await self.oracle_contract.functions.isKbQueryProcessed(
                     i
                 ).call()
-                index_cid = await self.oracle_contract.functions.kbQueryCids(i).call()
+                cid = await self.oracle_contract.functions.kbQueryCids(i).call()
+                index_cid = await self.oracle_contract.functions.kbIndexes(cid).call()
                 query = await self.oracle_contract.functions.kbQueries(i).call()
                 self.indexed_kb_queries.append(
                     KnowledgeBaseQuery(
                         id=i,
                         callback_id=callback_id,
                         is_processed=is_processed,
+                        cid=cid,
                         index_cid=index_cid,
                         query=query,
                     )
