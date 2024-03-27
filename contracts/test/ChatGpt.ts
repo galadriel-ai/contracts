@@ -86,6 +86,7 @@ describe("ChatGpt", function () {
 
       await chatGpt.startChat("Hello");
       await oracle.connect(oracleAccount).addResponse(0, 0, "Hi", "");
+      await oracle.connect(oracleAccount).markPromptAsProcessed(0);
       await expect(
         oracle.connect(oracleAccount).addResponse(0, 0, "Hi", "")
       ).to.be.revertedWith("Prompt already processed");
