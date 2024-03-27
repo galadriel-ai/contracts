@@ -20,12 +20,12 @@ def main(directory: str, chunk_size: int, chunk_overlap: int) -> None:
     cid: str = upload_documents_use_case.execute(documents)
     print(f"Uploaded collection to IPFS.")
     print("Requesting indexing, please wait...")
-    index_cid = request_indexing_use_case.execute(cid)
-    if index_cid:
-        print(f"Collection indexed, index CID {index_cid}.")
+    response = request_indexing_use_case.execute(cid)
+    if response.is_processed and response.index_cid:
+        print(f"Collection indexed, index CID `{response.index_cid}`.")
         print(f"Use CID `{cid}` in your contract to query the indexed collection.")
     else:
-        print(f"Failed to index collection.")
+        print(response.error or "Failed to index collection.")
 
 
 if __name__ == "__main__":

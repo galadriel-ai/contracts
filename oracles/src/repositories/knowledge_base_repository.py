@@ -15,27 +15,14 @@ BATCH_SIZE = 2048
 
 
 class KnowledgeBaseRepository:
-    def __init__(self, max_size=10, cleanup_interval=3600):
+    def __init__(self, max_size=10):
         self.openai_client = AsyncOpenAI(
             api_key=settings.OPEN_AI_API_KEY,
         )
         self.lock = asyncio.Lock()
         self.max_size = max_size
-        self.cleanup_interval = cleanup_interval
-        # keeps only the most recent max_size indexes
-        #self.cleanup_task = asyncio.create_task(self._cleanup_periodically())
         self.indexes = OrderedDict()
         self.document_stores = {}
-
-    async def _cleanup_periodically(self):
-        while True:
-            await asyncio.sleep(self.cleanup_interval)
-            async with self.lock:
-                # Remove items only if the indexes exceeds max_size
-                while len(self.indexes) > self.max_size:
-                    name, (value, index) = self.indexes.popitem(last=False)
-                    self.document_stores.pop(name)
-                    print(f"KB: Removed {name} KB from memory", flush=True)
 
     async def _add_knowledge_base(
         self, name: str, index: Any, documents: List[Document]
@@ -65,7 +52,7 @@ class KnowledgeBaseRepository:
         await self._add_knowledge_base(name, index, documents)
 
     async def serialize(self, name: str) -> bytes:
-        index = self.indexes[name]
+        index, time = self.indexes[name]
         np_index = faiss.serialize_index(index)
         bytes_container = BytesIO()
         np.save(bytes_container, np_index)

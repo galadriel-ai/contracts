@@ -1,4 +1,4 @@
-from typing import List
+import settings
 from src.entities import KnowledgeBaseQuery
 from src.domain.knowledge_base.entities import Document
 from src.domain.knowledge_base.entities import KnowledgeBaseQueryResult
@@ -14,8 +14,10 @@ async def execute(
 ) -> KnowledgeBaseQueryResult:
     try:
         if not await kb_repository.exists(request.cid):
-            documents_str = await ipfs_repository.read_file(request.cid)
-            documents = deserialize_documents(documents_str)
+            documents_bytes = await ipfs_repository.read_file(
+                request.cid, settings.KNOWLEDGE_BASE_MAX_SIZE_BYTES
+            )
+            documents = deserialize_documents(documents_bytes)
             index = await ipfs_repository.read_file(request.index_cid)
             await kb_repository.deserialize(
                 request.cid, documents=documents, data=index
@@ -40,7 +42,7 @@ if __name__ == "__main__":
             query="What was the color of the car?",
         )
         ipfs_repository = IpfsRepository()
-        kb_repository = KnowledgeBaseRepository(0, 5)
+        kb_repository = KnowledgeBaseRepository(1)
         print(await execute(query, ipfs_repository, kb_repository))
         for i in range(100):
             print(await execute(query, ipfs_repository, kb_repository))

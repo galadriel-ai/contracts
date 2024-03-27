@@ -6,14 +6,19 @@ NFT_STORAGE_LINK_BASE = "https://{}.ipfs.nftstorage.link"
 
 
 class IpfsRepository:
-    async def read_file(self, cid: str) -> Union[str, bytes]:
+    async def read_file(self, cid: str, max_bytes: int = 0) -> bytes:
         async with aiohttp.ClientSession() as session:
             async with session.get(NFT_STORAGE_LINK_BASE.format(cid)) as response:
                 response.raise_for_status()
-                try:
-                    return await response.text()
-                except UnicodeDecodeError:
-                    return await response.read()
+                data = bytearray()
+                while True:
+                    chunk = await response.content.read(4096)
+                    if not chunk:
+                        break
+                    data += chunk
+                    if max_bytes > 0 and len(data) > max_bytes:
+                        raise Exception(f"File exceeded the maximum allowed size of {max_bytes} bytes.")
+                return data
 
     async def write_file(self, data: Union[str, bytes]) -> str:
         mime_type = (

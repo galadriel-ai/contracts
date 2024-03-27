@@ -238,6 +238,11 @@ class OracleRepository:
                 f"Indexing new knowledge base indexing requests from {self.last_kb_index_request_count} to {kb_index_request_count}"
             )
             for i in range(self.last_kb_index_request_count, kb_index_request_count):
+                is_processed = (
+                    await self.oracle_contract.functions.isKbIndexingRequestProcessed(
+                        i
+                    ).call()
+                )
                 cid = await self.oracle_contract.functions.kbIndexingRequests(i).call()
                 index_cid = await self.oracle_contract.functions.kbIndexes(cid).call()
                 self.indexed_kb_index_requests.append(
@@ -245,7 +250,7 @@ class OracleRepository:
                         id=i,
                         cid=cid,
                         index_cid=index_cid,
-                        is_processed=index_cid != "",
+                        is_processed=is_processed,
                     )
                 )
             self.last_kb_index_request_count = kb_index_request_count
@@ -263,7 +268,7 @@ class OracleRepository:
         self,
         request: KnowledgeBaseIndexingRequest,
         index_cid: str,
-        error_message: str = "",
+        error_message: str,
     ) -> bool:
         nonce = await self.web3_client.eth.get_transaction_count(self.account.address)
         tx_data = {
@@ -278,8 +283,7 @@ class OracleRepository:
             tx_data["chainId"] = int(chain_id)
         try:
             tx = await self.oracle_contract.functions.addKnowledgeBaseIndex(
-                request.id,
-                index_cid,
+                request.id, index_cid, error_message
             ).build_transaction(tx_data)
         except Exception as e:
             request.is_processed = True
@@ -534,4 +538,3 @@ def _parse_tools(value: str) -> Optional[List[ChatCompletionToolParam]]:
         return filtered_tools
     except:
         return None
-

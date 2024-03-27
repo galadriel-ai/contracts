@@ -18,6 +18,9 @@ from src.repositories.oracle_repository import OracleRepository
 from src.repositories.knowledge_base_repository import KnowledgeBaseRepository
 
 repository = OracleRepository()
+ipfs_repository = IpfsRepository()
+kb_repository = KnowledgeBaseRepository(max_size=settings.KNOWLEDGE_BASE_CACHE_MAX_SIZE)
+
 
 CHAT_TASKS = {}
 FUNCTION_TASKS = {}
@@ -80,9 +83,7 @@ async def _call_function(function_call: FunctionCall, semaphore: Semaphore):
             if function_call.response is None:
                 formatted_input = utils.format_tool_input(function_call.function_input)
                 if function_call.function_type == "image_generation":
-                    image = await generate_image_use_case.execute(
-                        formatted_input
-                    )
+                    image = await generate_image_use_case.execute(formatted_input)
                     response = (
                         await reupload_to_gcp_use_case.execute(image.url)
                         if image.url != ""
@@ -147,7 +148,9 @@ async def _index_knowledgebase_function(
             request, ipfs_repository, kb_repository
         )
         success = await repository.send_kb_indexing_response(
-            request, index_cid=indexing_result.index_cid, error_message=indexing_result.index_cid
+            request,
+            index_cid=indexing_result.index_cid,
+            error_message=indexing_result.error,
         )
         print(
             f"Knowledge base indexing {request.id} {'' if success else 'not '} indexed, tx: {request.transaction_receipt}"
@@ -159,11 +162,6 @@ async def _index_knowledgebase_function(
 
 
 async def _process_knowledge_base_indexing():
-    ipfs_repository = IpfsRepository()
-    kb_repository = KnowledgeBaseRepository(
-        max_size=settings.KNOWLEDGE_BASE_MAX_SIZE,
-        cleanup_interval=settings.KNOWLEDGE_BASE_CACHE_CLEANUP_INTERVAL
-    )
 
     while True:
         try:
@@ -201,7 +199,6 @@ async def _query_knowledge_base(
     kb_repository: KnowledgeBaseRepository,
 ):
     try:
-        error_message = ""
         query_result = await query_knowledge_base_use_case.execute(
             request, ipfs_repository, kb_repository
         )
@@ -219,7 +216,6 @@ async def _query_knowledge_base(
 
 async def _process_knowledge_base_queries():
     ipfs_repository = IpfsRepository()
-    kb_repository = KnowledgeBaseRepository()
     while True:
         try:
             kb_queries = await repository.get_unanswered_kb_queries()
@@ -262,7 +258,10 @@ async def _serve_metrics():
         server = uvicorn.Server(config)
         await server.serve()
     except ImportError as e:
-        print(f"Required module not found: {e}. FastAPI server will not start.", flush=True)
+        print(
+            f"Required module not found: {e}. FastAPI server will not start.",
+            flush=True,
+        )
 
 
 async def main():

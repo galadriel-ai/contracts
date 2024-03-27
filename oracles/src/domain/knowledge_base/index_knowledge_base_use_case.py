@@ -1,5 +1,4 @@
-from typing import List
-from typing import Optional
+import settings
 from src.entities import KnowledgeBaseIndexingRequest
 from src.domain.knowledge_base.entities import KnowledgeBaseIndexingResult
 from src.repositories.ipfs_repository import IpfsRepository
@@ -13,11 +12,16 @@ async def execute(
     kb_repository: KnowledgeBaseRepository,
 ) -> KnowledgeBaseIndexingResult:
     try:
-        documents_str = await ipfs_repository.read_file(request.cid)
-        await kb_repository.create(request.cid, deserialize_documents(documents_str))
+        documents = await ipfs_repository.read_file(
+            request.cid, settings.KNOWLEDGE_BASE_MAX_SIZE_BYTES
+        )
+        await kb_repository.create(request.cid, deserialize_documents(documents))
         index = await kb_repository.serialize(request.cid)
         index_cid = await ipfs_repository.write_file(index)
-        return index_cid
+        return KnowledgeBaseIndexingResult(
+            index_cid=index_cid,
+            error="",
+        )
     except Exception as e:
         print(e)
         return KnowledgeBaseIndexingResult(

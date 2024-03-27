@@ -177,6 +177,8 @@ contract ChatOracle {
     uint public functionsCount;
 
     mapping(uint => string) public kbIndexingRequests;
+    mapping(uint => string) public kbIndexingRequestErrors;
+    mapping(uint => bool) public isKbIndexingRequestProcessed;
     mapping(string => string) public kbIndexes;
     uint public kbIndexingRequestCount;
 
@@ -384,6 +386,10 @@ contract ChatOracle {
         );
     }
 
+    function markGroqPromptAsProcessed(uint promptId) public onlyWhitelisted {
+        isPromptProcessed[promptId] = true;
+    }
+
     function addKnowledgeBase(string memory cid) public {
         require(bytes(kbIndexes[cid]).length == 0, "Index already set for this CID");
         uint kbIndexingRequestId = kbIndexingRequestCount;
@@ -392,10 +398,16 @@ contract ChatOracle {
         emit KnowledgeBaseIndexRequestAdded(kbIndexingRequestId, msg.sender);
     }
 
-    function addKnowledgeBaseIndex(uint kbIndexingRequestId, string memory indexCid) public onlyWhitelisted {
-        require(bytes(kbIndexes[kbIndexingRequests[kbIndexingRequestId]]).length == 0, "Index already set for this CID");
+    function addKnowledgeBaseIndex(uint kbIndexingRequestId, string memory indexCid, string memory error) public onlyWhitelisted {
+        require(!isKbIndexingRequestProcessed[kbIndexingRequestId], "Indexing request already processed");
         kbIndexes[kbIndexingRequests[kbIndexingRequestId]] = indexCid;
+        kbIndexingRequestErrors[kbIndexingRequestId] = error;
+        isKbIndexingRequestProcessed[kbIndexingRequestId] = true;
         emit KnowledgeBaseIndexed(kbIndexingRequests[kbIndexingRequestId], indexCid);
+    }
+
+    function markKnowledgeBaseAsProcessed(uint kbIndexingRequestId) public onlyWhitelisted {
+        isKbIndexingRequestProcessed[kbIndexingRequestId] = true;
     }
 
     function createKnowledgeBaseQuery(
@@ -434,7 +446,7 @@ contract ChatOracle {
         );
     }
 
-    function markGroqPromptAsProcessed(uint promptId) public onlyWhitelisted {
-        isPromptProcessed[promptId] = true;
+    function markKnowledgeBaseQueryAsProcessed(uint kbQueryId) public onlyWhitelisted {
+        isKbQueryProcessed[kbQueryId] = true;
     }
 }
