@@ -53,7 +53,7 @@ pip install -r requirements.txt
 
 With the virtual environment active, run:
 
-```python
+```shell
 python oracle.py
 ```
 

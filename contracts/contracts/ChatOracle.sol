@@ -233,9 +233,9 @@ contract ChatOracle {
         whitelistedAddresses[_addressToWhitelist] = isWhitelisted;
     }
 
-    function addAttestation(address owner, string memory attestation) public onlyOwner {
-        attestations[owner] = attestation;
-        latestAttestationOwner = owner;
+    function addAttestation(string memory attestation) public onlyWhitelisted {
+        attestations[msg.sender] = attestation;
+        latestAttestationOwner = msg.sender;
     }
 
     function createLlmCall(uint promptCallbackId) public returns (uint i) {
@@ -259,12 +259,15 @@ contract ChatOracle {
         string memory errorMessage
     ) public onlyWhitelisted {
         require(!isPromptProcessed[promptId], "Prompt already processed");
-        isPromptProcessed[promptId] = true;
         IChatGpt(callbackAddresses[promptId]).onOracleLlmResponse(
             promptCallBackId,
             response,
             errorMessage
         );
+    }
+
+    function markPromptAsProcessed(uint promptId) public onlyWhitelisted {
+        isPromptProcessed[promptId] = true;
     }
 
     function getMessages(
@@ -308,12 +311,15 @@ contract ChatOracle {
         string memory errorMessage
     ) public onlyWhitelisted {
         require(!isFunctionProcessed[functionId], "Function already processed");
-        isFunctionProcessed[functionId] = true;
         IChatGpt(functionCallbackAddresses[functionId]).onOracleFunctionResponse(
             functionCallBackId,
             response,
             errorMessage
         );
+    }
+
+    function markFunctionAsProcessed(uint functionId) public onlyWhitelisted {
+        isFunctionProcessed[functionId] = true;
     }
 
     function createOpenAiLlmCall(uint promptCallbackId, IOracleTypes.OpenAiRequest memory config) public returns (uint i) {
@@ -338,12 +344,15 @@ contract ChatOracle {
         string memory errorMessage
     ) public onlyWhitelisted {
         require(!isPromptProcessed[promptId], "Prompt already processed");
-        isPromptProcessed[promptId] = true;
         IChatGpt(callbackAddresses[promptId]).onOracleOpenAiLlmResponse(
             promptCallBackId,
             response,
             errorMessage
         );
+    }
+
+    function markOpenAiPromptAsProcessed(uint promptId) public onlyWhitelisted {
+        isPromptProcessed[promptId] = true;
     }
 
     function createGroqLlmCall(uint promptCallbackId, IOracleTypes.GroqRequest memory config) public returns (uint i) {
@@ -368,7 +377,6 @@ contract ChatOracle {
         string memory errorMessage
     ) public onlyWhitelisted {
         require(!isPromptProcessed[promptId], "Prompt already processed");
-        isPromptProcessed[promptId] = true;
         IChatGpt(callbackAddresses[promptId]).onOracleGroqLlmResponse(
             promptCallBackId,
             response,
@@ -424,5 +432,9 @@ contract ChatOracle {
             documents,
             errorMessage
         );
+    }
+
+    function markGroqPromptAsProcessed(uint promptId) public onlyWhitelisted {
+        isPromptProcessed[promptId] = true;
     }
 }
