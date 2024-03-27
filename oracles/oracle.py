@@ -41,9 +41,9 @@ async def _answer_chat(chat: Chat, semaphore: Semaphore):
 
 
 async def _answer_unanswered_chats():
+    semaphore = asyncio.Semaphore(MAX_CONCURRENT_CHATS)
     while True:
         try:
-            semaphore = asyncio.Semaphore(MAX_CONCURRENT_CHATS)
             chats = await repository.get_unanswered_chats()
             for chat in chats:
                 if chat.id not in CHAT_TASKS:
@@ -107,9 +107,9 @@ async def _call_function(function_call: FunctionCall, semaphore: Semaphore):
 
 
 async def _process_function_calls():
+    semaphore = asyncio.Semaphore(MAX_CONCURRENT_CHATS)
     while True:
         try:
-            semaphore = asyncio.Semaphore(MAX_CONCURRENT_CHATS)
             function_calls = await repository.get_unanswered__function_calls()
             for function_call in function_calls:
                 if function_call.id not in FUNCTION_TASKS:
