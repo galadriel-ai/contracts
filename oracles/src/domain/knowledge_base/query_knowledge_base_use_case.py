@@ -40,7 +40,7 @@ if __name__ == "__main__":
             query="What was the color of the car?",
         )
         ipfs_repository = IpfsRepository()
-        kb_repository = KnowledgeBaseRepository()
+        kb_repository = KnowledgeBaseRepository(0, 5)
         print(await execute(query, ipfs_repository, kb_repository))
         for i in range(100):
             print(await execute(query, ipfs_repository, kb_repository))

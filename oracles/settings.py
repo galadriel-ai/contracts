@@ -19,3 +19,6 @@ ORACLE_ABI_PATH = os.getenv("ORACLE_ABI_PATH", "abi/ChatOracle.json")
 GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME", "galadriel-assets")
 SERVE_METRICS = os.getenv("SERVE_METRICS", "False").lower() == "true"
 NFT_STORAGE_API_KEY = os.getenv("NFT_STORAGE_API_KEY")
+
+KNOWLEDGE_BASE_MAX_SIZE = int(os.getenv("KNOWLEDGE_BASE_MAX_SIZE", "10"))
+KNOWLEDGE_BASE_CACHE_CLEANUP_INTERVAL = int(os.getenv("KNOWLEDGE_BASE_CACHE_CLEANUP_INTERVAL", "3600"))

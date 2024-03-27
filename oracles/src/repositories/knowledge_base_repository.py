@@ -1,10 +1,13 @@
+import time
 import faiss
 import backoff
+import asyncio
 import settings
 import numpy as np
 from io import BytesIO
 from openai import AsyncOpenAI
 from openai import RateLimitError
+from collections import OrderedDict
 from typing import List, Any, Tuple, Dict
 from src.domain.knowledge_base.entities import Document
 
@@ -12,13 +15,37 @@ BATCH_SIZE = 2048
 
 
 class KnowledgeBaseRepository:
-    def __init__(self):
+    def __init__(self, max_size=10, cleanup_interval=3600):
         self.openai_client = AsyncOpenAI(
             api_key=settings.OPEN_AI_API_KEY,
         )
-        self.indexes = {}
+        self.lock = asyncio.Lock()
+        self.max_size = max_size
+        self.cleanup_interval = cleanup_interval
+        # keeps only the most recent max_size indexes
+        self.cleanup_task = asyncio.create_task(self._cleanup_periodically())
+        self.indexes = OrderedDict()
         self.document_stores = {}
 
+    async def _cleanup_periodically(self):
+        while True:
+            await asyncio.sleep(self.cleanup_interval)
+            async with self.lock:
+                # Remove items only if the indexes exceeds max_size
+                while len(self.indexes) > self.max_size:
+                    name, (value, index) = self.indexes.popitem(last=False)
+                    self.document_stores.pop(name)
+                    print(f"KB: Removed {name} KB from memory", flush = True)
+
+    async def _add_knowledge_base(self, name: str, index: Any, documents: List[Document]):
+         async with self.lock:
+            # Remove items if the number of indexes exceeds max_size
+            #if len(self.indexes) >= self.max_size:
+            #    key, (value, index) = self.indexes.popitem(last=False)
+            #    self.document_stores.pop(key)
+            self.indexes[name] = (index, time.time())
+            self.document_stores[name] = documents
+    
     async def create(self, name: str, documents: List[Document]):
         embeddings = []
         for i in range(0, len(documents), BATCH_SIZE):
@@ -32,8 +59,8 @@ class KnowledgeBaseRepository:
         np_embeddings = np.array(embeddings).astype("float32")
         index = faiss.IndexFlatL2(dimension)
         index.add(np_embeddings)
-        self.indexes[name] = index
-        self.document_stores[name] = documents
+        print(f"KB: Created {name}", flush=True)
+        await self._add_knowledge_base(name, index, documents)
 
     async def serialize(self, name: str) -> bytes:
         index = self.indexes[name]
@@ -46,23 +73,26 @@ class KnowledgeBaseRepository:
         bytes_container = BytesIO(data)
         np_index = np.load(bytes_container)
         index = faiss.deserialize_index(np_index)
-        self.indexes[name] = index
-        self.document_stores[name] = documents
+        print(f"KB: Deserialized {name}", flush=True)
+        await self._add_knowledge_base(name, index, documents)
 
     async def query(self, name: str, query: str, k: int = 1) -> List[str]:
-        index = self.indexes[name]
-        doc_store = self.document_stores[name]
-        query_embedding = await self._create_embedding([query])
-        query_vector = np.array([query_embedding[0]]).astype("float32")
-        _, indexes = index.search(query_vector, k)
-        results = [doc_store[indexes[0][i]] for i in range(len(indexes[0]))]
-        return results
+        async with self.lock:
+            self.indexes.move_to_end(name)
+            index, time = self.indexes[name]
+            doc_store = self.document_stores[name]
+            query_embedding = await self._create_embedding([query])
+            query_vector = np.array([query_embedding[0]]).astype("float32")
+            _, indexes = index.search(query_vector, k)
+            results = [doc_store[indexes[0][i]] for i in range(len(indexes[0]))]
+            return results
 
     async def exists(self, name: str) -> bool:
         try:
-            self.indexes[name]
-            self.document_stores[name]
-            return True
+            async with self.lock:
+                self.indexes[name]
+                self.document_stores[name]
+                return True
         except KeyError:
             return False
 

@@ -151,7 +151,10 @@ async def _index_knowledgebase_function(
 
 async def _process_knowledge_base_indexing():
     ipfs_repository = IpfsRepository()
-    kb_repository = KnowledgeBaseRepository()
+    kb_repository = KnowledgeBaseRepository(
+        max_size=settings.KNOWLEDGE_BASE_MAX_SIZE,
+        cleanup_interval=settings.KNOWLEDGE_BASE_CACHE_CLEANUP_INTERVAL
+    )
 
     while True:
         try:
