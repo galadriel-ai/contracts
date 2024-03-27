@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 // Uncomment this line to use console.log
 // import "hardhat/console.sol";
 import {ERC721URIStorage, ERC721} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-
+import {ERC721Enumerable} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
 interface IOracle {
     function createFunctionCall(
@@ -14,7 +14,7 @@ interface IOracle {
     ) external returns (uint i);
 }
 
-contract DalleNft is ERC721URIStorage {
+contract DalleNft is ERC721, ERC721Enumerable, ERC721URIStorage {
     uint256 private _nextTokenId;
 
     struct MintInput {
@@ -24,7 +24,6 @@ contract DalleNft is ERC721URIStorage {
     }
 
     mapping(uint => MintInput) public mintInputs;
-    uint private mintsCount;
 
     event MintInputCreated(address indexed owner, uint indexed chatId);
 
@@ -66,14 +65,14 @@ contract DalleNft is ERC721URIStorage {
     }
 
     function initializeMint(string memory message) public returns (uint i) {
-        MintInput storage mintInput = mintInputs[mintsCount];
+        uint256 currentId = _nextTokenId++;
+        MintInput storage mintInput = mintInputs[currentId];
 
         mintInput.owner = msg.sender;
         mintInput.prompt = message;
+
         mintInput.isMinted = false;
 
-        uint currentId = mintsCount;
-        mintsCount = currentId + 1;
 
         string memory fullPrompt = prompt;
         fullPrompt = string.concat(fullPrompt, message);
@@ -98,9 +97,8 @@ contract DalleNft is ERC721URIStorage {
 
         mintInput.isMinted = true;
 
-        uint256 tokenId = _nextTokenId++;
-        _mint(mintInput.owner, tokenId);
-        _setTokenURI(tokenId, response);
+        _mint(mintInput.owner, runId);
+        _setTokenURI(runId, response);
     }
 
     function getMessageHistoryContents(uint chatId) public view returns (string[] memory) {
@@ -116,5 +114,38 @@ contract DalleNft is ERC721URIStorage {
         string[] memory rolesArray = new string[](1);
         rolesArray[0] = "user";
         return rolesArray;
+    }
+
+    function _update(address to, uint256 tokenId, address auth)
+        internal
+        override(ERC721, ERC721Enumerable)
+        returns (address)
+    {
+        return super._update(to, tokenId, auth);
+    }
+
+    function _increaseBalance(address account, uint128 value)
+        internal
+        override(ERC721, ERC721Enumerable)
+    {
+        super._increaseBalance(account, value);
+    }
+
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        override(ERC721, ERC721URIStorage)
+        returns (string memory)
+    {
+        return super.tokenURI(tokenId);
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC721, ERC721Enumerable, ERC721URIStorage)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
     }
 }
