@@ -107,7 +107,7 @@ interface IChatGpt {
         string memory errorMessage
     ) external;
 
-    function onOracleKbQueryResponse(
+    function onOracleKnowledgeBaseQueryResponse(
         uint callbackId,
         string [] memory documents,
         string memory errorMessage
@@ -419,7 +419,7 @@ contract ChatOracle {
     ) public onlyWhitelisted {
         require(!isKbQueryProcessed[kbQueryId], "Knowledge base query already processed");
         isKbQueryProcessed[kbQueryId] = true;
-        IChatGpt(kbQueryCallbackAddresses[kbQueryId]).onOracleKbQueryResponse(
+        IChatGpt(kbQueryCallbackAddresses[kbQueryId]).onOracleKnowledgeBaseQueryResponse(
             kbQueryCallbackId,
             documents,
             errorMessage

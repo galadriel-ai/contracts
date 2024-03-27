@@ -23,7 +23,7 @@ class KnowledgeBaseRepository:
         self.max_size = max_size
         self.cleanup_interval = cleanup_interval
         # keeps only the most recent max_size indexes
-        self.cleanup_task = asyncio.create_task(self._cleanup_periodically())
+        #self.cleanup_task = asyncio.create_task(self._cleanup_periodically())
         self.indexes = OrderedDict()
         self.document_stores = {}
 
@@ -35,17 +35,19 @@ class KnowledgeBaseRepository:
                 while len(self.indexes) > self.max_size:
                     name, (value, index) = self.indexes.popitem(last=False)
                     self.document_stores.pop(name)
-                    print(f"KB: Removed {name} KB from memory", flush = True)
+                    print(f"KB: Removed {name} KB from memory", flush=True)
 
-    async def _add_knowledge_base(self, name: str, index: Any, documents: List[Document]):
-         async with self.lock:
-            # Remove items if the number of indexes exceeds max_size
-            #if len(self.indexes) >= self.max_size:
-            #    key, (value, index) = self.indexes.popitem(last=False)
-            #    self.document_stores.pop(key)
+    async def _add_knowledge_base(
+        self, name: str, index: Any, documents: List[Document]
+    ):
+        async with self.lock:
+            # keep only the most recent max_size indexes
+            if len(self.indexes) >= self.max_size:
+                key, (value, index) = self.indexes.popitem(last=False)
+                self.document_stores.pop(key)
             self.indexes[name] = (index, time.time())
             self.document_stores[name] = documents
-    
+
     async def create(self, name: str, documents: List[Document]):
         embeddings = []
         for i in range(0, len(documents), BATCH_SIZE):
