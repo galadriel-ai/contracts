@@ -94,6 +94,7 @@ class OracleRepository:
         except Exception as e:
             chat.is_processed = True
             chat.transaction_receipt = {"error": str(e)}
+            await self.mark_as_done(chat)
             return False
         signed_tx = self.web3_client.eth.account.sign_transaction(
             tx, private_key=self.account.key
@@ -105,6 +106,39 @@ class OracleRepository:
         chat.transaction_receipt = tx_receipt
         chat.is_processed = bool(tx_receipt.get("status"))
         return bool(tx_receipt.get("status"))
+
+    async def mark_as_done(self, chat: Chat):
+        nonce = await self.web3_client.eth.get_transaction_count(self.account.address)
+        tx_data = {
+            "from": self.account.address,
+            "nonce": nonce,
+            # TODO: pick gas amount in a better way
+            # "gas": 1000000,
+            "maxFeePerGas": self.web3_client.to_wei("2", "gwei"),
+            "maxPriorityFeePerGas": self.web3_client.to_wei("1", "gwei"),
+        }
+        if chain_id := settings.CHAIN_ID:
+            tx_data["chainId"] = int(chain_id)
+
+        if chat.prompt_type == PromptType.OPENAI:
+            tx = await self.oracle_contract.functions.markOpenAiPromptAsProcessed(
+                chat.id,
+            ).build_transaction(tx_data)
+        elif chat.prompt_type == PromptType.GROQ:
+            tx = await self.oracle_contract.functions.markGroqPromptAsProcessed(
+                chat.id,
+            ).build_transaction(tx_data)
+        else:
+            tx = await self.oracle_contract.functions.markPromptAsProcessed(
+                chat.id,
+            ).build_transaction(tx_data)
+        signed_tx = self.web3_client.eth.account.sign_transaction(
+            tx, private_key=self.account.key
+        )
+        tx_hash = await self.web3_client.eth.send_raw_transaction(
+            signed_tx.rawTransaction
+        )
+        await self.web3_client.eth.wait_for_transaction_receipt(tx_hash)
 
     async def _build_response_tx(self, chat: Chat):
         nonce = await self.web3_client.eth.get_transaction_count(self.account.address)
@@ -208,6 +242,7 @@ class OracleRepository:
         except Exception as e:
             function_call.is_processed = True
             function_call.transaction_receipt = {"error": str(e)}
+            await self.mark_function_call_as_done(function_call)
             return False
         signed_tx = self.web3_client.eth.account.sign_transaction(
             tx, private_key=self.account.key
@@ -219,6 +254,30 @@ class OracleRepository:
         function_call.transaction_receipt = tx_receipt
         function_call.is_processed = bool(tx_receipt.get("status"))
         return bool(tx_receipt.get("status"))
+
+    async def mark_function_call_as_done(self, function_call: FunctionCall):
+        nonce = await self.web3_client.eth.get_transaction_count(self.account.address)
+        tx_data = {
+            "from": self.account.address,
+            "nonce": nonce,
+            # TODO: pick gas amount in a better way
+            # "gas": 1000000,
+            "maxFeePerGas": self.web3_client.to_wei("2", "gwei"),
+            "maxPriorityFeePerGas": self.web3_client.to_wei("1", "gwei"),
+        }
+        if chain_id := settings.CHAIN_ID:
+            tx_data["chainId"] = int(chain_id)
+
+        tx = await self.oracle_contract.functions.markFunctionAsProcessed(
+            function_call.id,
+        ).build_transaction(tx_data)
+        signed_tx = self.web3_client.eth.account.sign_transaction(
+            tx, private_key=self.account.key
+        )
+        tx_hash = await self.web3_client.eth.send_raw_transaction(
+            signed_tx.rawTransaction
+        )
+        await self.web3_client.eth.wait_for_transaction_receipt(tx_hash)
 
     async def _get_openai_config(self, i: int) -> Optional[OpenAiConfig]:
         config = await self.oracle_contract.functions.openAiConfigurations(i).call()
