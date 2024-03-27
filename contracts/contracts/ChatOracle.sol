@@ -202,9 +202,9 @@ contract ChatOracle {
         whitelistedAddresses[_addressToWhitelist] = isWhitelisted;
     }
 
-    function addAttestation(address owner, string memory attestation) public onlyOwner {
-        attestations[owner] = attestation;
-        latestAttestationOwner = owner;
+    function addAttestation(string memory attestation) public onlyWhitelisted {
+        attestations[msg.sender] = attestation;
+        latestAttestationOwner = msg.sender;
     }
 
     function createLlmCall(uint promptCallbackId) public returns (uint i) {
