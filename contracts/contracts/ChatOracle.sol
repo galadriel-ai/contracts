@@ -228,12 +228,15 @@ contract ChatOracle {
         string memory errorMessage
     ) public onlyWhitelisted {
         require(!isPromptProcessed[promptId], "Prompt already processed");
-        isPromptProcessed[promptId] = true;
         IChatGpt(callbackAddresses[promptId]).onOracleLlmResponse(
             promptCallBackId,
             response,
             errorMessage
         );
+    }
+
+    function markPromptAsProcessed(uint promptId) public onlyWhitelisted {
+        isPromptProcessed[promptId] = true;
     }
 
     function getMessages(
@@ -277,12 +280,15 @@ contract ChatOracle {
         string memory errorMessage
     ) public onlyWhitelisted {
         require(!isFunctionProcessed[functionId], "Function already processed");
-        isFunctionProcessed[functionId] = true;
         IChatGpt(functionCallbackAddresses[functionId]).onOracleFunctionResponse(
             functionCallBackId,
             response,
             errorMessage
         );
+    }
+
+    function markFunctionAsProcessed(uint functionId) public onlyWhitelisted {
+        isFunctionProcessed[functionId] = true;
     }
 
     function createOpenAiLlmCall(uint promptCallbackId, IOracleTypes.OpenAiRequest memory config) public returns (uint i) {
@@ -307,12 +313,15 @@ contract ChatOracle {
         string memory errorMessage
     ) public onlyWhitelisted {
         require(!isPromptProcessed[promptId], "Prompt already processed");
-        isPromptProcessed[promptId] = true;
         IChatGpt(callbackAddresses[promptId]).onOracleOpenAiLlmResponse(
             promptCallBackId,
             response,
             errorMessage
         );
+    }
+
+    function markOpenAiPromptAsProcessed(uint promptId) public onlyWhitelisted {
+        isPromptProcessed[promptId] = true;
     }
 
     function createGroqLlmCall(uint promptCallbackId, IOracleTypes.GroqRequest memory config) public returns (uint i) {
@@ -337,11 +346,14 @@ contract ChatOracle {
         string memory errorMessage
     ) public onlyWhitelisted {
         require(!isPromptProcessed[promptId], "Prompt already processed");
-        isPromptProcessed[promptId] = true;
         IChatGpt(callbackAddresses[promptId]).onOracleGroqLlmResponse(
             promptCallBackId,
             response,
             errorMessage
         );
+    }
+
+    function markGroqPromptAsProcessed(uint promptId) public onlyWhitelisted {
+        isPromptProcessed[promptId] = true;
     }
 }
