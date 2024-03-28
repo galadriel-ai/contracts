@@ -15,7 +15,7 @@ describe("ChatGpt", function () {
     const oracle = await Oracle.deploy();
 
     const ChatGpt = await ethers.getContractFactory("ChatGpt");
-    const chatGpt = await ChatGpt.deploy("0x0000000000000000000000000000000000000000");
+    const chatGpt = await ChatGpt.deploy("0x0000000000000000000000000000000000000000", "");
 
     return {chatGpt, oracle, owner, allSigners};
   }
