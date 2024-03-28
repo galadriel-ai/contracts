@@ -3,7 +3,7 @@ import base64
 import aiohttp
 import settings
 from typing import Optional
-from src.domain.code_interpreter.entities import PythonInterpreterResult
+from src.domain.tools.code_interpreter.entities import PythonInterpreterResult
 
 
 async def _interpret_code(code: str) -> Optional[PythonInterpreterResult]:

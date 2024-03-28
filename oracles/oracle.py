@@ -88,7 +88,7 @@ async def _call_function(function_call: FunctionCall, semaphore: Semaphore):
                     )
                     response = web_search_result.result
                     error_message = web_search_result.error
-                elif function_call.function_type == "python_interpreter":
+                elif function_call.function_type == "code_interpreter":
                     python_interpreter_result = await python_interpreter_use_case.execute(
                         function_call.function_input
                     )
