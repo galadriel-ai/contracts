@@ -321,7 +321,7 @@ class OracleRepository:
         tx_hash = await self.web3_client.eth.send_raw_transaction(
             signed_tx.rawTransaction
         )
-        await self.web3_client.eth.wait_for_transaction_receipt(tx_hash)
+        return await self.web3_client.eth.wait_for_transaction_receipt(tx_hash)
 
 
 def _value_or_none(value: Any) -> Optional[Any]:
