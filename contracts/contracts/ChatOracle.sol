@@ -9,13 +9,13 @@ interface IOracleTypes {
     struct OpenAiRequest {
         // "gpt-4-turbo-preview" or "gpt-3.5-turbo-1106"
         string model;
-        // int -20 - 20? Mapped to float -2.0 - 2.0? If bigger than 20 then null?
+        // int -20 - 20, Mapped to float -2.0 - 2.0. If bigger than 20 then null
         int8 frequencyPenalty;
         // JSON string or empty string
         string logitBias;
         // 0 for null
         uint32 maxTokens;
-        // int -20 - 20? Mapped to float -2.0 - 2.0? If bigger than 20 then null?
+        // int -20 - 20, Mapped to float -2.0 - 2.0. If bigger than 20 then null
         int8 presencePenalty;
         // JSON string or empty string
         string responseFormat;
@@ -56,13 +56,13 @@ interface IOracleTypes {
     struct GroqRequest {
         // "llama2-70b-4096", "mixtral-8x7b-32768" or "gemma-7b-it"
         string model;
-        // int -20 - 20? Mapped to float -2.0 - 2.0? If bigger than 20 then null?
+        // int -20 - 20, Mapped to float -2.0 - 2.0. If bigger than 20 then null
         int8 frequencyPenalty;
         // JSON string or empty string
         string logitBias;
         // 0 for null
         uint32 maxTokens;
-        // int -20 - 20? Mapped to float -2.0 - 2.0? If bigger than 20 then null?
+        // int -20 - 20, Mapped to float -2.0 - 2.0. If bigger than 20 then null
         int8 presencePenalty;
         // JSON string or empty string
         string responseFormat;

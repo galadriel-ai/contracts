@@ -54,6 +54,42 @@ describe("DalleNft", function () {
       const tokenUri = await dalleNft.tokenURI(0)
       expect(tokenUri).to.equal("ipfs://CID")
     });
+    it("TotalSupply works", async () => {
+      const {
+        dalleNft,
+        oracle,
+        allSigners
+      } = await loadFixture(deploy);
+      const oracleAccount = allSigners[6];
+      await dalleNft.setOracleAddress(oracle.target);
+      await oracle.updateWhitelist(oracleAccount, true);
+
+      await dalleNft.initializeMint("funky gorilla");
+
+      await oracle.connect(oracleAccount).addFunctionResponse(0, 0, "ipfs://CID", "");
+
+      const totalSupply = await dalleNft.totalSupply()
+      expect(totalSupply).to.equal(1)
+    });
+    it("Can get user NFT token ID by index", async () => {
+      const {
+        dalleNft,
+        oracle,
+        allSigners
+      } = await loadFixture(deploy);
+      const oracleAccount = allSigners[6];
+      await dalleNft.setOracleAddress(oracle.target);
+      await oracle.updateWhitelist(oracleAccount, true);
+
+      await dalleNft.initializeMint("funky gorilla");
+      await oracle.connect(oracleAccount).addFunctionResponse(0, 0, "ipfs://CID", "");
+
+      await dalleNft.initializeMint("funky gorilla 2");
+      await oracle.connect(oracleAccount).addFunctionResponse(1, 1, "ipfs://CID", "");
+
+      const tokenId = await dalleNft.tokenOfOwnerByIndex(allSigners[0].address, 1)
+      expect(tokenId).to.equal(1)
+    });
   });
   describe("Error handling", function () {
     it("Cannot mint same prompt twice", async () => {
