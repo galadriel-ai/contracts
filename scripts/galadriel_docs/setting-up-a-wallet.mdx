@@ -1,0 +1,28 @@
+Galadriel should be compatible with any wallet that supports EVM. Our recommendation is to use [MetaMask](https://metamask.io/).
+
+Whenever you attempt to connect your wallet to a dApp running on Galadriel network, you should be automatically prompted to add the Galadriel network to your app. Alternatively, you could connect manually as described below.
+
+Galadriel Devnet is occasionally reset from genesis, so you may need to reset your network; see instructions below.
+
+<Note>
+If you are using Galadriel Testnet, please migrate to the **Devnet**. The original **testnet** will be shut down on 01 Apr 2024.
+</Note>
+
+### Network reset
+
+If you previously connected to Galadriel Testnet, or the Devnet has been reset from genesis, you need to migrate to the new network.
+
+To migrate your wallet, reset your account activity in your wallet. If you are using Metamask, follow [these instructions](https://support.metamask.io/hc/en-us/articles/360015488891-How-to-clear-your-account-activity-reset-account).
+
+To migrate your application, make sure you are using the correct RPC URL (**devnet**.galadriel.com) and [Oracle address](/oracle-address.mdx), and reset off-chain nonce handling if using any.
+
+### Connect manually
+
+To connect to the Galadriel devnet manually, follow the guide to [add a custom network RPC](https://support.metamask.io/hc/en-us/articles/360043227612-How-to-add-a-custom-network-RPC) and use the following settings:
+
+* Network Name: **Galadriel Devnet**
+* New RPC URL: https://devnet.galadriel.com
+* Chain ID: **696969**
+* Currency Symbol: **GAL**
+* Block Explorer URL: https://explorer.galadriel.com
+

@@ -322,17 +322,30 @@ class OracleRepository:
         except Exception as e:
             request.is_processed = True
             request.transaction_receipt = {"error": str(e)}
+            await self.mark_kb_indexing_request_as_done(request)
             return False
-        signed_tx = self.web3_client.eth.account.sign_transaction(
-            tx, private_key=self.account.key
-        )
-        tx_hash = await self.web3_client.eth.send_raw_transaction(
-            signed_tx.rawTransaction
-        )
-        tx_receipt = await self.web3_client.eth.wait_for_transaction_receipt(tx_hash)
+        tx_receipt = await self._sign_and_send_tx(tx)
         request.transaction_receipt = tx_receipt
         request.is_processed = bool(tx_receipt.get("status"))
         return bool(tx_receipt.get("status"))
+
+    async def mark_kb_indexing_request_as_done(self, request: KnowledgeBaseIndexingRequest):
+        nonce = await self.web3_client.eth.get_transaction_count(self.account.address)
+        tx_data = {
+            "from": self.account.address,
+            "nonce": nonce,
+            # TODO: pick gas amount in a better way
+            # "gas": 1000000,
+            "maxFeePerGas": self.web3_client.to_wei("2", "gwei"),
+            "maxPriorityFeePerGas": self.web3_client.to_wei("1", "gwei"),
+        }
+        if chain_id := settings.CHAIN_ID:
+            tx_data["chainId"] = int(chain_id)
+
+        tx = await self.oracle_contract.functions.markKnowledgeBaseAsProcessed(
+            request.id,
+        ).build_transaction(tx_data)
+        return await self._sign_and_send_tx(tx)
 
     async def _index_new_kb_queries(self):
         kb_query_count = await self.oracle_contract.functions.kbQueryCount().call()
@@ -398,17 +411,30 @@ class OracleRepository:
         except Exception as e:
             request.is_processed = True
             request.transaction_receipt = {"error": str(e)}
+            await self.mark_kb_query_as_done(request)
             return False
-        signed_tx = self.web3_client.eth.account.sign_transaction(
-            tx, private_key=self.account.key
-        )
-        tx_hash = await self.web3_client.eth.send_raw_transaction(
-            signed_tx.rawTransaction
-        )
-        tx_receipt = await self.web3_client.eth.wait_for_transaction_receipt(tx_hash)
+        tx_receipt = await self._sign_and_send_tx(tx)
         request.transaction_receipt = tx_receipt
         request.is_processed = bool(tx_receipt.get("status"))
         return bool(tx_receipt.get("status"))
+
+    async def mark_kb_query_as_done(self, query: KnowledgeBaseQuery):
+        nonce = await self.web3_client.eth.get_transaction_count(self.account.address)
+        tx_data = {
+            "from": self.account.address,
+            "nonce": nonce,
+            # TODO: pick gas amount in a better way
+            # "gas": 1000000,
+            "maxFeePerGas": self.web3_client.to_wei("2", "gwei"),
+            "maxPriorityFeePerGas": self.web3_client.to_wei("1", "gwei"),
+        }
+        if chain_id := settings.CHAIN_ID:
+            tx_data["chainId"] = int(chain_id)
+
+        tx = await self.oracle_contract.functions.markKnowledgeBaseQueryAsProcessed(
+            query.id,
+        ).build_transaction(tx_data)
+        return await self._sign_and_send_tx(tx)
 
     async def _get_openai_config(self, i: int) -> Optional[OpenAiConfig]:
         config = await self.oracle_contract.functions.openAiConfigurations(i).call()

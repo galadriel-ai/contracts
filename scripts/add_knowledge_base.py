@@ -16,16 +16,18 @@ def main(directory: str, chunk_size: int, chunk_overlap: int) -> None:
         is_separator_regex=False,
     )
     documents = load_documents_use_case.execute(directory, text_splitter)
-    print("Uploading documents, please wait...")
+    print("Uploading documents to IPFS, please wait...", end="")
     cid: str = upload_documents_use_case.execute(documents)
-    print(f"Uploaded collection to IPFS.")
-    print("Requesting indexing, please wait...")
+    print(f"done.")
+    print("Requesting indexing, please wait...",end="")
     response = request_indexing_use_case.execute(cid)
     if response.is_processed and response.index_cid:
-        print(f"Collection indexed, index CID `{response.index_cid}`.")
-        print(f"Use CID `{cid}` in your contract to query the indexed collection.")
+        print("done.")
+        print(f"Knowledge base indexed, index CID `{response.index_cid}`.")
+        print(f"Use CID `{cid}` in your contract to query the indexed knowledge base.")
     else:
-        print(response.error or "Failed to index collection.")
+        print("failed.")
+        print(response.error or "Failed to index knowledge base.")
 
 
 if __name__ == "__main__":

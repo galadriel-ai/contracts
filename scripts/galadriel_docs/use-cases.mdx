@@ -1,0 +1,63 @@
+import {chatgptAddress, dalleAddress, vitailikAddress, agentAddress} from '/snippets/addresses.mdx';
+
+On-chain AI enables building powerful products that combine the security of blockchains with the intelligence of state-of-the-art AI models.
+
+In addition to three fully functional example AI dApps built, we listed more ideas for what Galadriel enables below on this page.
+
+**Please note you need [devnet tokens](/faucet) to be able to interact with the dApps.**
+
+### On-chain ChatGPT
+
+This dApp looks familiar to most people and allows chatting to an AI model on-chain, and the conversation is stored on-chain as well.
+
+* [Live demo](https://chatgpt.galadriel.com)
+* [Front-end repo](https://github.com/galadriel-ai/example-chatgpt)
+* [Solidity contract](https://github.com/galadriel-ai/contracts/blob/main/contracts/contracts/ChatGpt.sol)
+* [Example script that calls the contract](https://github.com/galadriel-ai/contracts/blob/main/examples/chat.ts)
+* Deployed contract address: {chatgptAddress}
+
+<Frame>
+<img src="/images/chatgpt.png"/>
+</Frame>
+
+
+### VitAIlik game
+
+This dApp pitches the user in a fight against a powerful on-chain crypto-AI creature in a simple text-based game, and visualizes the battle with images.
+
+* [Live demo](https://vitailik.galadriel.com)
+* [Front-end repo](https://github.com/galadriel-ai/example-vitailik-game)
+* [Solidity contract](https://github.com/galadriel-ai/contracts/blob/main/contracts/contracts/Vitailik.sol)
+* Deployed contract address: {vitailikAddress}
+
+<Frame>
+<img src="/images/vitailik.png"/>
+</Frame>
+
+
+### Generative AI NFT minter
+
+This dApp combines the developer's prompt with the user input to make an NFT where the user has control over the final input, yet the NFT is recognizably part of the collection.
+
+Currently there is no front-end example for this; you have to directly interact with the contract to test it.
+
+* [Solidity contract](https://github.com/galadriel-ai/contracts/blob/main/contracts/contracts/DalleNft.sol)
+* Deployed contract address: {dalleAddress}
+
+### AI agent
+
+AI agents have a broad set of capabilities which depend on the tools you provide them. A common use case is research: an agent with web searching and browsing access can put together detailed reports on a topic.
+
+Currently there is a simple AI agent implementation available which you may fork and customize.
+
+* [Solidity contract](https://github.com/galadriel-ai/contracts/blob/main/contracts/contracts/Agent.sol)
+* Deployed contract address: {agentAddress}
+
+### More ideas
+* Fast and low-cost oracle that brings off-chain data on-chain by using AI to source and verify the data.
+* Investment agents that allocate a DAO's money based on the predictions of an LLM.
+* On-chain content moderation that uses AI to filter out content that doesn't follow the platform's rules.
+* Prediction market bots that use AI and web access to trade on prediction markets, especially ones too niche for most humans to do so.
+* Evaluating work done on an on-chain freelancer marketplace.
+
+Whatever you are building with Galadriel, we'd love to hear -- please reach out and share what you're working on!
