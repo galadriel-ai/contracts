@@ -139,7 +139,7 @@ async def _process_function_calls():
                     )
                 del FUNCTION_TASKS[index]
         except Exception as exc:
-            print(f"Function loop raised an exception: {exc}")
+            print(f"Function loop raised an exception: {exc}", flush=True)
         await asyncio.sleep(1)
 
 

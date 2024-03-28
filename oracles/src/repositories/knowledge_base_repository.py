@@ -46,13 +46,17 @@ class KnowledgeBaseRepository:
         dimension = len(embeddings[0])
         np_embeddings = np.array(embeddings).astype("float32")
         index = faiss.IndexFlatL2(dimension)
-        index.add(np_embeddings)
+        await asyncio.get_running_loop().run_in_executor(
+            None, index.add, np_embeddings
+        )
         print(f"KB: Created {name}", flush=True)
         await self._add_knowledge_base(name, index, documents)
 
     async def serialize(self, name: str) -> bytes:
         index, time = self.indexes[name]
-        np_index = faiss.serialize_index(index)
+        np_index = await asyncio.get_running_loop().run_in_executor(
+            None, faiss.serialize_index, index
+        )
         bytes_container = BytesIO()
         np.save(bytes_container, np_index)
         return bytes_container.getvalue()
@@ -60,7 +64,9 @@ class KnowledgeBaseRepository:
     async def deserialize(self, name: str, documents: List[Document], data: bytes):
         bytes_container = BytesIO(data)
         np_index = np.load(bytes_container)
-        index = faiss.deserialize_index(np_index)
+        index = await asyncio.get_running_loop().run_in_executor(
+            None, faiss.deserialize_index, np_index
+        )
         print(f"KB: Deserialized {name}", flush=True)
         await self._add_knowledge_base(name, index, documents)
 
