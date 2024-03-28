@@ -500,7 +500,7 @@ class OracleRepository:
         tx_hash = await self.web3_client.eth.send_raw_transaction(
             signed_tx.rawTransaction
         )
-        await self.web3_client.eth.wait_for_transaction_receipt(tx_hash)
+        return await self.web3_client.eth.wait_for_transaction_receipt(tx_hash)
 
     async def _get_openai_config(self, i: int) -> Optional[OpenAiConfig]:
         config = await self.oracle_contract.functions.openAiConfigurations(i).call()
