@@ -228,6 +228,7 @@ contract ChatOracle {
         string memory errorMessage
     ) public onlyWhitelisted {
         require(!isPromptProcessed[promptId], "Prompt already processed");
+        isPromptProcessed[promptId] = true;
         IChatGpt(callbackAddresses[promptId]).onOracleLlmResponse(
             promptCallBackId,
             response,
@@ -280,6 +281,7 @@ contract ChatOracle {
         string memory errorMessage
     ) public onlyWhitelisted {
         require(!isFunctionProcessed[functionId], "Function already processed");
+        isFunctionProcessed[functionId] = true;
         IChatGpt(functionCallbackAddresses[functionId]).onOracleFunctionResponse(
             functionCallBackId,
             response,
@@ -313,6 +315,7 @@ contract ChatOracle {
         string memory errorMessage
     ) public onlyWhitelisted {
         require(!isPromptProcessed[promptId], "Prompt already processed");
+        isPromptProcessed[promptId] = true;
         IChatGpt(callbackAddresses[promptId]).onOracleOpenAiLlmResponse(
             promptCallBackId,
             response,
@@ -346,6 +349,7 @@ contract ChatOracle {
         string memory errorMessage
     ) public onlyWhitelisted {
         require(!isPromptProcessed[promptId], "Prompt already processed");
+        isPromptProcessed[promptId] = true;
         IChatGpt(callbackAddresses[promptId]).onOracleGroqLlmResponse(
             promptCallBackId,
             response,
