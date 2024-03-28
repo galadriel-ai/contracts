@@ -313,9 +313,11 @@ class OracleRepository:
                 is_processed = await self.oracle_contract.functions.isKbQueryProcessed(
                     i
                 ).call()
-                cid = await self.oracle_contract.functions.kbQueryCids(i).call()
+                request = await self.oracle_contract.functions.kbQueries(i).call()
+                cid = request[0]
+                query = request[1]
+                num_documents = request[2]
                 index_cid = await self.oracle_contract.functions.kbIndexes(cid).call()
-                query = await self.oracle_contract.functions.kbQueries(i).call()
                 self.indexed_kb_queries.append(
                     KnowledgeBaseQuery(
                         id=i,
@@ -324,6 +326,7 @@ class OracleRepository:
                         cid=cid,
                         index_cid=index_cid,
                         query=query,
+                        num_documents=num_documents,
                     )
                 )
             self.last_kb_query_count = kb_query_count
@@ -433,6 +436,34 @@ class OracleRepository:
             return PromptType(prompt_type)
         except:
             return PromptType.DEFAULT
+
+    async def _get_openai_config(self, i: int) -> Optional[OpenAiConfig]:
+        config = await self.oracle_contract.functions.openAiConfigurations(i).call()
+        if not config or not config[0] or not config[0] in get_args(OpenAiModelType):
+            return None
+        try:
+            return OpenAiConfig(
+                model=config[0],
+                frequency_penalty=_parse_float_from_int(config[1], -20, 20),
+                logit_bias=_parse_json_string(config[2]),
+                # Check max value?
+                max_tokens=_value_or_none(config[3]),
+                presence_penalty=_parse_float_from_int(config[4], -20, 20),
+                response_format=_get_response_format(config[5]),
+                seed=_value_or_none(config[6]),
+                stop=_value_or_none(config[7]),
+                temperature=_parse_float_from_int(config[8], 0, 20),
+                top_p=_parse_float_from_int(config[9], 0, 100, decimals=2),
+                tools=_parse_tools(config[10]),
+                tool_choice=(
+                    config[11]
+                    if (config[11] and config[11] in get_args(OpenaiToolChoiceType))
+                    else None
+                ),
+                user=_value_or_none(config[12]),
+            )
+        except:
+            return None
 
 
 def _value_or_none(value: Any) -> Optional[Any]:

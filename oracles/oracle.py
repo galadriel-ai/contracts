@@ -28,6 +28,8 @@ KB_INDEXING_TASKS = {}
 KB_QUERY_TASKS = {}
 MAX_CONCURRENT_CHATS = 5
 MAX_CONCURRENT_FUNCTION_CALLS = 5
+MAX_CONCURRENT_INDEXING = 5
+MAX_CONCURRENT_KB_QUERIES = 5
 
 
 async def _answer_chat(chat: Chat, semaphore: Semaphore):
@@ -45,7 +47,7 @@ async def _answer_chat(chat: Chat, semaphore: Semaphore):
             print(
                 f"Chat {chat.id} {'' if success else 'not '}"
                 f"replied, tx: {chat.transaction_receipt}",
-                flush=True
+                flush=True,
             )
     except Exception as ex:
         print(f"Failed to answer chat {chat.id}, exc: {ex}", flush=True)
@@ -109,7 +111,7 @@ async def _call_function(function_call: FunctionCall, semaphore: Semaphore):
                 print(
                     f"Function {function_call.id} {'' if success else 'not '}"
                     f"called, tx: {function_call.transaction_receipt}",
-                    flush=True
+                    flush=True,
                 )
     except Exception as ex:
         print(f"Failed to call function {function_call.id}, exc: {ex}", flush=True)
@@ -131,7 +133,10 @@ async def _process_function_calls():
                 try:
                     await FUNCTION_TASKS[index]
                 except Exception as e:
-                    print(f"Task for function {index} raised an exception: {e}", flush=True)
+                    print(
+                        f"Task for function {index} raised an exception: {e}",
+                        flush=True,
+                    )
                 del FUNCTION_TASKS[index]
         except Exception as exc:
             print(f"Function loop raised an exception: {exc}")
@@ -142,19 +147,21 @@ async def _index_knowledgebase_function(
     request: KnowledgeBaseIndexingRequest,
     ipfs_repository: IpfsRepository,
     kb_repository: KnowledgeBaseRepository,
+    semaphore: Semaphore,
 ):
     try:
-        indexing_result = await index_knowledge_base_use_case.execute(
-            request, ipfs_repository, kb_repository
-        )
-        success = await repository.send_kb_indexing_response(
-            request,
-            index_cid=indexing_result.index_cid,
-            error_message=indexing_result.error,
-        )
-        print(
-            f"Knowledge base indexing {request.id} {'' if success else 'not '} indexed, tx: {request.transaction_receipt}"
-        )
+        async with semaphore:
+            indexing_result = await index_knowledge_base_use_case.execute(
+                request, ipfs_repository, kb_repository
+            )
+            success = await repository.send_kb_indexing_response(
+                request,
+                index_cid=indexing_result.index_cid,
+                error_message=indexing_result.error,
+            )
+            print(
+                f"Knowledge base indexing {request.id} {'' if success else 'not '} indexed, tx: {request.transaction_receipt}"
+            )
     except Exception as ex:
         print(
             f"Failed to index knowledge base {request.id}, cid {request.cid}, exc: {ex}"
@@ -162,7 +169,7 @@ async def _index_knowledgebase_function(
 
 
 async def _process_knowledge_base_indexing():
-
+    semaphore = asyncio.Semaphore(MAX_CONCURRENT_INDEXING)
     while True:
         try:
             kb_indexing_requests = await repository.get_unindexed_knowledge_bases()
@@ -173,7 +180,10 @@ async def _process_knowledge_base_indexing():
                     )
                     task = asyncio.create_task(
                         _index_knowledgebase_function(
-                            kb_indexing_request, ipfs_repository, kb_repository
+                            kb_indexing_request,
+                            ipfs_repository,
+                            kb_repository,
+                            semaphore,
                         )
                     )
                     KB_INDEXING_TASKS[kb_indexing_request.id] = task
@@ -197,17 +207,19 @@ async def _query_knowledge_base(
     request: KnowledgeBaseQuery,
     ipfs_repository: IpfsRepository,
     kb_repository: KnowledgeBaseRepository,
+    semaphore: Semaphore,
 ):
     try:
-        query_result = await query_knowledge_base_use_case.execute(
-            request, ipfs_repository, kb_repository
-        )
-        success = await repository.send_kb_query_response(
-            request, query_result.documents, error_message=query_result.error
-        )
-        print(
-            f"Knowledge base query {request.id} {'' if success else 'not '} answered, tx: {request.transaction_receipt}"
-        )
+        async with semaphore:
+            query_result = await query_knowledge_base_use_case.execute(
+                request, ipfs_repository, kb_repository
+            )
+            success = await repository.send_kb_query_response(
+                request, query_result.documents, error_message=query_result.error
+            )
+            print(
+                f"Knowledge base query {request.id} {'' if success else 'not '} answered, tx: {request.transaction_receipt}"
+            )
     except Exception as ex:
         print(
             f"Failed to query knowledge base {request.id}, cid {request.index_cid}, exc: {ex}"
@@ -216,6 +228,7 @@ async def _query_knowledge_base(
 
 async def _process_knowledge_base_queries():
     ipfs_repository = IpfsRepository()
+    semaphore = asyncio.Semaphore(MAX_CONCURRENT_KB_QUERIES)
     while True:
         try:
             kb_queries = await repository.get_unanswered_kb_queries()
@@ -225,7 +238,9 @@ async def _process_knowledge_base_queries():
                         f"Querying knowledge base {kb_query.id}, cid {kb_query.cid}, index_cid {kb_query.index_cid}"
                     )
                     task = asyncio.create_task(
-                        _query_knowledge_base(kb_query, ipfs_repository, kb_repository)
+                        _query_knowledge_base(
+                            kb_query, ipfs_repository, kb_repository, semaphore
+                        )
                     )
                     KB_QUERY_TASKS[kb_query.id] = task
             completed_tasks = [

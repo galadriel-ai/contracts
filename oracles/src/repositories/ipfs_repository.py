@@ -17,7 +17,9 @@ class IpfsRepository:
                         break
                     data += chunk
                     if max_bytes > 0 and len(data) > max_bytes:
-                        raise Exception(f"File exceeded the maximum allowed size of {max_bytes} bytes.")
+                        raise Exception(
+                            f"File exceeded the maximum allowed size of {max_bytes} bytes."
+                        )
                 return data
 
     async def write_file(self, data: Union[str, bytes]) -> str:

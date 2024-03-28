@@ -83,7 +83,7 @@ def execute(cid: str) -> KnowledgeBaseIndexingResponse:
             id=None, is_processed=True, index_cid=index_cid, error=None
         )
     request_id = _request_indexing(cid)
-    if not request_id:
+    if request_id is None:
         return KnowledgeBaseIndexingResponse(
             id=None,
             is_processed=False,

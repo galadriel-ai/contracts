@@ -23,7 +23,7 @@ async def execute(
             error="",
         )
     except Exception as e:
-        print(e)
+        print(e, flush=True)
         return KnowledgeBaseIndexingResult(
             index_cid="",
             error=str(e),

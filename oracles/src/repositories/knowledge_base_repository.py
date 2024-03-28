@@ -38,7 +38,6 @@ class KnowledgeBaseRepository:
     async def create(self, name: str, documents: List[Document]):
         embeddings = []
         for i in range(0, len(documents), BATCH_SIZE):
-            print(i)
             batch = [
                 document.page_content for document in documents[i : i + BATCH_SIZE]
             ]
@@ -65,7 +64,7 @@ class KnowledgeBaseRepository:
         print(f"KB: Deserialized {name}", flush=True)
         await self._add_knowledge_base(name, index, documents)
 
-    async def query(self, name: str, query: str, k: int = 1) -> List[str]:
+    async def query(self, name: str, query: str, k: int = 1) -> List[Document]:
         async with self.lock:
             self.indexes.move_to_end(name)
             index, time = self.indexes[name]
@@ -73,7 +72,9 @@ class KnowledgeBaseRepository:
             query_embedding = await self._create_embedding([query])
             query_vector = np.array([query_embedding[0]]).astype("float32")
             _, indexes = index.search(query_vector, k)
-            results = [doc_store[indexes[0][i]] for i in range(len(indexes[0]))]
+            results = [
+                doc_store[indexes[0][i]] for i in range(len(indexes[0]))
+            ]
             return results
 
     async def exists(self, name: str) -> bool:

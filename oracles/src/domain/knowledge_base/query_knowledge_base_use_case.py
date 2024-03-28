@@ -22,10 +22,13 @@ async def execute(
             await kb_repository.deserialize(
                 request.cid, documents=documents, data=index
             )
-        documents = await kb_repository.query(request.cid, request.query)
-        return KnowledgeBaseQueryResult(documents=documents, error="")
+        documents = await kb_repository.query(
+            request.cid, request.query, request.num_documents
+        )
+        document_texts = [document.page_content for document in documents]
+        return KnowledgeBaseQueryResult(documents=document_texts, error="")
     except Exception as e:
-        print(e)
+        print(e, flush=True)
         return KnowledgeBaseQueryResult(documents=[], error=str(e))
 
 

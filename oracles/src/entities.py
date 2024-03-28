@@ -102,6 +102,5 @@ class KnowledgeBaseQuery:
     cid: str
     index_cid: str
     query: str
-    documents: List[str] = field(default_factory=list)
-    error_message: Optional[str] = None
+    num_documents: int
     transaction_receipt: dict = None

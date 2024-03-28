@@ -92,6 +92,12 @@ interface IOracleTypes {
         uint32 promptTokens;
         uint32 totalTokens;
     }
+
+    struct KnowledgeBaseQueryRequest {
+        string cid;
+        string query;
+        uint32 num_documents;
+    }
 }
 
 interface IChatGpt {
@@ -182,8 +188,7 @@ contract ChatOracle {
     mapping(string => string) public kbIndexes;
     uint public kbIndexingRequestCount;
 
-    mapping(uint => string) public kbQueryCids;
-    mapping(uint => string) public kbQueries;
+    mapping(uint => IOracleTypes.KnowledgeBaseQueryRequest) public kbQueries;
     mapping(uint => address) public kbQueryCallbackAddresses;
     mapping(uint => uint) public kbQueryCallbackIds;
     mapping(uint => bool) public isKbQueryProcessed;
@@ -413,12 +418,16 @@ contract ChatOracle {
     function createKnowledgeBaseQuery(
         uint kbQueryCallbackId,
         string memory cid,
-        string memory query
+        string memory query,
+        uint32 num_documents
     ) public returns (uint i) {
         require(bytes(kbIndexes[cid]).length > 0, "Index not available for this CID");
+        require(bytes(query).length > 0, "Query cannot be empty");
+        require(num_documents > 0, "Number of documents should be greater than 0");
         uint kbQueryId = kbQueryCount;
-        kbQueryCids[kbQueryId] = cid;
-        kbQueries[kbQueryId] = query;
+        kbQueries[kbQueryId].cid = cid;
+        kbQueries[kbQueryId].query = query;
+        kbQueries[kbQueryId].num_documents = num_documents;
         kbQueryCallbackIds[kbQueryId] = kbQueryCallbackId;
 
         kbQueryCallbackAddresses[kbQueryId] = msg.sender;
