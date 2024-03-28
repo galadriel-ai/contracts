@@ -8,6 +8,13 @@ interface IOracle {
     function createLlmCall(
         uint promptId
     ) external returns (uint);
+
+    function createKnowledgeBaseQuery(
+        uint kbQueryCallbackId,
+        string memory cid,
+        string memory query,
+        uint32 num_documents
+    ) external returns (uint i);
 }
 
 contract ChatGpt {
@@ -30,13 +37,14 @@ contract ChatGpt {
 
     address private owner;
     address public oracleAddress;
+    string public knowledgeBase;
 
     event OracleAddressUpdated(address indexed newOracleAddress);
 
-    constructor(address initialOracleAddress) {
+    constructor(address initialOracleAddress, string memory knowledgeBaseCID) {
         owner = msg.sender;
         oracleAddress = initialOracleAddress;
-        chatRunsCount = 0;
+        knowledgeBase = knowledgeBaseCID;
     }
 
     modifier onlyOwner() {
@@ -67,7 +75,18 @@ contract ChatGpt {
         uint currentId = chatRunsCount;
         chatRunsCount = chatRunsCount + 1;
 
-        IOracle(oracleAddress).createLlmCall(currentId);
+        // If there is a knowledge base, create a knowledge base query
+        if (bytes(knowledgeBase).length > 0) {
+            IOracle(oracleAddress).createKnowledgeBaseQuery(
+                currentId,
+                knowledgeBase,
+                message,
+                3
+            );
+        } else {
+            // Otherwise, create an LLM call
+            IOracle(oracleAddress).createLlmCall(currentId);
+        }
         emit ChatCreated(msg.sender, currentId);
 
         return currentId;
@@ -91,6 +110,39 @@ contract ChatGpt {
         run.messagesCount++;
     }
 
+    function onOracleKnowledgeBaseQueryResponse(
+        uint runId,
+        string [] memory documents,
+        string memory errorMessage
+    ) public onlyOracle {
+        ChatRun storage run = chatRuns[runId];
+        require(
+            keccak256(abi.encodePacked(run.messages[run.messagesCount - 1].role)) == keccak256(abi.encodePacked("user")),
+            "No message to add context to"
+        );
+        // Retrieve the last user message
+        Message storage lastMessage = run.messages[run.messagesCount - 1];
+
+        // Start with the original message content
+        string memory newContent = lastMessage.content;
+
+        // Append "Relevant context:\n" only if there are documents
+        if (documents.length > 0) {
+            newContent = string(abi.encodePacked(newContent, "\n\nRelevant context:\n"));
+        }
+
+        // Iterate through the documents and append each to the newContent
+        for (uint i = 0; i < documents.length; i++) {
+            newContent = string(abi.encodePacked(newContent, documents[i], "\n"));
+        }
+
+        // Finally, set the lastMessage content to the newly constructed string
+        lastMessage.content = newContent;
+
+        // Call LLM
+        IOracle(oracleAddress).createLlmCall(runId);
+    }
+
     function addMessage(string memory message, uint runId) public {
         ChatRun storage run = chatRuns[runId];
         require(
@@ -106,7 +158,18 @@ contract ChatGpt {
         newMessage.role = "user";
         run.messages.push(newMessage);
         run.messagesCount++;
-        IOracle(oracleAddress).createLlmCall(runId);
+        // If there is a knowledge base, create a knowledge base query
+        if (bytes(knowledgeBase).length > 0) {
+            IOracle(oracleAddress).createKnowledgeBaseQuery(
+                runId,
+                knowledgeBase,
+                message,
+                3
+            );
+        } else {
+            // Otherwise, create an LLM call
+            IOracle(oracleAddress).createLlmCall(runId);
+        }
     }
 
     function getMessageHistoryContents(uint chatId) public view returns (string[] memory) {

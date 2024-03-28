@@ -1,0 +1,7 @@
+langchain==0.1.13
+langchain-community==0.0.29
+python-dotenv==1.0.1
+requests==2.31.0
+tqdm==4.66.2
+unstructured[all-docs]==0.12.6
+web3==6.15.1
