@@ -21,6 +21,8 @@ from src.entities import OpenAiConfig
 from src.entities import OpenAiModelType
 from src.entities import OpenaiToolChoiceType
 from src.entities import PromptType
+from src.entities import KnowledgeBaseIndexingRequest
+from src.entities import KnowledgeBaseQuery
 from web3.types import TxReceipt
 
 
@@ -30,6 +32,10 @@ class OracleRepository:
         self.indexed_chats = []
         self.last_function_calls_count = 0
         self.indexed_function_calls = []
+        self.last_kb_index_request_count = 0
+        self.indexed_kb_index_requests = []
+        self.last_kb_query_count = 0
+        self.indexed_kb_queries = []
         self.web3_client = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(settings.WEB3_RPC_URL))
         self.account = self.web3_client.eth.account.from_key(settings.PRIVATE_KEY)
         with open(settings.ORACLE_ABI_PATH, "r", encoding="utf-8") as f:
@@ -173,7 +179,7 @@ class OracleRepository:
         if function_calls_count > self.last_function_calls_count:
             print(
                 f"Indexing new function calls from {self.last_function_calls_count} to {function_calls_count}",
-                flush=True
+                flush=True,
             )
             for i in range(self.last_function_calls_count, function_calls_count):
                 callback_id = await self.oracle_contract.functions.functionCallbackIds(
@@ -199,7 +205,7 @@ class OracleRepository:
                 )
             self.last_function_calls_count = function_calls_count
 
-    async def get_unanswered__function_calls(self) -> List[FunctionCall]:
+    async def get_unanswered_function_calls(self) -> List[FunctionCall]:
         await self._index_new_function_calls()
         unanswered_function_calls = [
             function_call
@@ -254,6 +260,179 @@ class OracleRepository:
 
         tx = await self.oracle_contract.functions.markFunctionAsProcessed(
             function_call.id,
+        ).build_transaction(tx_data)
+        return await self._sign_and_send_tx(tx)
+
+    async def _index_new_kb_index_requests(self):
+        kb_index_request_count = (
+            await self.oracle_contract.functions.kbIndexingRequestCount().call()
+        )
+        if kb_index_request_count > self.last_kb_index_request_count:
+            print(
+                f"Indexing new knowledge base indexing requests from {self.last_kb_index_request_count} to {kb_index_request_count}"
+            )
+            for i in range(self.last_kb_index_request_count, kb_index_request_count):
+                is_processed = (
+                    await self.oracle_contract.functions.isKbIndexingRequestProcessed(
+                        i
+                    ).call()
+                )
+                cid = await self.oracle_contract.functions.kbIndexingRequests(i).call()
+                index_cid = await self.oracle_contract.functions.kbIndexes(cid).call()
+                self.indexed_kb_index_requests.append(
+                    KnowledgeBaseIndexingRequest(
+                        id=i,
+                        cid=cid,
+                        index_cid=index_cid,
+                        is_processed=is_processed,
+                    )
+                )
+            self.last_kb_index_request_count = kb_index_request_count
+
+    async def get_unindexed_knowledge_bases(self) -> List[KnowledgeBaseIndexingRequest]:
+        await self._index_new_kb_index_requests()
+        unanswered_kb_indexing_requests = [
+            kb_indexing_request
+            for kb_indexing_request in self.indexed_kb_index_requests
+            if not kb_indexing_request.is_processed
+        ]
+        return unanswered_kb_indexing_requests
+
+    async def send_kb_indexing_response(
+        self,
+        request: KnowledgeBaseIndexingRequest,
+        index_cid: str,
+        error_message: str,
+    ) -> bool:
+        nonce = await self.web3_client.eth.get_transaction_count(self.account.address)
+        tx_data = {
+            "from": self.account.address,
+            "nonce": nonce,
+            # TODO: pick gas amount in a better way
+            # "gas": 1000000,
+            "maxFeePerGas": self.web3_client.to_wei("2", "gwei"),
+            "maxPriorityFeePerGas": self.web3_client.to_wei("1", "gwei"),
+        }
+        if chain_id := settings.CHAIN_ID:
+            tx_data["chainId"] = int(chain_id)
+        try:
+            tx = await self.oracle_contract.functions.addKnowledgeBaseIndex(
+                request.id, index_cid, error_message
+            ).build_transaction(tx_data)
+        except Exception as e:
+            request.is_processed = True
+            request.transaction_receipt = {"error": str(e)}
+            await self.mark_kb_indexing_request_as_done(request)
+            return False
+        tx_receipt = await self._sign_and_send_tx(tx)
+        request.transaction_receipt = tx_receipt
+        request.is_processed = bool(tx_receipt.get("status"))
+        return bool(tx_receipt.get("status"))
+
+    async def mark_kb_indexing_request_as_done(self, request: KnowledgeBaseIndexingRequest):
+        nonce = await self.web3_client.eth.get_transaction_count(self.account.address)
+        tx_data = {
+            "from": self.account.address,
+            "nonce": nonce,
+            # TODO: pick gas amount in a better way
+            # "gas": 1000000,
+            "maxFeePerGas": self.web3_client.to_wei("2", "gwei"),
+            "maxPriorityFeePerGas": self.web3_client.to_wei("1", "gwei"),
+        }
+        if chain_id := settings.CHAIN_ID:
+            tx_data["chainId"] = int(chain_id)
+
+        tx = await self.oracle_contract.functions.markKnowledgeBaseAsProcessed(
+            request.id,
+        ).build_transaction(tx_data)
+        return await self._sign_and_send_tx(tx)
+
+    async def _index_new_kb_queries(self):
+        kb_query_count = await self.oracle_contract.functions.kbQueryCount().call()
+        if kb_query_count > self.last_kb_query_count:
+            print(
+                f"Indexing new knowledge base queries from {self.last_kb_query_count} to {kb_query_count}"
+            )
+            for i in range(self.last_kb_query_count, kb_query_count):
+                callback_id = await self.oracle_contract.functions.kbQueryCallbackIds(
+                    i
+                ).call()
+                is_processed = await self.oracle_contract.functions.isKbQueryProcessed(
+                    i
+                ).call()
+                request = await self.oracle_contract.functions.kbQueries(i).call()
+                cid = request[0]
+                query = request[1]
+                num_documents = request[2]
+                index_cid = await self.oracle_contract.functions.kbIndexes(cid).call()
+                self.indexed_kb_queries.append(
+                    KnowledgeBaseQuery(
+                        id=i,
+                        callback_id=callback_id,
+                        is_processed=is_processed,
+                        cid=cid,
+                        index_cid=index_cid,
+                        query=query,
+                        num_documents=num_documents,
+                    )
+                )
+            self.last_kb_query_count = kb_query_count
+
+    async def get_unanswered_kb_queries(self) -> List[KnowledgeBaseQuery]:
+        await self._index_new_kb_queries()
+        unanswered_kb_queries = [
+            kb_query
+            for kb_query in self.indexed_kb_queries
+            if not kb_query.is_processed
+        ]
+        return unanswered_kb_queries
+
+    async def send_kb_query_response(
+        self,
+        request: KnowledgeBaseQuery,
+        documents: List[str],
+        error_message: str = "",
+    ) -> bool:
+        nonce = await self.web3_client.eth.get_transaction_count(self.account.address)
+        tx_data = {
+            "from": self.account.address,
+            "nonce": nonce,
+            # TODO: pick gas amount in a better way
+            # "gas": 1000000,
+            "maxFeePerGas": self.web3_client.to_wei("2", "gwei"),
+            "maxPriorityFeePerGas": self.web3_client.to_wei("1", "gwei"),
+        }
+        if chain_id := settings.CHAIN_ID:
+            tx_data["chainId"] = int(chain_id)
+        try:
+            tx = await self.oracle_contract.functions.addKnowledgeBaseQueryResponse(
+                request.id, request.callback_id, documents, error_message
+            ).build_transaction(tx_data)
+        except Exception as e:
+            request.is_processed = True
+            request.transaction_receipt = {"error": str(e)}
+            await self.mark_kb_query_as_done(request)
+            return False
+        tx_receipt = await self._sign_and_send_tx(tx)
+        request.transaction_receipt = tx_receipt
+        request.is_processed = bool(tx_receipt.get("status"))
+        return bool(tx_receipt.get("status"))
+
+    async def mark_kb_query_as_done(self, query: KnowledgeBaseQuery):
+        nonce = await self.web3_client.eth.get_transaction_count(self.account.address)
+        tx_data = {
+            "from": self.account.address,
+            "nonce": nonce,
+            # TODO: pick gas amount in a better way
+            # "gas": 1000000,
+            "maxFeePerGas": self.web3_client.to_wei("2", "gwei"),
+            "maxPriorityFeePerGas": self.web3_client.to_wei("1", "gwei"),
+        }
+        if chain_id := settings.CHAIN_ID:
+            tx_data["chainId"] = int(chain_id)
+
+        tx = await self.oracle_contract.functions.markKnowledgeBaseQueryAsProcessed(
+            query.id,
         ).build_transaction(tx_data)
         return await self._sign_and_send_tx(tx)
 
@@ -323,6 +502,34 @@ class OracleRepository:
         )
         return await self.web3_client.eth.wait_for_transaction_receipt(tx_hash)
 
+    async def _get_openai_config(self, i: int) -> Optional[OpenAiConfig]:
+        config = await self.oracle_contract.functions.openAiConfigurations(i).call()
+        if not config or not config[0] or not config[0] in get_args(OpenAiModelType):
+            return None
+        try:
+            return OpenAiConfig(
+                model=config[0],
+                frequency_penalty=_parse_float_from_int(config[1], -20, 20),
+                logit_bias=_parse_json_string(config[2]),
+                # Check max value?
+                max_tokens=_value_or_none(config[3]),
+                presence_penalty=_parse_float_from_int(config[4], -20, 20),
+                response_format=_get_response_format(config[5]),
+                seed=_value_or_none(config[6]),
+                stop=_value_or_none(config[7]),
+                temperature=_parse_float_from_int(config[8], 0, 20),
+                top_p=_parse_float_from_int(config[9], 0, 100, decimals=2),
+                tools=_parse_tools(config[10]),
+                tool_choice=(
+                    config[11]
+                    if (config[11] and config[11] in get_args(OpenaiToolChoiceType))
+                    else None
+                ),
+                user=_value_or_none(config[12]),
+            )
+        except:
+            return None
+
 
 def _value_or_none(value: Any) -> Optional[Any]:
     return value if value else None
@@ -374,7 +581,9 @@ def _format_openai_response(completion: Optional[ChatCompletion]) -> Dict:
         "id": completion.id,
         "content": choice.content if choice.content else "",
         "functionName": choice.tool_calls[0].function.name if choice.tool_calls else "",
-        "functionArguments": choice.tool_calls[0].function.arguments if choice.tool_calls else "",
+        "functionArguments": (
+            choice.tool_calls[0].function.arguments if choice.tool_calls else ""
+        ),
         "created": completion.created,
         "model": completion.model,
         "systemFingerprint": completion.system_fingerprint,

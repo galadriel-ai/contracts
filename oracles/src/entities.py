@@ -3,6 +3,7 @@ from typing import Dict
 from typing import List
 from typing import Literal
 from typing import Optional
+from dataclasses import field
 from dataclasses import dataclass
 from typing import Union
 from openai.types.chat import ChatCompletion
@@ -81,4 +82,25 @@ class FunctionCall:
     function_input: str
     response: Optional[str] = None
     error_message: Optional[str] = None
+    transaction_receipt: dict = None
+
+
+@dataclass
+class KnowledgeBaseIndexingRequest:
+    id: int
+    cid: str
+    is_processed: bool
+    index_cid: Optional[str] = None
+    transaction_receipt: dict = None
+
+
+@dataclass
+class KnowledgeBaseQuery:
+    id: int
+    callback_id: int
+    is_processed: bool
+    cid: str
+    index_cid: str
+    query: str
+    num_documents: int
     transaction_receipt: dict = None

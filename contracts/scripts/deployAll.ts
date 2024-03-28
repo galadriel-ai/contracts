@@ -11,8 +11,8 @@ async function main() {
   await deployVitailik(oracleAddress);
   await deployAgent(oracleAddress);
   console.log()
-
-  for (let contractName of ["ChatGpt", "OpenAiChatGpt", "GroqChatGpt"]) {
+  await deployChatGptWithKnowledgeBase("ChatGpt", oracleAddress, "");
+  for (let contractName of ["OpenAiChatGpt", "GroqChatGpt"]) {
     await deployChatGpt(contractName, oracleAddress)
   }
 }
@@ -83,6 +83,16 @@ async function deployChatGpt(contractName: string, oracleAddress: string) {
 
   console.log(
     `${contractName} deployed to ${agent.target}`
+  );
+}
+
+async function deployChatGptWithKnowledgeBase(contractName: string, oracleAddress: string, knowledgeBaseCID: string) {
+  const agent = await ethers.deployContract(contractName, [oracleAddress, knowledgeBaseCID], {});
+
+  await agent.waitForDeployment();
+
+  console.log(
+    `${contractName} deployed to ${agent.target} with knowledge base "${knowledgeBaseCID}"`
   );
 }
 
