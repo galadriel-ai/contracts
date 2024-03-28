@@ -30,7 +30,7 @@ To set up your environment for running the RAG Knowledge Base Script, follow the
     ```shell
     pip install -r requirements.txt
     ```
-4. Create a `.env` file in the root directory of the script and add your `nft.storage` API key and wallet private key as follows:
+4. Create a `.env` file and add your `nft.storage` API key and wallet private key as follows:
     ```plaintext
     PRIVATE_KEY=your_wallet_private key
     NFT_STORAGE_API_KEY=your_api_key_here
