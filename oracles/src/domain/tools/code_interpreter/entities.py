@@ -3,6 +3,6 @@ from dataclasses import dataclass
 
 @dataclass
 class PythonInterpreterResult:
-    stdout: str
-    stderr: str
+    output: str
+    error: str
     exit_code: int

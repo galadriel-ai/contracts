@@ -103,8 +103,8 @@ async def _call_function(function_call: FunctionCall, semaphore: Semaphore):
                     python_interpreter_result = await python_interpreter_use_case.execute(
                         formatted_input
                     )
-                    response = python_interpreter_result.stdout
-                    error_message = python_interpreter_result.stderr
+                    response = python_interpreter_result.output
+                    error_message = python_interpreter_result.error
                 else:
                     response = ""
                     error_message = f"Unknown function '{function_call.function_type}'"
