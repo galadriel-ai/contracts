@@ -9,7 +9,7 @@ from typing import Union
 from openai.types.chat import ChatCompletion
 from openai.types.chat import ChatCompletionToolParam
 
-ALLOWED_FUNCTION_NAMES = ["image_generation", "web_search"]
+ALLOWED_FUNCTION_NAMES = ["image_generation", "web_search", "code_interpreter"]
 
 OpenAiModelType = Literal["gpt-4-turbo-preview", "gpt-3.5-turbo-1106"]
 
