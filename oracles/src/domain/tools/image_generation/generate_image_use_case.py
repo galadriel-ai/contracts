@@ -4,7 +4,7 @@ from typing import Optional
 from openai import AsyncOpenAI
 from openai import RateLimitError
 from openai import APIError
-from src.domain.image_generation.entities import ImageGenerationResult
+from src.domain.tools.image_generation.entities import ImageGenerationResult
 
 
 @backoff.on_exception(backoff.expo, RateLimitError)

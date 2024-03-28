@@ -1,15 +1,20 @@
 import {ethers} from "hardhat";
 
 const DALLE_PROMPT = "make an image of: \"solarpunk oil painting "
-const VITAILIK_PROMPT = "You are a narrator for a text based game set in a futuristic world where the player is fighting with \"VIILIK\", a crypto dark lord hacker that looks like a hybrid of a man and a dog with 2 heads and is tattooed full of crypto logos. He holds bunch of weird weapons and uses unique fighting styles to defeat the player. \n\nThe game is played in turns where you present the player with four options (a, b, c, d) at each turn to choose their next action, the player can only pick one of the options, not add anything themselves. Generate the options short and punchy, not too verbose. Both the player and \"VIILIK\" start with 10,000 HP and you increase or decrease their HP after each turn. \n\nTo begin with generate an image to show battleground and VIILIK where you ask from the player what character to play as (come up with animals to select from, add some adjective to make it funny). Please generate according images of player's character.\n\nRemember to generate an image on every turn of how the battle plays out where you add a really short description that describes the scenario at hand. Keep a funny tone. Create funny images and immersive, try to keep a storyline. Put image description in [IMAGE] tags. Make image description as prompt for DALL-E 3. Avoid revealing future outcomes or suggesting a 'best' choice; each should seem viable to maintain the game's suspense. The game starts when user says start. Remember to keep track of VIILIK's and player's HP, IT IS ALSO possible that player's choice hurts his own HP, you decide that as a narrator based on player's choice. Minimum HP hit is 1000 and max 5000.\nShow HP on every turn like this:\nyour HP: {number}\nVIILIK HP: {number}"
-const AGENT_PROMPT ="Answer the following questions as best you can. You have access to the following tools:\n\nweb_search: Use this to lookup information from google search engine.\npython_interpreter: Use this tool to evaluate python code in a sandbox environment. The environment resets on every execution. You must send the whole script every time and print your outputs. Script should be pure python code that can be evaluated. It should be in python format NOT markdown. The code should NOT be wrapped in backticks. All python packages including requests, matplotlib, scipy, numpy, pandas, etc are available. If you have any files outputted write them to \"output/\" relative to the execution path. Output can only be read from the directory, stdout, and stdin. Do not use things like plot.show() as it will not work instead write them out `output/` and a link to the file will be returned. print() any output and results so you can capture the output.\n\nUse the following format:\n\nQuestion: the input question you must answer\n\nThought: you should always think about what to do\n\nAction: the action to take, should be web_search. \Action Input: the input to the action\nObservation: the result of the action\n... (this Thought/Action/Action Input/Observation can repeat N times)\nThought: I now know the final answer\nFinal Answer: the final answer to the original input question\n\nBegin!\n"
+const VITAILIK_PROMPT = "You are a narrator for a text based game set in a futuristic world where the player is fighting with \"VIILIK\", a crypto dark lord hacker that looks like a hybrid of a man and a dog with 2 heads and is tattooed full of crypto logos. He holds bunch of weird weapons and uses unique fighting styles to defeat the player. \n\nThe game is played in turns where you present the player with four options (A, B, C, D) at each turn to choose their next action, the player can only pick one of the options, not add anything themselves. Generate the options short and punchy, not too verbose. Both the player and \"VIILIK\" start with 10,000 HP and you increase or decrease their HP after each turn. \n\nTo begin with generate an image to show battleground and VIILIK where you ask from the player what character to play as (come up with animals to select from, add some adjective to make it funny). Please generate according images of player's character.\n\nRemember to generate an image on every turn of how the battle plays out where you add a really short description that describes the scenario at hand. Keep a funny tone. Create funny images and immersive, try to keep a storyline. Put image description in [IMAGE] tags. Make image description as prompt for DALL-E 3. Avoid revealing future outcomes or suggesting a 'best' choice; each should seem viable to maintain the game's suspense. The game starts when user says start. Remember to keep track of VIILIK's and player's HP, IT IS ALSO possible that player's choice hurts his own HP, you decide that as a narrator based on player's choice. Minimum HP hit is 1000 and max 5000.\nShow HP on every turn like this:\nyour HP: {number}\nVIILIK HP: {number}"
+const AGENT_PROMPT = "Answer the following questions as best you can. You have access to the following tools:\n\nweb_search: Use this to lookup information from google search engine.\n\nUse the following format:\n\nQuestion: the input question you must answer\n\nThought: you should always think about what to do\n\nAction: the action to take, should be web_search. \Action Input: the input to the action\nObservation: the result of the action\n... (this Thought/Action/Action Input/Observation can repeat N times)\nThought: I now know the final answer\nFinal Answer: the final answer to the original input question\n\nBegin!\n"
 
 async function main() {
   const oracleAddress: string = await deployOracle();
-  await deployChatGpt(oracleAddress);
+  console.log()
   await deployDalle(oracleAddress);
   await deployVitailik(oracleAddress);
   await deployAgent(oracleAddress);
+  console.log()
+
+  for (let contractName of ["ChatGpt", "OpenAiChatGpt", "GroqChatGpt"]) {
+    await deployChatGpt(contractName, oracleAddress)
+  }
 }
 
 async function deployOracle(): Promise<string> {
@@ -26,19 +31,9 @@ async function deployOracle(): Promise<string> {
   return oracle.target as string;
 }
 
-async function deployChatGpt(oracleAddress: string) {
-  const agent = await ethers.deployContract("ChatGpt", [oracleAddress], {});
-
-  await agent.waitForDeployment();
-
-  console.log(
-    `ChatGPT deployed to ${agent.target}`
-  );
-}
-
 async function deployAgent(oracleAddress: string) {
   const agent = await ethers.deployContract(
-    "Agent", 
+    "Agent",
     [
       oracleAddress,
       AGENT_PROMPT
@@ -80,6 +75,17 @@ async function deployVitailik(oracleAddress: string) {
     `Vitailik deployed to ${agent.target}`
   );
 }
+
+async function deployChatGpt(contractName: string, oracleAddress: string) {
+  const agent = await ethers.deployContract(contractName, [oracleAddress], {});
+
+  await agent.waitForDeployment();
+
+  console.log(
+    `${contractName} deployed to ${agent.target}`
+  );
+}
+
 
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.

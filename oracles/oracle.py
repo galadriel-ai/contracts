@@ -1,45 +1,54 @@
 import asyncio
+from asyncio import Semaphore
+
 import settings
-from src.repositories.oracle_repository import OracleRepository
 from src.domain.llm import generate_response_use_case
-from src.domain.search import web_search_use_case
-from src.domain.image_generation import generate_image_use_case
 from src.domain.storage import reupload_to_gcp_use_case
-from src.domain.code_interpreter import python_interpreter_use_case
+from src.domain.tools import utils
+from src.domain.tools.image_generation import generate_image_use_case
+from src.domain.tools.search import web_search_use_case
+from src.domain.tools.code_interpreter import python_interpreter_use_case
 from src.entities import Chat
 from src.entities import FunctionCall
+from src.repositories.oracle_repository import OracleRepository
 
 repository = OracleRepository()
 
 CHAT_TASKS = {}
 FUNCTION_TASKS = {}
+MAX_CONCURRENT_CHATS = 5
+MAX_CONCURRENT_FUNCTION_CALLS = 5
 
 
-async def _answer_chat(chat: Chat):
+async def _answer_chat(chat: Chat, semaphore: Semaphore):
     try:
-        if chat.response is None:
-            response = await generate_response_use_case.execute(
-                "gpt-4-turbo-preview", chat
-            )
-            chat.response = response.content
-            chat.error_message = response.error
+        async with semaphore:
+            print(f"Answering chat {chat.id}", flush=True)
+            if chat.response is None:
+                response = await generate_response_use_case.execute(
+                    "gpt-4-turbo-preview", chat
+                )
+                chat.response = response.chat_completion
+                chat.error_message = response.error
 
-        success = await repository.send_chat_response(chat)
-        print(
-            f"Chat {chat.id} {'' if success else 'not '}replied, tx: {chat.transaction_receipt}"
-        )
+            success = await repository.send_chat_response(chat)
+            print(
+                f"Chat {chat.id} {'' if success else 'not '}"
+                f"replied, tx: {chat.transaction_receipt}",
+                flush=True
+            )
     except Exception as ex:
-        print(f"Failed to answer chat {chat.id}, exc: {ex}")
+        print(f"Failed to answer chat {chat.id}, exc: {ex}", flush=True)
 
 
 async def _answer_unanswered_chats():
+    semaphore = asyncio.Semaphore(MAX_CONCURRENT_CHATS)
     while True:
         try:
             chats = await repository.get_unanswered_chats()
             for chat in chats:
                 if chat.id not in CHAT_TASKS:
-                    print(f"Answering chat {chat.id}")
-                    task = asyncio.create_task(_answer_chat(chat))
+                    task = asyncio.create_task(_answer_chat(chat, semaphore))
                     CHAT_TASKS[chat.id] = task
             completed_tasks = [
                 index for index, task in CHAT_TASKS.items() if task.done()
@@ -48,65 +57,70 @@ async def _answer_unanswered_chats():
                 try:
                     await CHAT_TASKS[index]
                 except Exception as e:
-                    print(f"Task for chat {index} raised an exception: {e}")
+                    print(f"Task for chat {index} raised an exception: {e}", flush=True)
                 del CHAT_TASKS[index]
         except Exception as exc:
-            print(f"Chat loop raised an exception: {exc}")
+            print(f"Chat loop raised an exception: {exc}", flush=True)
         await asyncio.sleep(1)
 
 
-async def _call_function(function_call: FunctionCall):
+async def _call_function(function_call: FunctionCall, semaphore: Semaphore):
     try:
-        response = ""
-        error_message = ""
-        if function_call.response is None:
-            if function_call.function_type == "image_generation":
-                image = await generate_image_use_case.execute(
-                    function_call.function_input
-                )
-                response = (
-                    await reupload_to_gcp_use_case.execute(image.url)
-                    if image.url != ""
-                    else ""
-                )
-                error_message = image.error
-            elif function_call.function_type == "web_search":
-                web_search_result = await web_search_use_case.execute(
-                    function_call.function_input
-                )
-                response = web_search_result.result
-                error_message = web_search_result.error
-            elif function_call.function_type == "python_interpreter":
-                python_interpreter_result = await python_interpreter_use_case.execute(
-                    function_call.function_input
-                )
-                response = python_interpreter_result.stdout
-                error_message = python_interpreter_result.stderr
-            else:
-                response = ""
-                error_message = f"Unknown function '{function_call.function_type}'"
-            function_call.response = response
-            function_call.error_message = error_message
+        async with semaphore:
+            print(f"Calling function {function_call.id}", flush=True)
+            response = ""
+            error_message = ""
+            if function_call.response is None:
+                formatted_input = utils.format_tool_input(function_call.function_input)
+                if function_call.function_type == "image_generation":
+                    image = await generate_image_use_case.execute(
+                        formatted_input
+                    )
+                    response = (
+                        await reupload_to_gcp_use_case.execute(image.url)
+                        if image.url != ""
+                        else ""
+                    )
+                    error_message = image.error
+                elif function_call.function_type == "web_search":
+                    web_search_result = await web_search_use_case.execute(
+                        formatted_input
+                    )
+                    response = web_search_result.result
+                    error_message = web_search_result.error
+                elif function_call.function_type == "python_interpreter":
+                    python_interpreter_result = await python_interpreter_use_case.execute(
+                        function_call.function_input
+                    )
+                    response = python_interpreter_result.stdout
+                    error_message = python_interpreter_result.stderr
+                else:
+                    response = ""
+                    error_message = f"Unknown function '{function_call.function_type}'"
+                function_call.response = response
+                function_call.error_message = error_message
 
-        if not function_call.is_processed:
-            success = await repository.send_function_call_response(
-                function_call, function_call.response, function_call.error_message
-            )
-            print(
-                f"Function {function_call.id} {'' if success else 'not '}called, tx: {function_call.transaction_receipt}"
-            )
+            if not function_call.is_processed:
+                success = await repository.send_function_call_response(
+                    function_call, function_call.response, function_call.error_message
+                )
+                print(
+                    f"Function {function_call.id} {'' if success else 'not '}"
+                    f"called, tx: {function_call.transaction_receipt}",
+                    flush=True
+                )
     except Exception as ex:
-        print(f"Failed to call function {function_call.id}, exc: {ex}")
+        print(f"Failed to call function {function_call.id}, exc: {ex}", flush=True)
 
 
 async def _process_function_calls():
+    semaphore = asyncio.Semaphore(MAX_CONCURRENT_CHATS)
     while True:
         try:
             function_calls = await repository.get_unanswered__function_calls()
             for function_call in function_calls:
                 if function_call.id not in FUNCTION_TASKS:
-                    print(f"Calling function {function_call.id}")
-                    task = asyncio.create_task(_call_function(function_call))
+                    task = asyncio.create_task(_call_function(function_call, semaphore))
                     FUNCTION_TASKS[function_call.id] = task
             completed_tasks = [
                 index for index, task in FUNCTION_TASKS.items() if task.done()
@@ -115,10 +129,10 @@ async def _process_function_calls():
                 try:
                     await FUNCTION_TASKS[index]
                 except Exception as e:
-                    print(f"Task for function {index} raised an exception: {e}")
+                    print(f"Task for function {index} raised an exception: {e}", flush=True)
                 del FUNCTION_TASKS[index]
         except Exception as exc:
-            print(f"Function loop raised an exception: {exc}")
+            print(f"Function loop raised an exception: {exc}", flush=True)
         await asyncio.sleep(1)
 
 
@@ -138,7 +152,7 @@ async def _serve_metrics():
         server = uvicorn.Server(config)
         await server.serve()
     except ImportError as e:
-        print(f"Required module not found: {e}. FastAPI server will not start.")
+        print(f"Required module not found: {e}. FastAPI server will not start.", flush=True)
 
 
 async def main():
@@ -148,9 +162,10 @@ async def main():
     ]
 
     if settings.SERVE_METRICS:
-        print("Serving metrics")
+        print("Serving metrics", flush=True)
         tasks.append(_serve_metrics())
 
+    print("Oracle started!")
     await asyncio.gather(*tasks)
 
 

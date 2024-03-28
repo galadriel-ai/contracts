@@ -2,7 +2,7 @@ import {loadFixture,} from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import {expect} from "chai";
 import {ethers} from "hardhat";
 
-describe("ChatGpt", function () {
+describe("ChatOracle", function () {
   // We define a fixture to reuse the same setup in every test.
   // We use loadFixture to run this setup once, snapshot that state,
   // and reset Hardhat Network to that snapshot in every test.
@@ -20,7 +20,8 @@ describe("ChatGpt", function () {
   describe("Deployment", function () {
     it("Can update attestation", async () => {
       const {oracle, owner, allSigners} = await loadFixture(deploy);
-      await oracle.addAttestation(allSigners[1].address, "attestation");
+      await oracle.connect(owner).updateWhitelist(allSigners[1], true);
+      await oracle.connect(allSigners[1]).addAttestation("attestation");
 
       const attestationOwner = await oracle.latestAttestationOwner();
       const attestation = await oracle.attestations(attestationOwner);
@@ -30,8 +31,8 @@ describe("ChatGpt", function () {
       const {oracle, owner, allSigners} = await loadFixture(deploy);
 
       await expect(
-        oracle.connect(allSigners[1]).addAttestation(allSigners[1].address, "attestation")
-      ).to.be.rejectedWith("Caller is not owner");
+        oracle.connect(allSigners[1]).addAttestation("attestation")
+      ).to.be.rejectedWith("Caller is not whitelisted");
     });
   });
 });
