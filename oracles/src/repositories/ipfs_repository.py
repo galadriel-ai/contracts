@@ -2,7 +2,7 @@ import aiohttp
 import settings
 from typing import Union
 
-NFT_STORAGE_LINK_BASE = "https://{}.ipfs.nftstorage.link"
+NFT_STORAGE_LINK_BASE = "https://ipfs.io/ipfs/{}"
 
 
 class IpfsRepository:
