@@ -62,6 +62,11 @@ python oracle.py
 python -m pytest tests/unit
 ```
 
+### Running integration tests
+```
+python -m pytest tests/integration
+```
+
 ## Troubleshooting
 
 Verify your API keys and network connectivity if encountering issues with Serper or OpenAI APIs. For Docker or Python setup errors, ensure all prerequisites are correctly installed.
