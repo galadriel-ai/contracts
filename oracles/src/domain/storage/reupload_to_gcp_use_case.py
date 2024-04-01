@@ -4,7 +4,10 @@ import aiohttp
 import settings
 from typing import Optional
 from google.cloud import storage
+from google.oauth2 import service_account
 from urllib.parse import urlparse, unquote
+
+KEY_PATH = "/app/sidekik.json"
 
 
 async def _generate_filename(original_filename: str) -> str:
@@ -25,7 +28,12 @@ async def execute(download_url: str) -> Optional[str]:
             if response.status == 200:
                 image_data = await response.read()
 
-                storage_client = storage.Client()
+                credentials = service_account.Credentials.from_service_account_file(
+                    KEY_PATH)
+                storage_client = storage.Client(
+                    project="sidekik-ai",
+                    credentials=credentials,
+                )
                 bucket = storage_client.bucket(settings.GCS_BUCKET_NAME)
                 blob = bucket.blob(new_image_name)
                 blob.upload_from_string(
