@@ -20,7 +20,7 @@ class PromptType(str, Enum):
     GROQ = "Groq"
 
 
-PromptTypeLiteral = Literal[PromptType.DEFAULT, PromptType.OPENAI]
+PromptTypeLiteral = Literal[PromptType.DEFAULT, PromptType.OPENAI, PromptType.GROQ]
 
 OpenaiToolChoiceType = Literal["none", "auto"]
 
@@ -47,7 +47,7 @@ GroqModelType = Literal["llama2-70b-4096", "mixtral-8x7b-32768", "gemma-7b-it"]
 
 @dataclass
 class GroqConfig:
-    model: OpenAiModelType
+    model: GroqModelType
     frequency_penalty: Optional[float]
     logit_bias: Optional[Dict]
     max_tokens: Optional[int]
