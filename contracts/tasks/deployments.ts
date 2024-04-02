@@ -10,5 +10,3 @@ task("deployChatWithRAG", "Deploys the chat contract with knowledge base")
     await contract.waitForDeployment();
     console.log(`RAG deployed to: ${contract.target}`);
   });
-
-
