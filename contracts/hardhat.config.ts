@@ -1,6 +1,7 @@
 import {HardhatUserConfig} from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "./tasks/whitelist";
+import "./tasks/deployChatWithRAG";
 
 require('dotenv').config()
 
