@@ -57,7 +57,7 @@ jobs:
         BEARLY_API_KEY: ${{ secrets.BEARLY_API_KEY }}
     - name: "Test 1 - Image Generation"
       run:
-        cd contracts && npx hardhat image_generation --contract-address 0x8A791620dd6260079BF849Dc5567aDC3F2FdC318 --query "White horse" --network localhost
+        cd contracts && npx hardhat image_generation --contract-address 0x8A791620dd6260079BF849Dc5567aDC3F2FdC318 --query "Red rose" --network localhost
       env:
         PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
     
