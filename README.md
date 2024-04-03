@@ -1,12 +1,7 @@
 
 <p align="center">
     <a href="https://galadriel.com" style="max-width: 100px;" target="_blank">
-        <picture>
-            <source srcset="Galadriel-light.svg" media="(prefers-color-scheme: dark)">
-            <source srcset="Galadriel.svg" media="(prefers-color-scheme: light)">
-        <!-- Fallback for browsers that do not support media attribute -->
         <img src="Galadriel.svg">
-        </picture>
     </a>
 </p>
 <p align="center">
