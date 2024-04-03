@@ -29,18 +29,22 @@ class IpfsRepository:
         mime_type = (
             "text/plain" if isinstance(data, str) else "application/octet-stream"
         )
+        form_data = aiohttp.FormData()
+        form_data.add_field("file",
+                    data,
+                    filename="file",
+                    content_type=mime_type)
         async with aiohttp.ClientSession() as session:
             async with session.post(
-                "https://api.nft.storage/upload",
+                "https://api.pinata.cloud/pinning/pinFileToIPFS",
                 headers={
-                    "Authorization": f"Bearer {settings.NFT_STORAGE_API_KEY}",
-                    "Content-Type": mime_type,
+                    "Authorization": f"Bearer {settings.PINATA_API_JWT}",
                 },
-                data=data,
+                data=form_data,
             ) as response:
                 response.raise_for_status()
                 json_response = await response.json()
-                return json_response.get("value").get("cid")
+                return json_response.get("IpfsHash")
 
 
 if __name__ == "__main__":
