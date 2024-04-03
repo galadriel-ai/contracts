@@ -11,7 +11,7 @@ class IpfsRepository:
             headers = {
                 "x-pinata-gateway-token": settings.PINATA_GATEWAY_TOKEN
             }
-            async with session.get(PINATA_LINK_BASE.format(cid)) as response:
+            async with session.get(PINATA_LINK_BASE.format(cid), headers=headers) as response:
                 response.raise_for_status()
                 data = bytearray()
                 while True:

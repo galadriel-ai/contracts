@@ -107,7 +107,7 @@ task("add_knowledge_base", "Adds a knowledge base to the contract")
       error = await contract.kbIndexingRequestErrors(runId);
     }
     console.log({ response: response, error: error });
-    if (response.error.length > 0) {
+    if (error.length > 0) {
       process.exit(1);
     }
   });
