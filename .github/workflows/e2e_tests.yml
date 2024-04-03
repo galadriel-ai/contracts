@@ -68,6 +68,8 @@ jobs:
         GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
         BEARLY_API_KEY: ${{ secrets.BEARLY_API_KEY }}
+        PINATA_GATEWAY_TOKEN: ${{ secrets.PINATA_GATEWAY_TOKEN }}
+        PINATA_API_JWT: ${{ secrets.PINATA_API_JWT }}
     - name: "Test 1 - OpenAI gpt-4-turbo-preview"
       run:
         cd contracts && npx hardhat openai --contract-address ${{ env.TEST_CONTRACT_ADDRESS }} --model gpt-4-turbo-preview --message "Who is the president of USA?" --network ${{ env.NETWORK }}
