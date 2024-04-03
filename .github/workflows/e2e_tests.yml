@@ -29,11 +29,17 @@ jobs:
       run: pip install -r oracles/requirements.txt
     - name: Run Hardhat Node
       run: cd contracts && npx hardhat node &
+    - name: "Deploy Contracts"
+      run:
+        cd contracts && npm run deployAll:localhost
+      env:
+        PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
     - name: Run Python Oracle
       run: cd oracles && python oracle.py
       env:
         CHAIN_ID: 1337
         WEB3_RPC_URL: "http://127.0.0.1:8545/"
+        ORACLE_ADDRESS: "0x5FbDB2315678afecb367f032d93F642f64180aa3"
         PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
         OPEN_AI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
