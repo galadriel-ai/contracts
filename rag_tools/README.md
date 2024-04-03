@@ -32,6 +32,7 @@ To set up your environment for running the RAG Knowledge Base Script, follow the
     ```
 4. Create a `.env` file and add your `nft.storage` API key and wallet private key as follows:
     ```plaintext
+    ORACLE_ADDRESS=galadriel_oracle_address
     PRIVATE_KEY=your_wallet_private key
     NFT_STORAGE_API_KEY=your_api_key_here
     ```

@@ -13,10 +13,12 @@
     "deployQuickstart": "npx hardhat run scripts/deployQuickstart.ts --network galadriel",
     "deployTest:localhost": "npx hardhat run scripts/deployTest.ts --network localhost",
     "deployTest:galadriel": "npx hardhat run scripts/deployTest.ts --network galadriel",
-    "callQuickstart": "npx hardhat run scripts/callQuickstart.ts --network galadriel"
+    "callQuickstart": "npx hardhat run scripts/callQuickstart.ts --network galadriel",
+    "generateStandardJson": "npx hardhat solidity-json"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@xyrusworx/hardhat-solidity-json": "^1.0.2",
     "ethers": "^6.11.0",
     "hardhat": "^2.19.5",
     "hardhat-deploy": "^0.11.45",
