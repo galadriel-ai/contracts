@@ -2,13 +2,16 @@ import aiohttp
 import settings
 from typing import Union
 
-NFT_STORAGE_LINK_BASE = "https://ipfs.io/ipfs/{}"
+PINATA_LINK_BASE = "https://galadriel.mypinata.cloud/ipfs/{}"
 
 
 class IpfsRepository:
     async def read_file(self, cid: str, max_bytes: int = 0) -> bytes:
         async with aiohttp.ClientSession() as session:
-            async with session.get(NFT_STORAGE_LINK_BASE.format(cid)) as response:
+            headers = {
+                "x-pinata-gateway-token": settings.PINATA_GATEWAY_TOKEN
+            }
+            async with session.get(PINATA_LINK_BASE.format(cid)) as response:
                 response.raise_for_status()
                 data = bytearray()
                 while True:
@@ -26,18 +29,22 @@ class IpfsRepository:
         mime_type = (
             "text/plain" if isinstance(data, str) else "application/octet-stream"
         )
+        form_data = aiohttp.FormData()
+        form_data.add_field("file",
+                    data,
+                    filename="file",
+                    content_type=mime_type)
         async with aiohttp.ClientSession() as session:
             async with session.post(
-                "https://api.nft.storage/upload",
+                "https://api.pinata.cloud/pinning/pinFileToIPFS",
                 headers={
-                    "Authorization": f"Bearer {settings.NFT_STORAGE_API_KEY}",
-                    "Content-Type": mime_type,
+                    "Authorization": f"Bearer {settings.PINATA_API_JWT}",
                 },
-                data=data,
+                data=form_data,
             ) as response:
                 response.raise_for_status()
                 json_response = await response.json()
-                return json_response.get("value").get("cid")
+                return json_response.get("IpfsHash")
 
 
 if __name__ == "__main__":
@@ -45,6 +52,9 @@ if __name__ == "__main__":
 
     async def main():
         ipfs = IpfsRepository()
-        print(await ipfs.write_file(bytes([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])))
+        cid = await ipfs.write_file(bytes([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
+        assert cid is not None
+        data = await ipfs.read_file(cid)
+        assert data == bytes([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 
     asyncio.run(main())
