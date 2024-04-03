@@ -10,11 +10,11 @@ export const whitelistTask = task("whitelist", "Whitelists an address in the Ora
 
     const contractABI = [
       "function updateWhitelist(address _addressToWhitelist, bool isWhitelisted)",
-      "function addAttestation(address owner, string memory attestation)"
+      "function addAttestation(string memory attestation)"
     ];
 
     const [signer] = await hre.ethers.getSigners();
-    const contract = new ethers.Contract(oracleContractAddress, contractABI, signer);
+    const contract = new hre.ethers.Contract(oracleContractAddress, contractABI, signer);
 
     console.log(`Whitelisting address: "${whitelistAddress}"...`);
     const updateTx = await contract.updateWhitelist(whitelistAddress, true);
@@ -23,7 +23,7 @@ export const whitelistTask = task("whitelist", "Whitelists an address in the Ora
 
     // Add attestation
     console.log(`Adding attestation for: "${whitelistAddress}"...`);
-    const attestationTx = await contract.addAttestation(whitelistAddress, attestation);
+    const attestationTx = await contract.addAttestation(attestation);
     await attestationTx.wait();
     console.log(`Attestation added for: "${whitelistAddress}"`);
   });
