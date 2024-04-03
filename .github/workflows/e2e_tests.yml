@@ -31,6 +31,11 @@ jobs:
         cd contracts && npm run deployAll:localhost
       env:
         PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
+    - name: "Whitelist the address"
+      run:
+        cd contracts && npx hardhat whitelist --oracle-address 0x5FbDB2315678afecb367f032d93F642f64180aa3 --whitelist-address 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 --network localhost
+      env:
+        PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
     - name: "Deploy Test Contract"
       run:
         cd contracts && npm run deployTest:localhost
@@ -50,9 +55,9 @@ jobs:
         GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
         BEARLY_API_KEY: ${{ secrets.BEARLY_API_KEY }}
-    #- name: Kill Python Oracle
-    #  if: always()
-    #  run: |
-    #    kill $(cat python_oracle.pid) || true
-    #    rm -f python_oracle.pid
-      # This ensures the python process is killed after tests, regardless of test outcomes
+    - name: "Test 1 - Image Generation"
+      run:
+        cd contracts && npx hardhat image_generation --contract-address 0x8A791620dd6260079BF849Dc5567aDC3F2FdC318 --query "White horse" --network localhost
+      env:
+        PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
+    
