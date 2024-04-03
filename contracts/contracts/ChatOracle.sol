@@ -154,6 +154,8 @@ contract ChatOracle {
 
     mapping(address => string) public attestations;
     address public latestAttestationOwner;
+    mapping(address => string) public pcr0Hashes;
+    address public latestPcr0HashOwner;
 
 
     // LLM calls
@@ -243,6 +245,11 @@ contract ChatOracle {
     function addAttestation(string memory attestation) public onlyWhitelisted {
         attestations[msg.sender] = attestation;
         latestAttestationOwner = msg.sender;
+    }
+
+    function addPcr0Hash(string memory pcr0Hash) public onlyOwner {
+        pcr0Hashes[msg.sender] = pcr0Hash;
+        latestPcr0HashOwner = msg.sender;
     }
 
     function createLlmCall(uint promptCallbackId) public returns (uint i) {
