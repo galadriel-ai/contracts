@@ -1,9 +1,6 @@
 
 name: e2e tests
 on:
-  push:
-    branches:
-      - kresimir/ci
   pull_request:
     branches:
       - main
@@ -35,7 +32,9 @@ jobs:
       env:
         PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
     - name: Run Python Oracle
-      run: cd oracles && python oracle.py
+      run: | 
+        cd oracles && python oracle.py &
+        echo $! > python_oracle.pid
       env:
         CHAIN_ID: 1337
         WEB3_RPC_URL: "http://127.0.0.1:8545/"
@@ -45,3 +44,9 @@ jobs:
         GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
         BEARLY_API_KEY: ${{ secrets.BEARLY_API_KEY }}
+    - name: Kill Python Oracle
+      if: always()
+      run: |
+        kill $(cat python_oracle.pid) || true
+        rm -f python_oracle.pid
+      # This ensures the python process is killed after tests, regardless of test outcomes
