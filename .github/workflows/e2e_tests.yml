@@ -60,4 +60,13 @@ jobs:
         cd contracts && npx hardhat image_generation --contract-address 0x8A791620dd6260079BF849Dc5567aDC3F2FdC318 --query "Red rose" --network localhost
       env:
         PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
-    
+    - name: "Test 2 - Web search"
+      run:
+        cd contracts && npx hardhat web_search --contract-address 0x8A791620dd6260079BF849Dc5567aDC3F2FdC318 --query "Capital of Germany" --network localhost
+      env:
+        PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
+    - name: "Test 3 - Code interpreter"
+      run:
+        cd contracts && npx hardhat code_interpreter --contract-address 0x8A791620dd6260079BF849Dc5567aDC3F2FdC318 --query "print(2+2)" --network localhost
+      env:
+        PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
