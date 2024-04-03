@@ -20,6 +20,7 @@ GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME", "galadriel-assets")
 SERVE_METRICS = os.getenv("SERVE_METRICS", "False").lower() == "true"
 NFT_STORAGE_API_KEY = os.getenv("NFT_STORAGE_API_KEY")
 BEARLY_API_KEY = os.getenv("BEARLY_API_KEY")
+PINATA_GATEWAY_TOKEN = os.getenv("PINATA_GATEWAY_TOKEN")
 
 KNOWLEDGE_BASE_MAX_SIZE_BYTES = int(
     os.getenv("KNOWLEDGE_BASE_MAX_SIZE_BYTES", 10485760)

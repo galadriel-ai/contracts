@@ -2,13 +2,16 @@ import aiohttp
 import settings
 from typing import Union
 
-NFT_STORAGE_LINK_BASE = "https://ipfs.io/ipfs/{}"
+PINATA_LINK_BASE = "https://galadriel.mypinata.cloud/ipfs/{}"
 
 
 class IpfsRepository:
     async def read_file(self, cid: str, max_bytes: int = 0) -> bytes:
         async with aiohttp.ClientSession() as session:
-            async with session.get(NFT_STORAGE_LINK_BASE.format(cid)) as response:
+            headers = {
+                "x-pinata-gateway-token": settings.PINATA_GATEWAY_TOKEN
+            }
+            async with session.get(PINATA_LINK_BASE.format(cid)) as response:
                 response.raise_for_status()
                 data = bytearray()
                 while True:
@@ -45,6 +48,9 @@ if __name__ == "__main__":
 
     async def main():
         ipfs = IpfsRepository()
-        print(await ipfs.write_file(bytes([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])))
+        cid = await ipfs.write_file(bytes([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
+        assert cid is not None
+        data = await ipfs.read_file(cid)
+        assert data == bytes([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 
     asyncio.run(main())
