@@ -1,12 +1,45 @@
 import { task } from "hardhat/config";
-import { Contract, TransactionReceipt } from "ethers";
+import { Contract } from "ethers";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { Func } from "mocha";
 
 interface FunctionResponse {
-    response: string,
-    error: string,
-  }
+  response: string,
+  error: string,
+}
+
+task("openai", "Calls the OpenAI LLM")
+  .addParam("contractAddress", "The address of the Test contract")
+  .addParam("model", "The model to use")
+  .addParam("message", "The message to send to the model")
+  .setAction(async (taskArgs, hre) => {
+    const contractAddress = taskArgs.contractAddress;
+    const model = taskArgs.model;
+    const message = taskArgs.message;
+
+    const contract = await getContract("Test", contractAddress, hre);
+    const response = await queryOpenAiLLM(contract, model, message, hre);
+    console.log(response);
+    if (response.error.length > 0) {
+      process.exit(1);
+    }
+  });
+
+task("groq", "Calls the Groq LLM")
+  .addParam("contractAddress", "The address of the Test contract")
+  .addParam("model", "The model to use")
+  .addParam("message", "The message to send to the model")
+  .setAction(async (taskArgs, hre) => {
+    const contractAddress = taskArgs.contractAddress;
+    const model = taskArgs.model;
+    const message = taskArgs.message;
+
+    const contract = await getContract("Test", contractAddress, hre);
+    const response = await queryGroqLLM(contract, model, message, hre);
+    console.log(response)
+    if (response.error.length > 0) {
+      process.exit(1);
+    }
+  });
 
 task("web_search", "Calls the web search function")
   .addParam("contractAddress", "The address of the Test contract")
@@ -21,7 +54,7 @@ task("web_search", "Calls the web search function")
     if (response.error.length > 0) {
       process.exit(1);
     }
-});
+  });
 
 task("image_generation", "Calls the image generation function")
   .addParam("contractAddress", "The address of the Test contract")
@@ -38,7 +71,7 @@ task("image_generation", "Calls the image generation function")
     }
   });
 
-  task("code_interpreter", "Calls the code interpreter function")
+task("code_interpreter", "Calls the code interpreter function")
   .addParam("contractAddress", "The address of the Test contract")
   .addParam("query", "The query to ask the contract")
   .setAction(async (taskArgs, hre) => {
@@ -53,7 +86,7 @@ task("image_generation", "Calls the image generation function")
     }
   });
 
-  task("knowledge_base", "Queries a knowledge base")
+task("knowledge_base", "Queries a knowledge base")
   .addParam("contractAddress", "The address of the Test contract")
   .addParam("cid", "The CID of the knowledge base")
   .addParam("query", "The query to ask the knowledge base")
@@ -70,40 +103,92 @@ task("image_generation", "Calls the image generation function")
     }
   });
 
-  async function getContract(
-    name: string,
-    contractAddress: string,
-    hre: HardhatRuntimeEnvironment
-  ): Promise<Contract> {
-    const signer = (await hre.ethers.getSigners())[0];
-    const ContractArtifact = await hre.artifacts.readArtifact(name);
-    return new hre.ethers.Contract(contractAddress, ContractArtifact.abi, signer);
+async function getContract(
+  name: string,
+  contractAddress: string,
+  hre: HardhatRuntimeEnvironment
+): Promise<Contract> {
+  const signer = (await hre.ethers.getSigners())[0];
+  const ContractArtifact = await hre.artifacts.readArtifact(name);
+  return new hre.ethers.Contract(contractAddress, ContractArtifact.abi, signer);
+}
+
+async function queryOpenAiLLM(
+  contract: Contract,
+  model: string,
+  message: string,
+  hre: HardhatRuntimeEnvironment
+): Promise<FunctionResponse> {
+  try {
+    const txResponse = await contract.callOpenAiLLM(model, message);
+    await txResponse.wait();
+    process.stdout.write("Waiting for response");
+    let response = await contract.lastResponse();
+    let error = await contract.lastError();
+    while (response.length === 0 && error.length === 0) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      response = await contract.lastResponse();
+      error = await contract.lastError();
+      process.stdout.write(".");
+    }
+    console.log("");
+    return { response: response, error: error };
+  } catch (error) {
+    console.error(`Error calling contract function: ${error}`);
   }
+  return { response: "", error: "Failed XX" };
+}
+
+async function queryGroqLLM(
+  contract: Contract,
+  model: string,
+  message: string,
+  hre: HardhatRuntimeEnvironment
+): Promise<FunctionResponse> {
+  try {
+    const txResponse = await contract.callGroqLLM(model, message);
+    await txResponse.wait();
+    process.stdout.write("Waiting for response");
+    let response = await contract.lastResponse();
+    let error = await contract.lastError();
+    while (response.length === 0 && error.length === 0) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      response = await contract.lastResponse();
+      error = await contract.lastError();
+      process.stdout.write(".");
+    }
+    console.log("");
+    return { response: response, error: error };
+  } catch (error) {
+    console.error(`Error calling contract function: ${error}`);
+  }
+  return { response: "", error: "Failed XX" };
+}
 
 async function queryContractFunction(
-    contract: Contract,
-    tool: string,
-    query: string,
-    hre: HardhatRuntimeEnvironment
+  contract: Contract,
+  tool: string,
+  query: string,
+  hre: HardhatRuntimeEnvironment
 ): Promise<FunctionResponse> {
-    try {
-        const txResponse = await contract.callFunction(tool, query);
-        await txResponse.wait();
-        process.stdout.write("Waiting for response");
-        let response = await contract.lastResponse();
-        let error = await contract.lastError();
-        while (response.length === 0 && error.length === 0) {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          response = await contract.lastResponse();
-          error = await contract.lastError();
-          process.stdout.write(".");
-        }
-        console.log("");
-        return { response: response, error: error };
-    } catch (error) {
-        console.error(`Error calling contract function: ${error}`);
+  try {
+    const txResponse = await contract.callFunction(tool, query);
+    await txResponse.wait();
+    process.stdout.write("Waiting for response");
+    let response = await contract.lastResponse();
+    let error = await contract.lastError();
+    while (response.length === 0 && error.length === 0) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      response = await contract.lastResponse();
+      error = await contract.lastError();
+      process.stdout.write(".");
     }
-    return { response: "", error: "Failed XX"};
+    console.log("");
+    return { response: response, error: error };
+  } catch (error) {
+    console.error(`Error calling contract function: ${error}`);
+  }
+  return { response: "", error: "Failed XX" };
 }
 
 async function queryContractKnowledgeBase(
@@ -113,21 +198,21 @@ async function queryContractKnowledgeBase(
   hre: HardhatRuntimeEnvironment
 ): Promise<FunctionResponse> {
   try {
-      const txResponse = await contract.queryKnowledgeBase(cid, query);
-      await txResponse.wait();
-      process.stdout.write("Waiting for response");
-      let response = await contract.lastResponse();
-      let error = await contract.lastError();
-      while (response.length === 0 && error.length === 0) {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        response = await contract.lastResponse();
-        error = await contract.lastError();
-        process.stdout.write(".");
-      }
-      console.log("");
-      return { response: response, error: error };
+    const txResponse = await contract.queryKnowledgeBase(cid, query);
+    await txResponse.wait();
+    process.stdout.write("Waiting for response");
+    let response = await contract.lastResponse();
+    let error = await contract.lastError();
+    while (response.length === 0 && error.length === 0) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      response = await contract.lastResponse();
+      error = await contract.lastError();
+      process.stdout.write(".");
+    }
+    console.log("");
+    return { response: response, error: error };
   } catch (error) {
-      console.error(`Error calling contract function: ${error}`);
+    console.error(`Error calling contract function: ${error}`);
   }
-  return { response: "", error: "Failed XX"};
+  return { response: "", error: "Failed XX" };
 }

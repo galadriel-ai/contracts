@@ -55,17 +55,42 @@ jobs:
         GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
         BEARLY_API_KEY: ${{ secrets.BEARLY_API_KEY }}
-    - name: "Test 1 - Image Generation"
+    - name: "Test 1 - OpenAI gpt-4-turbo-preview"
+      run:
+        cd contracts && npx hardhat openai --contract-address 0x59b670e9fA9D0A427751Af201D676719a970857b --model gpt-4-turbo-preview --message "Who is the president of USA?" --network localhost
+      env:
+        PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
+    - name: "Test 2 - OpenAI gpt-3.5-turbo-1106"
+      run:
+        cd contracts && npx hardhat openai --contract-address 0x59b670e9fA9D0A427751Af201D676719a970857b --model gpt-3.5-turbo-1106 --message "Who is the president of USA?" --network localhost
+      env:
+        PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
+    - name: "Test 3 - Groq llama2-70b-4096"
+      run:
+        cd contracts && npx hardhat groq --contract-address 0x59b670e9fA9D0A427751Af201D676719a970857b --model llama2-70b-4096 --message "Who is the president of USA?" --network localhost
+      env:
+        PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
+    - name: "Test 4 - Groq mixtral-8x7b-32768"
+      run:
+        cd contracts && npx hardhat groq --contract-address 0x59b670e9fA9D0A427751Af201D676719a970857b --model mixtral-8x7b-32768 --message "Who is the president of USA?" --network localhost
+      env:
+        PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
+    - name: "Test 5 - gemma-7b-it"
+      run:
+        cd contracts && npx hardhat groq --contract-address 0x59b670e9fA9D0A427751Af201D676719a970857b --model gemma-7b-it --message "Who is the president of USA?" --network localhost
+      env:
+        PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
+    - name: "Test 6 - Image Generation"
       run:
         cd contracts && npx hardhat image_generation --contract-address 0x8A791620dd6260079BF849Dc5567aDC3F2FdC318 --query "Red rose" --network localhost
       env:
         PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
-    - name: "Test 2 - Web search"
+    - name: "Test 7 - Web search"
       run:
         cd contracts && npx hardhat web_search --contract-address 0x8A791620dd6260079BF849Dc5567aDC3F2FdC318 --query "Capital of Germany" --network localhost
       env:
         PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
-    - name: "Test 3 - Code interpreter"
+    - name: "Test 8 - Code interpreter"
       run:
         cd contracts && npx hardhat code_interpreter --contract-address 0x8A791620dd6260079BF849Dc5567aDC3F2FdC318 --query "print(2+2)" --network localhost
       env:
