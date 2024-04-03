@@ -8,8 +8,9 @@ jobs:
   e2e-tests:
     runs-on: ubuntu-latest
     env:
-      TEST_CONTRACT_ADDRESS: "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318"
       NETWORK: "localhost"
+      ORACLE_ADDRESS: "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      TEST_CONTRACT_ADDRESS: "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318"
     steps:
     - uses: actions/checkout@v4
     - name: Set up Node.js
@@ -45,7 +46,7 @@ jobs:
         PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
     - name: "Whitelist the address"
       run:
-        cd contracts && npx hardhat whitelist --oracle-address 0x5FbDB2315678afecb367f032d93F642f64180aa3 --whitelist-address 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 --network localhost
+        cd contracts && npx hardhat whitelist --oracle-address ${{ env.ORACLE_ADDRESS }} --whitelist-address 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 --network localhost
       env:
         PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
     - name: "Deploy Test Contract"
@@ -53,7 +54,7 @@ jobs:
         cd contracts && npm run deployTest:localhost
       env:
         PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
-        ORACLE_ADDRESS: "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+        ORACLE_ADDRESS: ${{ env.ORACLE_ADDRESS }}
     - name: Run Python Oracle
       run: | 
         cd oracles && python oracle.py &
@@ -61,7 +62,7 @@ jobs:
       env:
         CHAIN_ID: 1337
         WEB3_RPC_URL: "http://127.0.0.1:8545/"
-        ORACLE_ADDRESS: "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+        ORACLE_ADDRESS: ${{ env.ORACLE_ADDRESS }}
         PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
         OPEN_AI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
