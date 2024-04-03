@@ -31,4 +31,11 @@ jobs:
       run: cd contracts && npx hardhat node &
     - name: Run Python Oracle
       run: cd oracles && python oracle.py
-
+      env:
+        CHAIN_ID: 1337
+        WEB3_RPC_URL: "http://127.0.0.1:8545/"
+        PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+        OPEN_AI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
+        BEARLY_API_KEY: ${{ secrets.BEARLY_API_KEY }}
