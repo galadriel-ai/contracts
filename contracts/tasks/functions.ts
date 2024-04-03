@@ -1,5 +1,5 @@
 import { task } from "hardhat/config";
-import { Contract } from "ethers";
+import { Contract, TransactionReceipt } from "ethers";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 interface FunctionResponse {
@@ -86,7 +86,33 @@ task("code_interpreter", "Calls the code interpreter function")
     }
   });
 
-task("knowledge_base", "Queries a knowledge base")
+task("add_knowledge_base", "Adds a knowledge base to the contract")
+  .addParam("oracleAddress", "The address of the Test contract")
+  .addParam("cid", "The CID of the knowledge base")
+  .setAction(async (taskArgs, hre) => {
+    const oracleAddress = taskArgs.oracleAddress;
+    const cid = taskArgs.cid;
+
+    const contract = await getContract("ChatOracle", oracleAddress, hre);
+    const txResponse = await contract.addKnowledgeBase(cid);
+    const txReceipt = await txResponse.wait();
+    let runId = getRunId(txReceipt, contract, hre);
+    let isProcessed = await contract.isKbIndexingRequestProcessed(runId);
+    let response = await contract.kbIndexes(cid);
+    let error = await contract.kbIndexingRequestErrors(runId);
+    while (!isProcessed) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      isProcessed = await contract.isKbIndexingRequestProcessed(runId);
+      response = await contract.kbIndexes(cid);
+      error = await contract.kbIndexingRequestErrors(runId);
+    }
+    console.log({ response: response, error: error });
+    if (response.error.length > 0) {
+      process.exit(1);
+    }
+  });
+
+task("query_knowledge_base", "Queries a knowledge base")
   .addParam("contractAddress", "The address of the Test contract")
   .addParam("cid", "The CID of the knowledge base")
   .addParam("query", "The query to ask the knowledge base")
@@ -215,4 +241,26 @@ async function queryContractKnowledgeBase(
     console.error(`Error calling contract function: ${error}`);
   }
   return { response: "", error: "Failed XX" };
+}
+
+function getRunId(
+  receipt: TransactionReceipt,
+  contract: Contract,
+  hre: HardhatRuntimeEnvironment,
+  eventName: string = "KnowledgeBaseIndexRequestAdded",
+  eventArgIndex: number = 0
+  ): number | undefined {
+  let runId
+  for (const log of receipt.logs) {
+    try {
+      const parsedLog = contract.interface.parseLog(log)
+      if (parsedLog && parsedLog.name === eventName) {
+        runId = hre.ethers.toNumber(parsedLog.args[eventArgIndex])
+      }
+    } catch (error) {
+      // This log might not have been from your contract, or it might be an anonymous log
+      console.log("Could not parse log:", log)
+    }
+  }
+  return runId;
 }
