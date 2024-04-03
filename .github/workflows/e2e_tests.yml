@@ -31,6 +31,12 @@ jobs:
         cd contracts && npm run deployAll:localhost
       env:
         PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
+    - name: "Deploy Test Contract"
+      run:
+        cd contracts && npm run deployTest:localhost
+      env:
+        PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
+        ORACLE_ADDRESS: "0x5FbDB2315678afecb367f032d93F642f64180aa3"
     - name: Run Python Oracle
       run: | 
         cd oracles && python oracle.py &
@@ -44,9 +50,9 @@ jobs:
         GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
         BEARLY_API_KEY: ${{ secrets.BEARLY_API_KEY }}
-    - name: Kill Python Oracle
-      if: always()
-      run: |
-        kill $(cat python_oracle.pid) || true
-        rm -f python_oracle.pid
+    #- name: Kill Python Oracle
+    #  if: always()
+    #  run: |
+    #    kill $(cat python_oracle.pid) || true
+    #    rm -f python_oracle.pid
       # This ensures the python process is killed after tests, regardless of test outcomes
