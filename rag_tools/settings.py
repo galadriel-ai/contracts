@@ -10,6 +10,6 @@ STORAGE_KEY = os.getenv("NFT_STORAGE_API_KEY")
 ORACLE_ADDRESS = os.getenv("ORACLE_ADDRESS")
 ORACLE_ABI_PATH = os.getenv(
     "ORACLE_ABI_PATH",
-    "../contracts/artifacts/contracts/ChatOracle.sol/ChatOracle.json",
+    "../oracles/abi/ChatOracle.json",
 )
 MAX_DOCUMENT_SIZE_MB = 10
