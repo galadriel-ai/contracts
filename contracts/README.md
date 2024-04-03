@@ -64,3 +64,16 @@ Run the following command, replacing `[oracle_address]` with the Oracle contract
 
 ```bash
 npx hardhat whitelist --oracle-address [oracle_address] --whitelist-address [wallet_address] --network galadriel
+```
+
+### Generating standard Solidity input JSON
+
+This is useful for verifying contracts on the explorer, 
+using the "Standard JSON input" option.  
+
+```bash
+npm run generateStandardJson
+```
+
+This generated JSON files are in `./contracts/artifacts/solidity-json/contracts`
+

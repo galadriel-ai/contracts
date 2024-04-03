@@ -18,21 +18,38 @@ describe("ChatOracle", function () {
   }
 
   describe("Deployment", function () {
-    it("Can update attestation", async () => {
+    it("Whitelisted account can update attestation", async () => {
       const {oracle, owner, allSigners} = await loadFixture(deploy);
       await oracle.connect(owner).updateWhitelist(allSigners[1], true);
-      await oracle.connect(allSigners[1]).addAttestation("attestation");
+      const inputAttestation = "attestation"
+      await oracle.connect(allSigners[1]).addAttestation(inputAttestation);
 
       const attestationOwner = await oracle.latestAttestationOwner();
       const attestation = await oracle.attestations(attestationOwner);
-      expect(attestation).to.equal("attestation");
+      expect(attestation).to.equal(inputAttestation);
     });
-    it("Only owner can update attestation", async () => {
+    it("Only whitelisted address can update attestation", async () => {
       const {oracle, owner, allSigners} = await loadFixture(deploy);
 
       await expect(
         oracle.connect(allSigners[1]).addAttestation("attestation")
       ).to.be.rejectedWith("Caller is not whitelisted");
+    });
+    it("Owner can update pcr0 hash", async () => {
+      const {oracle} = await loadFixture(deploy);
+      const inputHash = "random hash"
+      await oracle.addPcr0Hash(inputHash);
+
+      const hashOwner = await oracle.latestPcr0HashOwner();
+      const hash = await oracle.pcr0Hashes(hashOwner);
+      expect(hash).to.equal(inputHash);
+    });
+    it("Only owner can update pcr0 hash", async () => {
+      const {oracle, owner, allSigners} = await loadFixture(deploy);
+
+      await expect(
+        oracle.connect(allSigners[1]).addPcr0Hash("hash")
+      ).to.be.rejectedWith("Caller is not owner");
     });
   });
 });
