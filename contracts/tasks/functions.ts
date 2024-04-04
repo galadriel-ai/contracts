@@ -87,7 +87,7 @@ task("code_interpreter", "Calls the code interpreter function")
   });
 
 task("add_knowledge_base", "Adds a knowledge base to the contract")
-  .addParam("oracleAddress", "The address of the Test contract")
+  .addParam("oracleAddress", "The address of the Oracle contract")
   .addParam("cid", "The CID of the knowledge base")
   .setAction(async (taskArgs, hre) => {
     const oracleAddress = taskArgs.oracleAddress;
