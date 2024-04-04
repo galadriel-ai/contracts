@@ -119,7 +119,6 @@ async function runTaskWithTimeout(
     timeoutPromise,
     hre.run(taskIdentifier, taskArguments),
   ]);
-  console.log('Task completed successfully');
 }
 
 
