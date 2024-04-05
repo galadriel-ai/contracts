@@ -3,14 +3,21 @@ import {HardhatRuntimeEnvironment} from "hardhat/types";
 
 const TIMEOUT_SECONDS: number = 300
 const green = "\x1b[32m"
+const reset = "\x1b[0m"
 
-// npx hardhat e2e --contract-address 0xa85233C63b9Ee964Add6F2cffe00Fd84eb32338f --oracle-address 0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e --network localhost
+class TimeoutError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "TimeoutError"
+  }
+}
+
 task("e2e", "Runs all e2e tests")
   .addParam("contractAddress", "The address of the Test contract")
   .addParam("oracleAddress", "The address of the Oracle contract")
   .setAction(async (taskArgs: any, hre: HardhatRuntimeEnvironment) => {
     const contractAddress = taskArgs.contractAddress;
-    const oracleAddress = taskArgs.contractAddress;
+    const oracleAddress = taskArgs.oracleAddress;
 
     await runOpenAi(
       contractAddress,
@@ -100,7 +107,7 @@ task("e2e", "Runs all e2e tests")
 
 
     console.log("================================================")
-    console.log(green, "e2e run done", "green")
+    console.log(green, "e2e run done", reset)
   });
 
 async function runTaskWithTimeout(
@@ -108,17 +115,23 @@ async function runTaskWithTimeout(
   taskArguments: any,
   hre: HardhatRuntimeEnvironment,
 ) {
-  const timeoutPromise = new Promise((resolve, reject) => {
-    const id = setTimeout(() => {
-      clearTimeout(id);
-      reject(new Error('Task timed out'));
-    }, TIMEOUT_SECONDS * 1000);
-  });
+  try {
+    const timeoutPromise = new Promise((resolve, reject) => {
+      const id = setTimeout(() => {
+        clearTimeout(id);
+        reject(new TimeoutError(taskIdentifier));
+      }, TIMEOUT_SECONDS * 1000);
+    });
 
-  await Promise.race([
-    timeoutPromise,
-    hre.run(taskIdentifier, taskArguments),
-  ]);
+    await Promise.race([
+      timeoutPromise,
+      hre.run(taskIdentifier, taskArguments),
+    ]);
+  } catch (e: any) {
+    process.stderr.write(e.message + " ")
+    throw e
+  }
+
 }
 
 
