@@ -9,9 +9,8 @@ class IpfsRepository:
     async def read_file(self, cid: str, max_bytes: int = 0) -> bytes:
         async with aiohttp.ClientSession() as session:
             headers = {
-                "x-pinata-gateway-token": settings.PINATA_GATEWAY_TOKEN.replace("\n", "").replace("\r", "")
+                "x-pinata-gateway-token": settings.PINATA_GATEWAY_TOKEN
             }
-            print(headers)
             async with session.get(PINATA_LINK_BASE.format(cid), headers=headers) as response:
                 response.raise_for_status()
                 data = bytearray()
