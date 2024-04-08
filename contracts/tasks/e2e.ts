@@ -83,27 +83,27 @@ task("e2e", "Runs all e2e tests")
     )
     console.log(`DONE Running "code_interpreter"`)
 
-    // console.log(`Running "add_knowledge_base"`)
-    // await runTaskWithTimeout(
-    //   "add_knowledge_base",
-    //   {
-    //     oracleAddress,
-    //     cid: "QmdCgbMawRVE6Kc1joZmhgDo2mSZFgRgWvBCqUvJV9JwkF",
-    //   },
-    //   hre,
-    // )
-    // console.log(`DONE Running "add_knowledge_base"`)
-    // console.log(`Running "query_knowledge_base"`)
-    // await runTaskWithTimeout(
-    //   "query_knowledge_base",
-    //   {
-    //     contractAddress,
-    //     cid: "QmdCgbMawRVE6Kc1joZmhgDo2mSZFgRgWvBCqUvJV9JwkF",
-    //     query: "What is the oracle smart contract address?",
-    //   },
-    //   hre,
-    // )
-    // console.log(`DONE Running "query_knowledge_base"`)
+    console.log(`Running "add_knowledge_base"`)
+    await runTaskWithTimeout(
+      "add_knowledge_base",
+      {
+        oracleAddress,
+        cid: "QmdCgbMawRVE6Kc1joZmhgDo2mSZFgRgWvBCqUvJV9JwkF",
+      },
+      hre,
+    )
+    console.log(`DONE Running "add_knowledge_base"`)
+    console.log(`Running "query_knowledge_base"`)
+    await runTaskWithTimeout(
+      "query_knowledge_base",
+      {
+        contractAddress,
+        cid: "QmdCgbMawRVE6Kc1joZmhgDo2mSZFgRgWvBCqUvJV9JwkF",
+        query: "What is the oracle smart contract address?",
+      },
+      hre,
+    )
+    console.log(`DONE Running "query_knowledge_base"`)
 
 
     console.log("================================================")
