@@ -14,7 +14,7 @@ export const whitelistTask = task("whitelist", "Whitelists an address in the Ora
     ];
 
     const [signer] = await hre.ethers.getSigners();
-    const contract = new ethers.Contract(oracleContractAddress, contractABI, signer);
+    const contract = new hre.ethers.Contract(oracleContractAddress, contractABI, signer);
 
     console.log(`Whitelisting address: "${whitelistAddress}"...`);
     const updateTx = await contract.updateWhitelist(whitelistAddress, true);

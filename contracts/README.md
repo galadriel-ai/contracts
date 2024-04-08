@@ -77,3 +77,27 @@ npm run generateStandardJson
 
 This generated JSON files are in `./contracts/artifacts/solidity-json/contracts`
 
+### Running e2e validation tests
+
+**Deploy test contract to relevant network**
+```
+npm run deployTest:localhost
+```
+```
+npm run deployTest:galadriel
+```
+
+**Single run**
+```
+npx hardhat e2e --contract-address <Test contract address> --oracle-address <oracle contract address> --network <network>
+```
+
+**Cron job with Slack**
+```
+ts-node tasks/e2eCron.ts
+```
+
+**Cron job with Slack in docker**
+```
+docker compose -f docker/docker-compose-e2e.yml up --build -d
+```
