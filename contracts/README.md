@@ -12,7 +12,7 @@ npm install
 
 Modify .env and add your private key for relevant network  
 `PRIVATE_KEY_LOCALHOST` for local node
-`PRIVATE_KEY_CUSTOM` for Galadriel testnet
+`PRIVATE_KEY_GALADRIEL` for Galadriel testnet
 
 Rest of this README assumes you are in the `contracts` directory
 
@@ -44,7 +44,7 @@ Please see the [`oracles` directory](/oracles) to run the oracle backend. If you
 ### Galadriel testnet
 
 Update `.env`:
-* Add your private key to `PRIVATE_KEY_CUSTOM`
+* Add your private key to `PRIVATE_KEY_GALADRIEL`
 * Add the [oracle address](http://docs.galadriel.com/oracle-address) to `ORACLE_ADDRESS`
 
 **Deploy quickstart to Galadriel testnet**
