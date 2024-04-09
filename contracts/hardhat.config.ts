@@ -9,8 +9,8 @@ import "./tasks/functions";
 require('dotenv').config()
 
 const galadrielDevnet = []
-if (process.env.PRIVATE_KEY_CUSTOM) {
-  galadrielDevnet.push(process.env.PRIVATE_KEY_CUSTOM)
+if (process.env.PRIVATE_KEY_GALADRIEL) {
+  galadrielDevnet.push(process.env.PRIVATE_KEY_GALADRIEL)
 }
 const localhostPrivateKeys = []
 if (process.env.PRIVATE_KEY_LOCALHOST) {
