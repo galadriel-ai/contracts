@@ -37,6 +37,10 @@ Take some private key from local node and add to .env `PRIVATE_KEY_LOCALHOST`
 npm run deployAll:localhost
 ```
 
+**Run the oracle backend**
+
+Please see the [`oracles` directory](/oracles) to run the oracle backend. If you don't run the oracle back-end, the oracle contracts on your localnet will not produce any results (and will not make any callbacks).
+
 ### Galadriel testnet
 
 Update `.env`:
