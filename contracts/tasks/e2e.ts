@@ -19,31 +19,34 @@ task("e2e", "Runs all e2e tests")
     const contractAddress = taskArgs.contractAddress;
     const oracleAddress = taskArgs.oracleAddress;
 
-    await runOpenAi(
+    process.env.RUN_MODE = "e2e-script";
+
+    let result = await runOpenAi(
       contractAddress,
       "gpt-4-turbo-preview",
       "Who is the president of USA?",
       hre,
     )
-    await runOpenAi(
+    console.log(result);
+    result = await runOpenAi(
       contractAddress,
       "gpt-3.5-turbo-1106",
       "Who is the president of USA?",
       hre,
     )
-    await runGroq(
+    result = await runGroq(
       contractAddress,
       "llama2-70b-4096",
       "Who is the president of USA?",
       hre,
     )
-    await runGroq(
+    result = await runGroq(
       contractAddress,
       "mixtral-8x7b-32768",
       "Who is the president of USA?",
       hre,
     )
-    await runGroq(
+    result = await runGroq(
       contractAddress,
       "gemma-7b-it",
       "Who is the president of USA?",
@@ -51,7 +54,7 @@ task("e2e", "Runs all e2e tests")
     )
 
     console.log(`Running "image_generation"`)
-    await runTaskWithTimeout(
+    result = await runTaskWithTimeout(
       "image_generation",
       {
         contractAddress,
@@ -62,7 +65,7 @@ task("e2e", "Runs all e2e tests")
     console.log(`DONE Running "image_generation"`)
 
     console.log(`Running "web_search"`)
-    await runTaskWithTimeout(
+    result = await runTaskWithTimeout(
       "web_search",
       {
         contractAddress,
@@ -73,7 +76,7 @@ task("e2e", "Runs all e2e tests")
     console.log(`DONE Running "web_search"`)
 
     console.log(`Running "code_interpreter"`)
-    await runTaskWithTimeout(
+    result = await runTaskWithTimeout(
       "code_interpreter",
       {
         contractAddress,
@@ -94,7 +97,7 @@ task("e2e", "Runs all e2e tests")
     // )
     // console.log(`DONE Running "add_knowledge_base"`)
     console.log(`Running "query_knowledge_base"`)
-    await runTaskWithTimeout(
+    result = await runTaskWithTimeout(
       "query_knowledge_base",
       {
         contractAddress,
@@ -104,8 +107,6 @@ task("e2e", "Runs all e2e tests")
       hre,
     )
     console.log(`DONE Running "query_knowledge_base"`)
-
-
     console.log("================================================")
     console.log(green, "e2e run done", reset)
   });
@@ -114,7 +115,7 @@ async function runTaskWithTimeout(
   taskIdentifier: string,
   taskArguments: any,
   hre: HardhatRuntimeEnvironment,
-) {
+): Promise<any> {
   try {
     const timeoutPromise = new Promise((resolve, reject) => {
       const id = setTimeout(() => {
@@ -123,15 +124,15 @@ async function runTaskWithTimeout(
       }, TIMEOUT_SECONDS * 1000);
     });
 
-    await Promise.race([
+    const taskResult = await Promise.race([
       timeoutPromise,
       hre.run(taskIdentifier, taskArguments),
     ]);
+    return taskResult;
   } catch (e: any) {
     process.stderr.write(e.message + " ")
     throw e
   }
-
 }
 
 
@@ -142,7 +143,7 @@ async function runOpenAi(
   hre: HardhatRuntimeEnvironment,
 ) {
   console.log(`Running "openai", with model: ${model}`)
-  await runTaskWithTimeout(
+  let result = await runTaskWithTimeout(
     "openai",
     {
       contractAddress,
@@ -152,6 +153,7 @@ async function runOpenAi(
     hre,
   )
   console.log(`DONE Running "openai", with model: ${model}.`)
+  return result;
 }
 
 async function runGroq(
@@ -161,7 +163,7 @@ async function runGroq(
   hre: HardhatRuntimeEnvironment,
 ) {
   console.log(`Running "groq", with model: ${model}`)
-  await runTaskWithTimeout(
+  let result = await runTaskWithTimeout(
     "groq",
     {
       contractAddress,
@@ -171,4 +173,5 @@ async function runGroq(
     hre,
   )
   console.log(`DONE Running "groq", with model: ${model}.`)
+  return result;
 }

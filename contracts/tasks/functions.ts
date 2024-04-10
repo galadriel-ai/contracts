@@ -18,10 +18,7 @@ task("openai", "Calls the OpenAI LLM")
 
     const contract = await getContract("Test", contractAddress, hre);
     const response = await queryOpenAiLLM(contract, model, message, hre);
-    console.log(response);
-    if (response.error.length > 0) {
-      process.exit(1);
-    }
+    return checkResult(response);
   });
 
 task("groq", "Calls the Groq LLM")
@@ -35,10 +32,7 @@ task("groq", "Calls the Groq LLM")
 
     const contract = await getContract("Test", contractAddress, hre);
     const response = await queryGroqLLM(contract, model, message, hre);
-    console.log(response)
-    if (response.error.length > 0) {
-      process.exit(1);
-    }
+    return checkResult(response);
   });
 
 task("web_search", "Calls the web search function")
@@ -50,10 +44,7 @@ task("web_search", "Calls the web search function")
 
     const contract = await getContract("Test", contractAddress, hre);
     const response = await queryContractFunction(contract, "web_search", query, hre);
-    console.log(response)
-    if (response.error.length > 0) {
-      process.exit(1);
-    }
+    return checkResult(response);
   });
 
 task("image_generation", "Calls the image generation function")
@@ -65,10 +56,7 @@ task("image_generation", "Calls the image generation function")
 
     const contract = await getContract("Test", contractAddress, hre);
     const response = await queryContractFunction(contract, "image_generation", query, hre);
-    console.log(response)
-    if (response.error.length > 0) {
-      process.exit(1);
-    }
+    return checkResult(response);
   });
 
 task("code_interpreter", "Calls the code interpreter function")
@@ -80,10 +68,7 @@ task("code_interpreter", "Calls the code interpreter function")
 
     const contract = await getContract("Test", contractAddress, hre);
     const response = await queryContractFunction(contract, "code_interpreter", query, hre);
-    console.log(response)
-    if (response.error.length > 0) {
-      process.exit(1);
-    }
+    return checkResult(response);
   });
 
 task("add_knowledge_base", "Adds a knowledge base to the contract")
@@ -106,10 +91,7 @@ task("add_knowledge_base", "Adds a knowledge base to the contract")
       response = await contract.kbIndexes(cid);
       error = await contract.kbIndexingRequestErrors(runId);
     }
-    console.log({ response: response, error: error });
-    if (error.length > 0) {
-      process.exit(1);
-    }
+    return checkResult({ response: response, error: error });
   });
 
 task("query_knowledge_base", "Queries a knowledge base")
@@ -123,10 +105,7 @@ task("query_knowledge_base", "Queries a knowledge base")
 
     const contract = await getContract("Test", contractAddress, hre);
     const response = await queryContractKnowledgeBase(contract, cid, query, hre);
-    console.log(response)
-    if (response.error.length > 0) {
-      process.exit(1);
-    }
+    return checkResult(response);
   });
 
 async function getContract(
@@ -148,21 +127,18 @@ async function queryOpenAiLLM(
   try {
     const txResponse = await contract.callOpenAiLLM(model, message);
     await txResponse.wait();
-    process.stdout.write("Waiting for response");
     let response = await contract.lastResponse();
     let error = await contract.lastError();
     while (response.length === 0 && error.length === 0) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       response = await contract.lastResponse();
       error = await contract.lastError();
-      process.stdout.write(".");
     }
-    console.log("");
     return { response: response, error: error };
   } catch (error) {
     console.error(`Error calling contract function: ${error}`);
   }
-  return { response: "", error: "Failed XX" };
+  return { response: "", error: "Call failed" };
 }
 
 async function queryGroqLLM(
@@ -174,21 +150,18 @@ async function queryGroqLLM(
   try {
     const txResponse = await contract.callGroqLLM(model, message);
     await txResponse.wait();
-    process.stdout.write("Waiting for response");
     let response = await contract.lastResponse();
     let error = await contract.lastError();
     while (response.length === 0 && error.length === 0) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       response = await contract.lastResponse();
       error = await contract.lastError();
-      process.stdout.write(".");
     }
-    console.log("");
     return { response: response, error: error };
   } catch (error) {
     console.error(`Error calling contract function: ${error}`);
   }
-  return { response: "", error: "Failed XX" };
+  return { response: "", error: "Call failed" };
 }
 
 async function queryContractFunction(
@@ -200,21 +173,18 @@ async function queryContractFunction(
   try {
     const txResponse = await contract.callFunction(tool, query);
     await txResponse.wait();
-    process.stdout.write("Waiting for response");
     let response = await contract.lastResponse();
     let error = await contract.lastError();
     while (response.length === 0 && error.length === 0) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       response = await contract.lastResponse();
       error = await contract.lastError();
-      process.stdout.write(".");
     }
-    console.log("");
     return { response: response, error: error };
   } catch (error) {
     console.error(`Error calling contract function: ${error}`);
   }
-  return { response: "", error: "Failed XX" };
+  return { response: "", error: "Call failed" };
 }
 
 async function queryContractKnowledgeBase(
@@ -226,21 +196,18 @@ async function queryContractKnowledgeBase(
   try {
     const txResponse = await contract.queryKnowledgeBase(cid, query);
     await txResponse.wait();
-    process.stdout.write("Waiting for response");
     let response = await contract.lastResponse();
     let error = await contract.lastError();
     while (response.length === 0 && error.length === 0) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       response = await contract.lastResponse();
       error = await contract.lastError();
-      process.stdout.write(".");
     }
-    console.log("");
     return { response: response, error: error };
   } catch (error) {
     console.error(`Error calling contract function: ${error}`);
   }
-  return { response: "", error: "Failed XX" };
+  return { response: "", error: "Call failed" };
 }
 
 function getRunId(
@@ -263,4 +230,14 @@ function getRunId(
     }
   }
   return runId;
+}
+
+function checkResult(result: FunctionResponse) : FunctionResponse {
+  if (process.env.RUN_MODE != "e2e-script") {
+    console.log(result)
+    if (result.error.length > 0) {
+      process.exit(1);
+    }
+  }
+  return result;
 }
