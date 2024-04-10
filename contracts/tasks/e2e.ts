@@ -21,39 +21,43 @@ task("e2e", "Runs all e2e tests")
 
     process.env.RUN_MODE = "e2e-script";
 
+    const testResults: Record<string, string> = {};
+
     let result = await runOpenAi(
       contractAddress,
       "gpt-4-turbo-preview",
       "Who is the president of USA?",
       hre,
     )
-    console.log(result);
+    testResults["OpenAI gpt-4-turbo-preview"] = result.error.length ? result.error : "✅";
     result = await runOpenAi(
       contractAddress,
       "gpt-3.5-turbo-1106",
       "Who is the president of USA?",
       hre,
     )
+    testResults["OpenAI gpt-3.5-turbo-1106"] = result.error.length ? result.error : "✅";
     result = await runGroq(
       contractAddress,
       "llama2-70b-4096",
       "Who is the president of USA?",
       hre,
     )
+    testResults["Groq llama2-70b-4096"] = result.error.length ? result.error : "✅";
     result = await runGroq(
       contractAddress,
       "mixtral-8x7b-32768",
       "Who is the president of USA?",
       hre,
     )
+    testResults["Groq mixtral-8x7b-32768"] = result.error.length ? result.error : "✅";
     result = await runGroq(
       contractAddress,
       "gemma-7b-it",
       "Who is the president of USA?",
       hre,
     )
-
-    console.log(`Running "image_generation"`)
+    testResults["gemma-7b-it mixtral-8x7b-32768"] = result.error.length ? result.error : "✅";
     result = await runTaskWithTimeout(
       "image_generation",
       {
@@ -62,9 +66,7 @@ task("e2e", "Runs all e2e tests")
       },
       hre,
     )
-    console.log(`DONE Running "image_generation"`)
-
-    console.log(`Running "web_search"`)
+    testResults["OpenAI image_generation"] = result.error.length ? result.error : "✅";
     result = await runTaskWithTimeout(
       "web_search",
       {
@@ -73,9 +75,7 @@ task("e2e", "Runs all e2e tests")
       },
       hre,
     )
-    console.log(`DONE Running "web_search"`)
-
-    console.log(`Running "code_interpreter"`)
+    testResults["web_search"] = result.error.length ? result.error : "✅";
     result = await runTaskWithTimeout(
       "code_interpreter",
       {
@@ -84,7 +84,7 @@ task("e2e", "Runs all e2e tests")
       },
       hre,
     )
-    console.log(`DONE Running "code_interpreter"`)
+    testResults["code_interpreter"] = result.error.length ? result.error : "✅";
 
     // console.log(`Running "add_knowledge_base"`)
     // await runTaskWithTimeout(
@@ -96,7 +96,6 @@ task("e2e", "Runs all e2e tests")
     //   hre,
     // )
     // console.log(`DONE Running "add_knowledge_base"`)
-    console.log(`Running "query_knowledge_base"`)
     result = await runTaskWithTimeout(
       "query_knowledge_base",
       {
@@ -106,9 +105,20 @@ task("e2e", "Runs all e2e tests")
       },
       hre,
     )
-    console.log(`DONE Running "query_knowledge_base"`)
-    console.log("================================================")
-    console.log(green, "e2e run done", reset)
+    testResults["query_knowledge_base"] = result.error.length ? result.error : "✅";
+    const totalTests = Object.keys(testResults).length;
+    const passedTests = Object.values(testResults).filter(result => result === "✅").length;
+    const failedTests = totalTests - passedTests;
+    console.log(`${passedTests} out of ${totalTests} tests passed `);
+    const transformedResults = Object.entries(testResults).map(([testName, result]) => ({
+      "Test": testName,
+      "Result": result
+    }));
+    
+    console.table(transformedResults);
+    if (failedTests > 0) {
+      process.exit(1);
+    }
   });
 
 async function runTaskWithTimeout(
@@ -142,7 +152,6 @@ async function runOpenAi(
   message: string,
   hre: HardhatRuntimeEnvironment,
 ) {
-  console.log(`Running "openai", with model: ${model}`)
   let result = await runTaskWithTimeout(
     "openai",
     {
@@ -152,7 +161,6 @@ async function runOpenAi(
     },
     hre,
   )
-  console.log(`DONE Running "openai", with model: ${model}.`)
   return result;
 }
 
@@ -162,7 +170,6 @@ async function runGroq(
   message: string,
   hre: HardhatRuntimeEnvironment,
 ) {
-  console.log(`Running "groq", with model: ${model}`)
   let result = await runTaskWithTimeout(
     "groq",
     {
@@ -172,6 +179,5 @@ async function runGroq(
     },
     hre,
   )
-  console.log(`DONE Running "groq", with model: ${model}.`)
   return result;
 }
