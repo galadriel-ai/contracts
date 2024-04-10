@@ -34,9 +34,10 @@ async function main(): Promise<void> {
     "--network", network
   ];
 
+  let previousResult = false;
   while (true) {
     console.log(`Running e2e tests with `)
-    await runTests(command, args, slackWebHookUrl)
+    previousResult = await runTests(command, args, slackWebHookUrl, previousResult)
     console.log(`Run done, sleeping for ${TIMEOUT_SECONDS} seconds`)
     await new Promise((resolve) => setTimeout(resolve, TIMEOUT_SECONDS * 1000));
   }
@@ -46,44 +47,52 @@ async function runTests(
   command: string,
   args: string[],
   slackWebHookUrl: string,
-): Promise<void> {
+  previousResult: boolean
+): Promise<boolean> {
+  let isSuccess = false;
+  let stdoutData = '';
   try {
-    await new Promise((resolve, reject) => {
-      const childProcess = spawn(command, args, {shell: true});
-
-      let stdoutData = '';
-      let stderrData = '';
+    isSuccess = await new Promise((resolve) => {
+      const childProcess = spawn(command, args, { shell: true });
 
       childProcess.stdout.on('data', (data) => {
-        console.log(data.toString())
+        stdoutData += data.toString();
+        console.log(data.toString());
       });
 
       childProcess.stderr.on('data', (data) => {
-        stderrData += data.toString();
+        console.error(data.toString());
       });
 
       childProcess.on('close', (code) => {
         if (code === 0) {
-          resolve(stdoutData);
+          resolve(true);
         } else {
-          reject(new Error(stderrData));
+          resolve(false);
         }
       });
-    })
+    });
   } catch (e: any) {
-    console.error(e.message)
+    console.error(e.message);
     await postSlackMessage(
-      `e2e blockchain tests failed\n` +
-      "```" +
-      `${e.message}` +
-      "```",
+      e.message,
       slackWebHookUrl,
-    )
+    );
   }
+
+  // If isSuccess is false, you might want to send a message to Slack here as well
+  if (!isSuccess || !previousResult) {
+    await postSlackMessage(
+      stdoutData,
+      slackWebHookUrl,
+    );
+  }
+
+  return isSuccess;
 }
 
 async function postSlackMessage(
-  text: string,
+  output: string,
   webhookUrl: string,
 ) {
   try {
@@ -95,7 +104,15 @@ async function postSlackMessage(
           "Content-type": "application/json"
         },
         body: JSON.stringify({
-          text
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: "```" + output +"```"
+              }
+            }
+          ]
         })
       }
     )
