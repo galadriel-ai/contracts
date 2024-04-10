@@ -34,8 +34,8 @@ async function main(): Promise<void> {
     "--network", network
   ];
 
+  let previousResult = false;
   while (true) {
-    let previousResult = false;
     console.log(`Running e2e tests with `)
     previousResult = await runTests(command, args, slackWebHookUrl, previousResult)
     console.log(`Run done, sleeping for ${TIMEOUT_SECONDS} seconds`)

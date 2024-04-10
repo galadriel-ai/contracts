@@ -29,35 +29,35 @@ task("e2e", "Runs all e2e tests")
       "Who is the president of USA?",
       hre,
     )
-    testResults["OpenAI gpt-4-turbo-preview"] = result.error.length ? result.error : "✅";
+    testResults["OpenAI gpt-4-turbo-preview"] = result.error || "✅";
     result = await runOpenAi(
       contractAddress,
       "gpt-3.5-turbo-1106",
       "Who is the president of USA?",
       hre,
     )
-    testResults["OpenAI gpt-3.5-turbo-1106"] = result.error.length ? result.error : "✅";
+    testResults["OpenAI gpt-3.5-turbo-1106"] = result.error || "✅";
     result = await runGroq(
       contractAddress,
       "llama2-70b-4096",
       "Who is the president of USA?",
       hre,
     )
-    testResults["Groq llama2-70b-4096"] = result.error.length ? result.error : "✅";
+    testResults["Groq llama2-70b-4096"] = result.error || "✅";
     result = await runGroq(
       contractAddress,
       "mixtral-8x7b-32768",
       "Who is the president of USA?",
       hre,
     )
-    testResults["Groq mixtral-8x7b-32768"] = result.error.length ? result.error : "✅";
+    testResults["Groq mixtral-8x7b-32768"] = result.error || "✅";
     result = await runGroq(
       contractAddress,
       "gemma-7b-it",
       "Who is the president of USA?",
       hre,
     )
-    testResults["gemma-7b-it mixtral-8x7b-32768"] = result.error.length ? result.error : "✅";
+    testResults["gemma-7b-it mixtral-8x7b-32768"] = result.error || "✅";
     result = await runTaskWithTimeout(
       "image_generation",
       {
@@ -66,7 +66,7 @@ task("e2e", "Runs all e2e tests")
       },
       hre,
     )
-    testResults["OpenAI image_generation"] = result.error.length ? result.error : "✅";
+    testResults["OpenAI image_generation"] = result.error || "✅";
     result = await runTaskWithTimeout(
       "web_search",
       {
@@ -75,7 +75,7 @@ task("e2e", "Runs all e2e tests")
       },
       hre,
     )
-    testResults["web_search"] = result.error.length ? result.error : "✅";
+    testResults["web_search"] = result.error || "✅";
     result = await runTaskWithTimeout(
       "code_interpreter",
       {
@@ -84,7 +84,7 @@ task("e2e", "Runs all e2e tests")
       },
       hre,
     )
-    testResults["code_interpreter"] = result.error.length ? result.error : "✅";
+    testResults["code_interpreter"] = result.error || "✅";
 
     // console.log(`Running "add_knowledge_base"`)
     // await runTaskWithTimeout(
@@ -105,7 +105,7 @@ task("e2e", "Runs all e2e tests")
       },
       hre,
     )
-    testResults["query_knowledge_base"] = result.error.length ? result.error : "✅";
+    testResults["query_knowledge_base"] = result.error || "✅";
     const totalTests = Object.keys(testResults).length;
     const passedTests = Object.values(testResults).filter(result => result === "✅").length;
     const failedTests = totalTests - passedTests;
