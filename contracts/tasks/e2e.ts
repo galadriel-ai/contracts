@@ -57,7 +57,7 @@ task("e2e", "Runs all e2e tests")
       "Who is the president of USA?",
       hre,
     )
-    testResults["gemma-7b-it mixtral-8x7b-32768"] = result.error || "✅";
+    testResults["Groq gemma-7b-it"] = result.error || "✅";
     result = await runTaskWithTimeout(
       "image_generation",
       {
