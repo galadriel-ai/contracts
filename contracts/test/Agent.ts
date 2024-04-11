@@ -44,7 +44,20 @@ describe("Agent", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await agent.runAgent("which came first: the chicken or the egg?", 2);
-      await oracle.connect(oracleAccount).addResponse(0, 0, "The Chicken", "");
+      const response = {
+        id: "responseId",
+        content: "The Chicken",
+        functionName: "",
+        functionArguments: "",
+        created: 1618888901, // Example UNIX timestamp
+        model: "gpt-4-turbo-preview",
+        systemFingerprint: "systemFingerprintHere",
+        object: "chat.completion",
+        completionTokens: 10,
+        promptTokens: 5,
+        totalTokens: 15
+      };
+      await oracle.connect(oracleAccount).addOpenAiResponse(0, 0, response, "");
       const messages = await oracle.getMessages(0, 0)
       expect(messages.length).to.equal(3)
       expect(messages[1]).to.equal("which came first: the chicken or the egg?")
