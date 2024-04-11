@@ -5,8 +5,42 @@ pragma solidity ^0.8.9;
 // import "hardhat/console.sol";
 
 interface IOracle {
-    function createLlmCall(
-        uint promptId
+    struct OpenAiRequest {
+        string model;
+        int8 frequencyPenalty;
+        string logitBias;
+        uint32 maxTokens;
+        int8 presencePenalty;
+        string responseFormat;
+        uint seed;
+        string stop;
+        uint temperature;
+        uint topP;
+        string tools;
+        string toolChoice;
+        string user;
+    }
+
+    struct OpenAiResponse {
+        string id;
+
+        string content;
+        string functionName;
+        string functionArguments;
+
+        uint64 created;
+        string model;
+        string systemFingerprint;
+        string object;
+
+        uint32 completionTokens;
+        uint32 promptTokens;
+        uint32 totalTokens;
+    }
+
+    function createOpenAiLlmCall(
+        uint promptId,
+        OpenAiRequest memory request
     ) external returns (uint);
 
     function createFunctionCall(
@@ -43,6 +77,8 @@ contract Agent {
 
     event OracleAddressUpdated(address indexed newOracleAddress);
 
+    IOracle.OpenAiRequest private config;
+
     constructor(
         address initialOracleAddress,         
         string memory systemPrompt
@@ -50,6 +86,22 @@ contract Agent {
         owner = msg.sender;
         oracleAddress = initialOracleAddress;
         prompt = systemPrompt;
+
+        config = IOracle.OpenAiRequest({
+            model : "gpt-4-turbo-preview",
+            frequencyPenalty : 21, // > 20 for null
+            logitBias : "", // empty str for null
+            maxTokens : 1000, // 0 for null
+            presencePenalty : 21, // > 20 for null
+            responseFormat : "{\"type\":\"text\"}",
+            seed : 0, // null
+            stop : "", // null
+            temperature : 10, // Example temperature (scaled up, 10 means 1.0), > 20 means null
+            topP : 101, // Percentage 0-100, > 100 means null
+            tools : "[{\"type\":\"function\",\"function\":{\"name\":\"web_search\",\"description\":\"Search the internet\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"Search query\"}},\"required\":[\"query\"]}}},{\"type\":\"function\",\"function\":{\"name\":\"code_interpreter\",\"description\":\"Evaluates python code in a sandbox environment. The environment resets on every execution. You must send the whole script every time and print your outputs. Script should be pure python code that can be evaluated. It should be in python format NOT markdown. The code should NOT be wrapped in backticks. All python packages including requests, matplotlib, scipy, numpy, pandas, etc are available. Output can only be read from stdout, and stdin. Do not use things like plot.show() as it will not work. print() any output and results so you can capture the output.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"code\":{\"type\":\"string\",\"description\":\"The pure python script to be evaluated. The contents will be in main.py. It should not be in markdown format.\"}},\"required\":[\"code\"]}}}]",
+            toolChoice : "auto", // "none" or "auto"
+            user : "" // null
+        });
     }
 
     modifier onlyOwner() {
@@ -89,40 +141,44 @@ contract Agent {
         uint currentId = agentRunCount;
         agentRunCount = agentRunCount + 1;
 
-        IOracle(oracleAddress).createLlmCall(currentId);
+        IOracle(oracleAddress).createOpenAiLlmCall(currentId, config);
         emit AgentRunCreated(run.owner, currentId);
 
         return currentId;
     }
 
-    function onOracleLlmResponse(
+    function onOracleOpenAiLlmResponse(
         uint runId,
-        string memory response,
+        IOracle.OpenAiResponse memory response,
         string memory errorMessage
     ) public onlyOracle {
         AgentRun storage run = agentRuns[runId];
 
-        Message memory assistantMessage;
-        assistantMessage.content = response;
-        assistantMessage.role = "assistant";
-        run.messages.push(assistantMessage);
-        run.responsesCount++;
-
+        if (!compareStrings(errorMessage, "")) {
+            Message memory newMessage;
+            newMessage.role = "assistant";
+            newMessage.content = errorMessage;
+            run.messages.push(newMessage);
+            run.responsesCount++;
+            run.is_finished = true;
+            return;
+        }
         if (run.responsesCount >= run.max_iterations) {
             run.is_finished = true;
-        } else {
-            (string memory action, string memory actionInput) = findActionAndInput(response);
-            if (compareStrings(action, "web_search")) {
-                IOracle(oracleAddress).createFunctionCall(
-                    runId,
-                    "web_search",
-                    actionInput
-                );
-            }
-            else if (containsFinalAnswer(response)) {
-                run.is_finished = true;
-            }
+            return;
         }
+        if (!compareStrings(response.content, "")) {
+            Message memory assistantMessage;
+            assistantMessage.content = response.content;
+            assistantMessage.role = "assistant";
+            run.messages.push(assistantMessage);
+            run.responsesCount++;
+        }
+        if (!compareStrings(response.functionName, "")) {
+            IOracle(oracleAddress).createFunctionCall(runId, response.functionName, response.functionArguments);
+            return;
+        }
+        run.is_finished = true;
     }
 
     function onOracleFunctionResponse(
@@ -134,11 +190,16 @@ contract Agent {
         require(
             !run.is_finished, "Run is finished"
         );
+        string memory result = response;
+        if (!compareStrings(errorMessage, "")) {
+            result = errorMessage;
+        }
         Message memory newMessage;
-        newMessage.content = makeObservation(response);
         newMessage.role = "user";
+        newMessage.content = result;
         run.messages.push(newMessage);
-        IOracle(oracleAddress).createLlmCall(runId);
+        run.responsesCount++;
+        IOracle(oracleAddress).createOpenAiLlmCall(runId, config);
     }
 
     function getMessageHistoryContents(uint agentId) public view returns (string[] memory) {
@@ -161,70 +222,7 @@ contract Agent {
         return agentRuns[runId].is_finished;
     }
 
-    function findActionAndInput(string memory input) public pure returns (string memory action, string memory actionInput) {
-        bytes memory inputBytes = bytes(input);
-        uint inputLength = inputBytes.length;
-        uint i = 0;
-
-        // Temporary storage for byte segments
-        bytes memory tempBytes;
-
-        while (i < inputLength) {
-            // Reset tempBytes for each iteration
-            tempBytes = "";
-
-            // Look for "Action: " pattern
-            if (i + 7 < inputLength && inputBytes[i] == 'A' && inputBytes[i + 1] == 'c' && inputBytes[i + 2] == 't' && inputBytes[i + 3] == 'i' && inputBytes[i + 4] == 'o' && inputBytes[i + 5] == 'n' && inputBytes[i + 6] == ':' && inputBytes[i + 7] == ' ') {
-                i += 8; // Move past the "Action: " part
-                while (i < inputLength && inputBytes[i] != '\n') {
-                    tempBytes = abi.encodePacked(tempBytes, inputBytes[i]);
-                    i++;
-                }
-                action = string(tempBytes);
-            }
-            // Look for "Action Input: " pattern
-            else if (i + 13 < inputLength && inputBytes[i] == 'A' && inputBytes[i + 1] == 'c' && inputBytes[i + 2] == 't' && inputBytes[i + 3] == 'i' && inputBytes[i + 4] == 'o' && inputBytes[i + 5] == 'n' && inputBytes[i + 6] == ' ' && inputBytes[i + 7] == 'I' && inputBytes[i + 8] == 'n' && inputBytes[i + 9] == 'p' && inputBytes[i + 10] == 'u' && inputBytes[i + 11] == 't' && inputBytes[i + 12] == ':' && inputBytes[i + 13] == ' ') {
-                i += 14; // Move past the "Action Input: " part
-                while (i < inputLength && inputBytes[i] != '\n') {
-                    tempBytes = abi.encodePacked(tempBytes, inputBytes[i]);
-                    i++;
-                }
-                actionInput = string(tempBytes);
-            } else {
-                i++; // Move to the next character if no pattern is matched
-            }
-        }
-
-        return (action, actionInput);
-    }
-
-    function containsFinalAnswer(string memory input) public pure returns (bool) {
-        bytes memory inputBytes = bytes(input);
-        bytes memory target = bytes("Final Answer:");
-
-        if (inputBytes.length < target.length) {
-            return false;
-        }
-        for (uint i = 0; i <= inputBytes.length - target.length; i++) {
-            bool found = true;
-            for (uint j = 0; j < target.length; j++) {
-                if (inputBytes[i + j] != target[j]) {
-                    found = false;
-                    break;
-                }
-            }
-            if (found) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     function compareStrings(string memory a, string memory b) private pure returns (bool) {
         return (keccak256(abi.encodePacked((a))) == keccak256(abi.encodePacked((b))));
-    }
-
-    function makeObservation(string memory response) public pure returns (string memory) {
-        return string(abi.encodePacked("Observation: ", response));
     }
 }

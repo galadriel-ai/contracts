@@ -84,49 +84,6 @@
   {
     "inputs": [
       {
-        "internalType": "string",
-        "name": "input",
-        "type": "string"
-      }
-    ],
-    "name": "containsFinalAnswer",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "input",
-        "type": "string"
-      }
-    ],
-    "name": "findActionAndInput",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "action",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "actionInput",
-        "type": "string"
-      }
-    ],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "uint256",
         "name": "agentId",
         "type": "uint256"
@@ -184,25 +141,6 @@
   {
     "inputs": [
       {
-        "internalType": "string",
-        "name": "response",
-        "type": "string"
-      }
-    ],
-    "name": "makeObservation",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      }
-    ],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "uint256",
         "name": "runId",
         "type": "uint256"
@@ -231,9 +169,66 @@
         "type": "uint256"
       },
       {
-        "internalType": "string",
+        "components": [
+          {
+            "internalType": "string",
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "content",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "functionName",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "functionArguments",
+            "type": "string"
+          },
+          {
+            "internalType": "uint64",
+            "name": "created",
+            "type": "uint64"
+          },
+          {
+            "internalType": "string",
+            "name": "model",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "systemFingerprint",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "object",
+            "type": "string"
+          },
+          {
+            "internalType": "uint32",
+            "name": "completionTokens",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "promptTokens",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "totalTokens",
+            "type": "uint32"
+          }
+        ],
+        "internalType": "struct IOracle.OpenAiResponse",
         "name": "response",
-        "type": "string"
+        "type": "tuple"
       },
       {
         "internalType": "string",
@@ -241,7 +236,7 @@
         "type": "string"
       }
     ],
-    "name": "onOracleLlmResponse",
+    "name": "onOracleOpenAiLlmResponse",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
