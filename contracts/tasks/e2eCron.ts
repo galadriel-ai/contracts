@@ -81,7 +81,7 @@ async function runTests(
   }
 
   // If isSuccess is false, you might want to send a message to Slack here as well
-  if (!isSuccess || !previousResult) {
+  if (!isSuccess || (isSuccess && !previousResult)) {
     await postSlackMessage(
       stdoutData,
       slackWebHookUrl,
