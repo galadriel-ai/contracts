@@ -5,8 +5,8 @@ import asyncio
 import settings
 import numpy as np
 from io import BytesIO
+import openai
 from openai import AsyncOpenAI
-from openai import RateLimitError
 from collections import OrderedDict
 from typing import List, Any, Tuple, Dict
 from src.domain.knowledge_base.entities import Document
@@ -92,7 +92,9 @@ class KnowledgeBaseRepository:
         except KeyError:
             return False
 
-    @backoff.on_exception(backoff.expo, RateLimitError, max_tries=3)
+    @backoff.on_exception(
+        backoff.expo, (openai.RateLimitError, openai.APITimeoutError), max_tries=3
+    )
     async def _create_embedding(self, texts: List[str]) -> List[float]:
         response = await self.openai_client.embeddings.create(
             input=texts, model="text-embedding-3-small"

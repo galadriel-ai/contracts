@@ -1,13 +1,14 @@
 import backoff
 import settings
 from typing import Optional
+import openai
 from openai import AsyncOpenAI
-from openai import RateLimitError
-from openai import APIError
 from src.domain.tools.image_generation.entities import ImageGenerationResult
 
 
-@backoff.on_exception(backoff.expo, RateLimitError)
+@backoff.on_exception(
+    backoff.expo, (openai.RateLimitError, openai.APITimeoutError), max_tries=3
+)
 async def _generate_image(prompt: str) -> Optional[ImageGenerationResult]:
     client = AsyncOpenAI(
         api_key=settings.OPEN_AI_API_KEY,
@@ -29,7 +30,7 @@ async def execute(prompt: str) -> Optional[ImageGenerationResult]:
             url=response.data[0].url,
             error="",
         )
-    except APIError as api_error:
+    except openai.APIError as api_error:
         print(f"OpenAI API error: {api_error}", flush=True)
         return ImageGenerationResult(
             url="",
