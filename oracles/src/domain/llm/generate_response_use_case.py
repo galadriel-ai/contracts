@@ -2,10 +2,11 @@ import backoff
 from typing import List
 from typing import Optional
 
+import httpx
+import groq
 from groq import AsyncGroq
+import openai
 from openai import AsyncOpenAI
-from openai import RateLimitError
-from openai import APIError
 from openai.types.chat import ChatCompletion
 from groq.types.chat import ChatCompletion as GroqChatCompletion
 
@@ -15,11 +16,16 @@ from src.domain.llm.entities import LLMResult
 import settings
 from src.entities import PromptType
 
+TIMEOUT = httpx.Timeout(timeout=600.0, connect=10.0)
 
-@backoff.on_exception(backoff.expo, RateLimitError)
+
+@backoff.on_exception(
+    backoff.expo, (openai.RateLimitError, openai.APITimeoutError), max_tries=3
+)
 async def _generate(model: str, messages: List[dict]) -> Optional[str]:
     client = AsyncOpenAI(
         api_key=settings.OPEN_AI_API_KEY,
+        timeout=TIMEOUT,
     )
     chat_completion: ChatCompletion = await client.chat.completions.create(
         messages=messages,
@@ -28,10 +34,13 @@ async def _generate(model: str, messages: List[dict]) -> Optional[str]:
     return chat_completion.choices[0].message.content
 
 
-@backoff.on_exception(backoff.expo, RateLimitError)
+@backoff.on_exception(
+    backoff.expo, (openai.RateLimitError, openai.APITimeoutError), max_tries=3
+)
 async def _generate_openai_with_params(chat: Chat) -> Optional[ChatCompletion]:
     client = AsyncOpenAI(
         api_key=settings.OPEN_AI_API_KEY,
+        timeout=TIMEOUT,
     )
     chat_completion: ChatCompletion = await client.chat.completions.create(
         messages=chat.messages,
@@ -49,14 +58,20 @@ async def _generate_openai_with_params(chat: Chat) -> Optional[ChatCompletion]:
         tool_choice=chat.config.tool_choice,
         user=chat.config.user,
     )
-    assert chat_completion.choices[0].message.content or chat_completion.choices[0].message.tool_calls
+    assert (
+        chat_completion.choices[0].message.content
+        or chat_completion.choices[0].message.tool_calls
+    )
     return chat_completion
 
 
-@backoff.on_exception(backoff.expo, RateLimitError)
+@backoff.on_exception(
+    backoff.expo, (groq.RateLimitError, groq.APITimeoutError), max_tries=3
+)
 async def _generate_groq_with_params(chat: Chat) -> Optional[GroqChatCompletion]:
     client = AsyncGroq(
         api_key=settings.GROQ_API_KEY,
+        timeout=TIMEOUT,
     )
     chat_completion: ChatCompletion = await client.chat.completions.create(
         messages=chat.messages,
@@ -72,7 +87,10 @@ async def _generate_groq_with_params(chat: Chat) -> Optional[GroqChatCompletion]
         top_p=chat.config.top_p,
         user=chat.config.user,
     )
-    assert chat_completion.choices[0].message.content or chat_completion.choices[0].message.tool_calls
+    assert (
+        chat_completion.choices[0].message.content
+        or chat_completion.choices[0].message.tool_calls
+    )
     return chat_completion
 
 
@@ -80,8 +98,7 @@ async def execute(model: str, chat: Chat) -> LLMResult:
     try:
         if not chat.config or chat.prompt_type == PromptType.DEFAULT:
             chat.prompt_type = PromptType.DEFAULT
-            response = await _generate(
-                model=model, messages=chat.messages)
+            response = await _generate(model=model, messages=chat.messages)
         elif chat.prompt_type == PromptType.OPENAI:
             response = await _generate_openai_with_params(chat)
         elif chat.prompt_type == PromptType.GROQ:
@@ -92,7 +109,7 @@ async def execute(model: str, chat: Chat) -> LLMResult:
             chat_completion=response,
             error="",
         )
-    except APIError as api_error:
+    except openai.APIError as api_error:
         print(f"OpenAI API error: {api_error}", flush=True)
         return LLMResult(
             chat_completion=None,
