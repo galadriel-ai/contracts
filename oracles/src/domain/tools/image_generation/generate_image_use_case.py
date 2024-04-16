@@ -1,9 +1,12 @@
 import backoff
 import settings
 from typing import Optional
+import httpx
 import openai
 from openai import AsyncOpenAI
 from src.domain.tools.image_generation.entities import ImageGenerationResult
+
+TIMEOUT = httpx.Timeout(timeout=600.0, connect=10.0)
 
 
 @backoff.on_exception(
@@ -12,6 +15,7 @@ from src.domain.tools.image_generation.entities import ImageGenerationResult
 async def _generate_image(prompt: str) -> Optional[ImageGenerationResult]:
     client = AsyncOpenAI(
         api_key=settings.OPEN_AI_API_KEY,
+        timeout=TIMEOUT,
     )
 
     return await client.images.generate(

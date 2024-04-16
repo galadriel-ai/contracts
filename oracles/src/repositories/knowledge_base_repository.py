@@ -5,6 +5,7 @@ import asyncio
 import settings
 import numpy as np
 from io import BytesIO
+import httpx
 import openai
 from openai import AsyncOpenAI
 from collections import OrderedDict
@@ -12,12 +13,14 @@ from typing import List, Any, Tuple, Dict
 from src.domain.knowledge_base.entities import Document
 
 BATCH_SIZE = 2048
+TIMEOUT = httpx.Timeout(timeout=600.0, connect=10.0)
 
 
 class KnowledgeBaseRepository:
     def __init__(self, max_size=10):
         self.openai_client = AsyncOpenAI(
             api_key=settings.OPEN_AI_API_KEY,
+            timeout=TIMEOUT,
         )
         self.lock = asyncio.Lock()
         self.max_size = max_size

@@ -2,6 +2,7 @@ import backoff
 from typing import List
 from typing import Optional
 
+import httpx
 import groq
 from groq import AsyncGroq
 import openai
@@ -15,6 +16,8 @@ from src.domain.llm.entities import LLMResult
 import settings
 from src.entities import PromptType
 
+TIMEOUT = httpx.Timeout(timeout=600.0, connect=10.0)
+
 
 @backoff.on_exception(
     backoff.expo, (openai.RateLimitError, openai.APITimeoutError), max_tries=3
@@ -22,6 +25,7 @@ from src.entities import PromptType
 async def _generate(model: str, messages: List[dict]) -> Optional[str]:
     client = AsyncOpenAI(
         api_key=settings.OPEN_AI_API_KEY,
+        timeout=TIMEOUT,
     )
     chat_completion: ChatCompletion = await client.chat.completions.create(
         messages=messages,
@@ -36,6 +40,7 @@ async def _generate(model: str, messages: List[dict]) -> Optional[str]:
 async def _generate_openai_with_params(chat: Chat) -> Optional[ChatCompletion]:
     client = AsyncOpenAI(
         api_key=settings.OPEN_AI_API_KEY,
+        timeout=TIMEOUT,
     )
     chat_completion: ChatCompletion = await client.chat.completions.create(
         messages=chat.messages,
@@ -66,6 +71,7 @@ async def _generate_openai_with_params(chat: Chat) -> Optional[ChatCompletion]:
 async def _generate_groq_with_params(chat: Chat) -> Optional[GroqChatCompletion]:
     client = AsyncGroq(
         api_key=settings.GROQ_API_KEY,
+        timeout=TIMEOUT,
     )
     chat_completion: ChatCompletion = await client.chat.completions.create(
         messages=chat.messages,
