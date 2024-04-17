@@ -3,94 +3,7 @@ pragma solidity ^0.8.20;
 
 // Uncomment this line to use console.log
 // import "hardhat/console.sol";
-
-
-interface IOracle {
-    struct GroqRequest {
-        string model;
-        int8 frequencyPenalty;
-        string logitBias;
-        uint32 maxTokens;
-        int8 presencePenalty;
-        string responseFormat;
-        uint seed;
-        string stop;
-        uint temperature;
-        uint topP;
-        string user;
-    }
-
-    struct GroqResponse {
-        string id;
-
-        string content;
-
-        uint64 created;
-        string model;
-        string systemFingerprint;
-        string object;
-
-        uint32 completionTokens;
-        uint32 promptTokens;
-        uint32 totalTokens;
-    }
-
-    function createGroqLlmCall(
-        uint promptId,
-        GroqRequest memory request
-    ) external returns (uint);
-
-    struct OpenAiRequest {
-        string model;
-        int8 frequencyPenalty;
-        string logitBias;
-        uint32 maxTokens;
-        int8 presencePenalty;
-        string responseFormat;
-        uint seed;
-        string stop;
-        uint temperature;
-        uint topP;
-        string tools;
-        string toolChoice;
-        string user;
-    }
-
-    struct OpenAiResponse {
-        string id;
-
-        string content;
-        string functionName;
-        string functionArguments;
-
-        uint64 created;
-        string model;
-        string systemFingerprint;
-        string object;
-
-        uint32 completionTokens;
-        uint32 promptTokens;
-        uint32 totalTokens;
-    }
-
-    function createOpenAiLlmCall(
-        uint promptId,
-        OpenAiRequest memory request
-    ) external returns (uint);
-
-    function createFunctionCall(
-        uint functionCallbackId,
-        string memory functionType,
-        string memory functionInput
-    ) external returns (uint i);
-
-    function createKnowledgeBaseQuery(
-        uint kbQueryCallbackId,
-        string memory cid,
-        string memory query,
-        uint32 num_documents
-    ) external returns (uint i);
-}
+import "./interfaces/IOracle.sol";
 
 contract Test {
     address private owner;
@@ -198,13 +111,13 @@ contract Test {
         return currentId;
     }
 
-    function getMessageHistoryContents(uint chatId) public view returns (string[] memory) {
+    function getMessageHistoryContents(uint /*chatId*/) public view returns (string[] memory) {
         string[] memory messages = new string[](1);
         messages[0] = llmMessage;
         return messages;
     }
 
-    function getMessageHistoryRoles(uint chatId) public view returns (string[] memory) {
+    function getMessageHistoryRoles(uint /*chatId*/) public pure returns (string[] memory) {
         string[] memory roles = new string[](1);
         roles[0] = "user";
         return roles;
@@ -227,7 +140,7 @@ contract Test {
     }
 
     function onOracleFunctionResponse(
-        uint runId,
+        uint /*runId*/,
         string memory response,
         string memory errorMessage
     ) public onlyOracle {
@@ -236,7 +149,7 @@ contract Test {
     }
 
     function onOracleKnowledgeBaseQueryResponse(
-            uint runId,
+            uint /*runId*/,
             string [] memory documents,
             string memory errorMessage
         ) public onlyOracle {
@@ -249,7 +162,7 @@ contract Test {
     }
 
     function onOracleOpenAiLlmResponse(
-        uint runId,
+        uint /*runId*/,
         IOracle.OpenAiResponse memory response,
         string memory errorMessage
     ) public onlyOracle {
@@ -258,7 +171,7 @@ contract Test {
     }
 
     function onOracleGroqLlmResponse(
-        uint runId,
+        uint /*runId*/,
         IOracle.GroqResponse memory response,
         string memory errorMessage
     ) public onlyOracle {

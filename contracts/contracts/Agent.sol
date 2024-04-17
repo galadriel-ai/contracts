@@ -3,52 +3,7 @@ pragma solidity ^0.8.9;
 
 // Uncomment this line to use console.log
 // import "hardhat/console.sol";
-
-interface IOracle {
-    struct OpenAiRequest {
-        string model;
-        int8 frequencyPenalty;
-        string logitBias;
-        uint32 maxTokens;
-        int8 presencePenalty;
-        string responseFormat;
-        uint seed;
-        string stop;
-        uint temperature;
-        uint topP;
-        string tools;
-        string toolChoice;
-        string user;
-    }
-
-    struct OpenAiResponse {
-        string id;
-
-        string content;
-        string functionName;
-        string functionArguments;
-
-        uint64 created;
-        string model;
-        string systemFingerprint;
-        string object;
-
-        uint32 completionTokens;
-        uint32 promptTokens;
-        uint32 totalTokens;
-    }
-
-    function createOpenAiLlmCall(
-        uint promptId,
-        OpenAiRequest memory request
-    ) external returns (uint);
-
-    function createFunctionCall(
-        uint functionCallbackId,
-        string memory functionType,
-        string memory functionInput
-    ) external returns (uint i);
-}
+import "./interfaces/IOracle.sol";
 
 contract Agent {
 

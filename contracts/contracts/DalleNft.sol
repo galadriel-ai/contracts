@@ -5,14 +5,7 @@ pragma solidity ^0.8.20;
 // import "hardhat/console.sol";
 import {ERC721URIStorage, ERC721} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import {ERC721Enumerable} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-
-interface IOracle {
-    function createFunctionCall(
-        uint functionCallbackId,
-        string memory functionType,
-        string memory functionInput
-    ) external returns (uint i);
-}
+import {IOracle} from "./interfaces/IOracle.sol";
 
 contract DalleNft is ERC721, ERC721Enumerable, ERC721URIStorage {
     uint256 private _nextTokenId;
@@ -90,7 +83,7 @@ contract DalleNft is ERC721, ERC721Enumerable, ERC721URIStorage {
     function onOracleFunctionResponse(
         uint runId,
         string memory response,
-        string memory errorMessage
+        string memory /*errorMessage*/
     ) public onlyOracle {
         MintInput storage mintInput = mintInputs[runId];
         require(!mintInput.isMinted, "NFT already minted");
@@ -110,7 +103,7 @@ contract DalleNft is ERC721, ERC721Enumerable, ERC721URIStorage {
         return promptsArray;
     }
 
-    function getRoles(address _owner, uint _chatId) public pure returns (string[] memory) {
+    function getRoles(address /*_owner*/, uint /*_chatId*/) public pure returns (string[] memory) {
         string[] memory rolesArray = new string[](1);
         rolesArray[0] = "user";
         return rolesArray;
