@@ -2,8 +2,19 @@
 pragma solidity ^0.8.13;
 
 interface IOracle {
+
+    struct Content {
+        string contentType;
+        string value;
+    }
+
+    struct Message {
+        string role;
+        Content [] content;
+    }
+
     struct OpenAiRequest {
-        // "gpt-4-turbo-preview" or "gpt-3.5-turbo-1106"
+        // "gpt-4-turbo", "gpt-4-turbo-preview" or "gpt-3.5-turbo-1106"
         string model;
         // int -20 - 20, Mapped to float -2.0 - 2.0. If bigger than 20 then null
         int8 frequencyPenalty;

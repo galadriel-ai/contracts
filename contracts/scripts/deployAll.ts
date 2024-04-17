@@ -12,7 +12,7 @@ async function main() {
   await deployAgent(oracleAddress);
   console.log()
   await deployChatGptWithKnowledgeBase("ChatGpt", oracleAddress, "");
-  for (let contractName of ["OpenAiChatGpt", "GroqChatGpt"]) {
+  for (let contractName of ["OpenAiChatGpt", "GroqChatGpt", "OpenAiChatGptVision"]) {
     await deployChatGpt(contractName, oracleAddress)
   }
 }

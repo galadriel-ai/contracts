@@ -58,25 +58,31 @@ class OracleRepository:
                 is_prompt_processed = (
                     await self.oracle_contract.functions.isPromptProcessed(i).call()
                 )
+                gpt_vision_support = False
                 prompt_type = await self._get_prompt_type(i)
                 if prompt_type == PromptType.OPENAI:
                     config = await self._get_openai_config(i)
+                    gpt_vision_support = config.model == "gpt-4-turbo"
                 elif prompt_type == PromptType.GROQ:
                     config = await self._get_groq_config(i)
                 messages = []
-                contents = await self.oracle_contract.functions.getMessages(
-                    i, callback_id
-                ).call()
-                roles = await self.oracle_contract.functions.getRoles(
-                    i, callback_id
-                ).call()
-                for j in range(len(contents)):
-                    messages.append(
-                        {
-                            "role": roles[j],
-                            "content": contents[j],
-                        }
-                    )
+                if gpt_vision_support:
+                    history = await self.oracle_contract.functions.getMessagesAndRoles(i, callback_id).call()
+                    messages = await self._format_history(history)
+                else:
+                    contents = await self.oracle_contract.functions.getMessages(
+                        i, callback_id
+                    ).call()
+                    roles = await self.oracle_contract.functions.getRoles(
+                        i, callback_id
+                    ).call()
+                    for j in range(len(contents)):
+                        messages.append(
+                            {
+                                "role": roles[j],
+                                "content": contents[j],
+                            }
+                        )
                 self.indexed_chats.append(
                     Chat(
                         id=i,
@@ -454,8 +460,11 @@ class OracleRepository:
                 temperature=_parse_float_from_int(config[8], 0, 20),
                 top_p=_parse_float_from_int(config[9], 0, 100, decimals=2),
                 tools=_parse_tools(config[10]),
-                tool_choice=config[11] if (config[11] and config[11] in get_args(
-                    OpenaiToolChoiceType)) else None,
+                tool_choice=(
+                    config[11]
+                    if (config[11] and config[11] in get_args(OpenaiToolChoiceType))
+                    else None
+                ),
                 user=_value_or_none(config[12]),
             )
         except:
@@ -493,6 +502,34 @@ class OracleRepository:
         except:
             return PromptType.DEFAULT
 
+    async def _format_history(self, history: List[str]) -> List[Dict]:
+        formatted_history = []
+        for entry in history:
+            content = []
+            for c in entry[1]:
+                if c[0] == "text":
+                    content.append(
+                        {
+                            "type": "text",
+                            "text": c[1],
+                        }
+                    )
+                elif c[0] == "image_url":
+                    content.append(
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": c[1],
+                            },
+                        },
+                    )
+            message = {
+                "role": entry[0],
+                "content": content,
+            }
+            formatted_history.append(message)
+        return formatted_history
+
     async def _sign_and_send_tx(self, tx) -> TxReceipt:
         signed_tx = self.web3_client.eth.account.sign_transaction(
             tx, private_key=self.account.key
@@ -501,34 +538,6 @@ class OracleRepository:
             signed_tx.rawTransaction
         )
         return await self.web3_client.eth.wait_for_transaction_receipt(tx_hash)
-
-    async def _get_openai_config(self, i: int) -> Optional[OpenAiConfig]:
-        config = await self.oracle_contract.functions.openAiConfigurations(i).call()
-        if not config or not config[0] or not config[0] in get_args(OpenAiModelType):
-            return None
-        try:
-            return OpenAiConfig(
-                model=config[0],
-                frequency_penalty=_parse_float_from_int(config[1], -20, 20),
-                logit_bias=_parse_json_string(config[2]),
-                # Check max value?
-                max_tokens=_value_or_none(config[3]),
-                presence_penalty=_parse_float_from_int(config[4], -20, 20),
-                response_format=_get_response_format(config[5]),
-                seed=_value_or_none(config[6]),
-                stop=_value_or_none(config[7]),
-                temperature=_parse_float_from_int(config[8], 0, 20),
-                top_p=_parse_float_from_int(config[9], 0, 100, decimals=2),
-                tools=_parse_tools(config[10]),
-                tool_choice=(
-                    config[11]
-                    if (config[11] and config[11] in get_args(OpenaiToolChoiceType))
-                    else None
-                ),
-                user=_value_or_none(config[12]),
-            )
-        except:
-            return None
 
 
 def _value_or_none(value: Any) -> Optional[Any]:

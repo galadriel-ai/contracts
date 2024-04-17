@@ -22,6 +22,10 @@ interface IChatGpt {
         string memory errorMessage
     ) external;
 
+    function getMessageHistory(
+        uint callbackId
+    ) external view returns (IOracle.Message[] memory);
+
     function getMessageHistoryContents(
         uint callbackId
     ) external view returns (string[] memory);

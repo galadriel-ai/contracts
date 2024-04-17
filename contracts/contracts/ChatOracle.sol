@@ -165,6 +165,13 @@ contract ChatOracle is IOracle {
         return IChatGpt(callbackAddresses[promptId]).getMessageHistoryRoles(promptCallBackId);
     }
 
+   function getMessagesAndRoles(
+        uint promptId,
+        uint promptCallBackId
+    ) public view returns (IOracle.Message[] memory) {
+        return IChatGpt(callbackAddresses[promptId]).getMessageHistory(promptCallBackId);
+    }
+
     function createFunctionCall(
         uint functionCallbackId,
         string memory functionType,
