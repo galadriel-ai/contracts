@@ -111,41 +111,14 @@ contract OpenAiChatGptVision {
             run.messages.push(newMessage);
             run.messagesCount++;
         } else {
-            if (compareStrings(response.content, "")) {
-                IOracle(oracleAddress).createFunctionCall(runId, response.functionName, response.functionArguments);
-            } else {
-                IOracle.Message memory newMessage = IOracle.Message({
-                    role: "assistant",
-                    content: new IOracle.Content[](1)
-                });
-                newMessage.content[0].contentType = "text";
-                newMessage.content[0].value = response.content;
-                run.messages.push(newMessage);
-                run.messagesCount++;
-            }
-        }
-    }
-
-    function onOracleFunctionResponse(
-        uint runId,
-        string memory response,
-        string memory errorMessage
-    ) public onlyOracle {
-        ChatRun storage run = chatRuns[runId];
-        require(
-            compareStrings(run.messages[run.messagesCount - 1].role, "user"),
-            "No function to respond to"
-        );
-        if (compareStrings(errorMessage, "")) {
-             IOracle.Message memory newMessage = IOracle.Message({
+            IOracle.Message memory newMessage = IOracle.Message({
                 role: "assistant",
                 content: new IOracle.Content[](1)
             });
             newMessage.content[0].contentType = "text";
-            newMessage.content[0].value = response;
+            newMessage.content[0].value = response.content;
             run.messages.push(newMessage);
             run.messagesCount++;
-            IOracle(oracleAddress).createOpenAiLlmCall(runId, config);
         }
     }
 
