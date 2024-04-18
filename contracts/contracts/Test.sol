@@ -9,6 +9,7 @@ contract Test {
     address private owner;
     address public oracleAddress;
     string public llmMessage;
+    IOracle.Message visionMessage;
     string public lastResponse;
     string public lastError;
     uint private callsCount;
@@ -83,6 +84,48 @@ contract Test {
         return currentId;
     }
 
+    function callOpenAiVisionLLM(string memory model, string memory message, string memory imageUrl) public returns (uint i) {
+        uint currentId = callsCount;
+        callsCount = currentId + 1;
+
+        lastResponse = "";
+        lastError = "";
+    
+        visionMessage = IOracle.Message({
+            role: "user",
+            content: new IOracle.Content[](2)
+        });
+        visionMessage.content[0] = IOracle.Content({
+            contentType: "text",
+            value: message
+        });
+        visionMessage.content[1] = IOracle.Content({
+            contentType: "image_url",
+            value: imageUrl
+        });
+
+        IOracle(oracleAddress).createOpenAiLlmCall(
+            currentId,
+            IOracle.OpenAiRequest({
+                model: model,
+                frequencyPenalty : 21, // > 20 for null
+                logitBias : "", // empty str for null
+                maxTokens : 1000, // 0 for null
+                presencePenalty : 21, // > 20 for null
+                responseFormat : "{\"type\":\"text\"}",
+                seed : 0, // null
+                stop : "", // null
+                temperature : 10, // Example temperature (scaled up, 10 means 1.0), > 20 means null
+                topP : 101, // Percentage 0-100, > 100 means null
+                tools : "",
+                toolChoice : "", // "none" or "auto"
+                user : "" // null
+            })
+        );
+
+        return currentId;
+    }
+
     function callGroqLLM(string memory model, string memory message) public returns (uint i) {
         uint currentId = callsCount;
         callsCount = currentId + 1;
@@ -121,6 +164,12 @@ contract Test {
         string[] memory roles = new string[](1);
         roles[0] = "user";
         return roles;
+    }
+
+    function getMessageHistory(uint /*chatId*/) public view returns (IOracle.Message[] memory) {
+        IOracle.Message[] memory messages = new IOracle.Message[](1);
+        messages[0] = visionMessage;
+        return messages;
     }
 
     function queryKnowledgeBase(string memory cid, string memory query) public returns (uint i) {

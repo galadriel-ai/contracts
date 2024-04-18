@@ -21,6 +21,21 @@ task("openai", "Calls the OpenAI LLM")
     return checkResult(response);
   });
 
+task("openai_vision", "Calls the OpenAI LLM")
+.addParam("contractAddress", "The address of the Test contract")
+.addParam("model", "The model to use")
+.addParam("imageUrl", "The image URL to send to the model")
+.addParam("message", "The message to send to the model")
+.setAction(async (taskArgs, hre) => {
+  const contractAddress = taskArgs.contractAddress;
+  const model = taskArgs.model;
+  const message = taskArgs.message;
+  const imageUrl = taskArgs.imageUrl;
+  const contract = await getContract("Test", contractAddress, hre);
+  const response = await queryOpenAiVisionLLM(contract, model, message, imageUrl, hre);
+  return checkResult(response);
+});
+
 task("groq", "Calls the Groq LLM")
   .addParam("contractAddress", "The address of the Test contract")
   .addParam("model", "The model to use")
@@ -126,6 +141,30 @@ async function queryOpenAiLLM(
 ): Promise<FunctionResponse> {
   try {
     const txResponse = await contract.callOpenAiLLM(model, message);
+    await txResponse.wait();
+    let response = await contract.lastResponse();
+    let error = await contract.lastError();
+    while (response.length === 0 && error.length === 0) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      response = await contract.lastResponse();
+      error = await contract.lastError();
+    }
+    return { response: response, error: error };
+  } catch (error) {
+    console.error(`Error calling contract function: ${error}`);
+  }
+  return { response: "", error: "Call failed" };
+}
+
+async function queryOpenAiVisionLLM(
+  contract: Contract,
+  model: string,
+  message: string,
+  image_url: string,
+  hre: HardhatRuntimeEnvironment
+): Promise<FunctionResponse> {
+  try {
+    const txResponse = await contract.callOpenAiVisionLLM(model, message, image_url);
     await txResponse.wait();
     let response = await contract.lastResponse();
     let error = await contract.lastError();

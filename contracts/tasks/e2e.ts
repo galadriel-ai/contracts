@@ -43,6 +43,14 @@ task("e2e", "Runs all e2e tests")
       "Who is the president of USA?",
       hre,
     )
+    testResults["OpenAI gpt-4-turbo"] = result.error || "✅";
+    result = await runOpenAiVision(
+      contractAddress,
+      "gpt-4-turbo",
+      "What is on this image",
+      "https://picsum.photos/200/300",
+      hre,
+    )
     testResults["Groq llama2-70b-4096"] = result.error || "✅";
     result = await runGroq(
       contractAddress,
@@ -145,7 +153,6 @@ async function runTaskWithTimeout(
   }
 }
 
-
 async function runOpenAi(
   contractAddress: string,
   model: string,
@@ -158,6 +165,26 @@ async function runOpenAi(
       contractAddress,
       model,
       message,
+    },
+    hre,
+  )
+  return result;
+}
+
+async function runOpenAiVision(
+  contractAddress: string,
+  model: string,
+  message: string,
+  imageUrl: string,
+  hre: HardhatRuntimeEnvironment,
+) {
+  let result = await runTaskWithTimeout(
+    "openai_vision",
+    {
+      contractAddress,
+      model,
+      message,
+      imageUrl
     },
     hre,
   )
