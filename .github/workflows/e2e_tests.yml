@@ -11,6 +11,7 @@ jobs:
       NETWORK: "localhost"
       ORACLE_ADDRESS: "0x5FbDB2315678afecb367f032d93F642f64180aa3"
       TEST_CONTRACT_ADDRESS: "0x610178dA211FEF7D417bC0e6FeD39F05609AD788"
+      IMAGE_URL: "https://picsum.photos/200/300"
     steps:
     - uses: actions/checkout@v4
     - name: Set up Node.js
@@ -70,7 +71,6 @@ jobs:
         BEARLY_API_KEY: ${{ secrets.BEARLY_API_KEY }}
         PINATA_GATEWAY_TOKEN: ${{ secrets.PINATA_GATEWAY_TOKEN }}
         PINATA_API_JWT: ${{ secrets.PINATA_API_JWT }}
-        IMAGE_URL: "https://picsum.photos/200/300"
     - name: "Test 1 - OpenAI gpt-4-turbo-preview"
       run:
         cd contracts && npx hardhat openai --contract-address ${{ env.TEST_CONTRACT_ADDRESS }} --model gpt-4-turbo-preview --message "Who is the president of USA?" --network ${{ env.NETWORK }}
