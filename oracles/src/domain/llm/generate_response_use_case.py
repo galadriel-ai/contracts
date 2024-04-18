@@ -51,7 +51,8 @@ async def _generate_openai_with_params(chat: Chat) -> Optional[ChatCompletion]:
         presence_penalty=chat.config.presence_penalty,
         response_format=chat.config.response_format,
         seed=chat.config.seed,
-        stop=chat.config.stop,
+        # TODO gpt-4-turbo currently broken, keep the default for now
+        #stop=chat.config.stop,
         temperature=chat.config.temperature,
         top_p=chat.config.top_p,
         tools=chat.config.tools,

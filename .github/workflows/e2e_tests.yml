@@ -10,7 +10,8 @@ jobs:
     env:
       NETWORK: "localhost"
       ORACLE_ADDRESS: "0x5FbDB2315678afecb367f032d93F642f64180aa3"
-      TEST_CONTRACT_ADDRESS: "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318"
+      TEST_CONTRACT_ADDRESS: "0x610178dA211FEF7D417bC0e6FeD39F05609AD788"
+      IMAGE_URL: "https://picsum.photos/200/300"
     steps:
     - uses: actions/checkout@v4
     - name: Set up Node.js
@@ -118,6 +119,11 @@ jobs:
     - name: "Test 10 - Query knowledge base"
       run:
         cd contracts && npx hardhat query_knowledge_base --contract-address ${{ env.TEST_CONTRACT_ADDRESS }} --cid QmdCgbMawRVE6Kc1joZmhgDo2mSZFgRgWvBCqUvJV9JwkF --query "What is the oracle smart contract address?" --network ${{ env.NETWORK }}
+      env:
+        PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
+    - name: "Test 11 - OpenAI gpt-4-turbo vision"
+      run:
+        cd contracts && npx hardhat openai_vision --contract-address ${{ env.TEST_CONTRACT_ADDRESS }} --model gpt-4-turbo --message "What is on this image?" --image-url ${{env.IMAGE_URL}} --network ${{ env.NETWORK }}
       env:
         PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
     - name: Display Oracle Output

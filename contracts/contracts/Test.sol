@@ -3,99 +3,13 @@ pragma solidity ^0.8.20;
 
 // Uncomment this line to use console.log
 // import "hardhat/console.sol";
-
-
-interface IOracle {
-    struct GroqRequest {
-        string model;
-        int8 frequencyPenalty;
-        string logitBias;
-        uint32 maxTokens;
-        int8 presencePenalty;
-        string responseFormat;
-        uint seed;
-        string stop;
-        uint temperature;
-        uint topP;
-        string user;
-    }
-
-    struct GroqResponse {
-        string id;
-
-        string content;
-
-        uint64 created;
-        string model;
-        string systemFingerprint;
-        string object;
-
-        uint32 completionTokens;
-        uint32 promptTokens;
-        uint32 totalTokens;
-    }
-
-    function createGroqLlmCall(
-        uint promptId,
-        GroqRequest memory request
-    ) external returns (uint);
-
-    struct OpenAiRequest {
-        string model;
-        int8 frequencyPenalty;
-        string logitBias;
-        uint32 maxTokens;
-        int8 presencePenalty;
-        string responseFormat;
-        uint seed;
-        string stop;
-        uint temperature;
-        uint topP;
-        string tools;
-        string toolChoice;
-        string user;
-    }
-
-    struct OpenAiResponse {
-        string id;
-
-        string content;
-        string functionName;
-        string functionArguments;
-
-        uint64 created;
-        string model;
-        string systemFingerprint;
-        string object;
-
-        uint32 completionTokens;
-        uint32 promptTokens;
-        uint32 totalTokens;
-    }
-
-    function createOpenAiLlmCall(
-        uint promptId,
-        OpenAiRequest memory request
-    ) external returns (uint);
-
-    function createFunctionCall(
-        uint functionCallbackId,
-        string memory functionType,
-        string memory functionInput
-    ) external returns (uint i);
-
-    function createKnowledgeBaseQuery(
-        uint kbQueryCallbackId,
-        string memory cid,
-        string memory query,
-        uint32 num_documents
-    ) external returns (uint i);
-}
+import "./interfaces/IOracle.sol";
 
 contract Test {
     address private owner;
     address public oracleAddress;
     string public llmMessage;
+    IOracle.Message visionMessage;
     string public lastResponse;
     string public lastError;
     uint private callsCount;
@@ -170,6 +84,48 @@ contract Test {
         return currentId;
     }
 
+    function callOpenAiVisionLLM(string memory model, string memory message, string memory imageUrl) public returns (uint i) {
+        uint currentId = callsCount;
+        callsCount = currentId + 1;
+
+        lastResponse = "";
+        lastError = "";
+    
+        visionMessage = IOracle.Message({
+            role: "user",
+            content: new IOracle.Content[](2)
+        });
+        visionMessage.content[0] = IOracle.Content({
+            contentType: "text",
+            value: message
+        });
+        visionMessage.content[1] = IOracle.Content({
+            contentType: "image_url",
+            value: imageUrl
+        });
+
+        IOracle(oracleAddress).createOpenAiLlmCall(
+            currentId,
+            IOracle.OpenAiRequest({
+                model: model,
+                frequencyPenalty : 21, // > 20 for null
+                logitBias : "", // empty str for null
+                maxTokens : 1000, // 0 for null
+                presencePenalty : 21, // > 20 for null
+                responseFormat : "{\"type\":\"text\"}",
+                seed : 0, // null
+                stop : "", // null
+                temperature : 10, // Example temperature (scaled up, 10 means 1.0), > 20 means null
+                topP : 101, // Percentage 0-100, > 100 means null
+                tools : "",
+                toolChoice : "", // "none" or "auto"
+                user : "" // null
+            })
+        );
+
+        return currentId;
+    }
+
     function callGroqLLM(string memory model, string memory message) public returns (uint i) {
         uint currentId = callsCount;
         callsCount = currentId + 1;
@@ -198,16 +154,22 @@ contract Test {
         return currentId;
     }
 
-    function getMessageHistoryContents(uint chatId) public view returns (string[] memory) {
+    function getMessageHistoryContents(uint /*chatId*/) public view returns (string[] memory) {
         string[] memory messages = new string[](1);
         messages[0] = llmMessage;
         return messages;
     }
 
-    function getMessageHistoryRoles(uint chatId) public view returns (string[] memory) {
+    function getMessageHistoryRoles(uint /*chatId*/) public pure returns (string[] memory) {
         string[] memory roles = new string[](1);
         roles[0] = "user";
         return roles;
+    }
+
+    function getMessageHistory(uint /*chatId*/) public view returns (IOracle.Message[] memory) {
+        IOracle.Message[] memory messages = new IOracle.Message[](1);
+        messages[0] = visionMessage;
+        return messages;
     }
 
     function queryKnowledgeBase(string memory cid, string memory query) public returns (uint i) {
@@ -227,7 +189,7 @@ contract Test {
     }
 
     function onOracleFunctionResponse(
-        uint runId,
+        uint /*runId*/,
         string memory response,
         string memory errorMessage
     ) public onlyOracle {
@@ -236,7 +198,7 @@ contract Test {
     }
 
     function onOracleKnowledgeBaseQueryResponse(
-            uint runId,
+            uint /*runId*/,
             string [] memory documents,
             string memory errorMessage
         ) public onlyOracle {
@@ -249,7 +211,7 @@ contract Test {
     }
 
     function onOracleOpenAiLlmResponse(
-        uint runId,
+        uint /*runId*/,
         IOracle.OpenAiResponse memory response,
         string memory errorMessage
     ) public onlyOracle {
@@ -258,7 +220,7 @@ contract Test {
     }
 
     function onOracleGroqLlmResponse(
-        uint runId,
+        uint /*runId*/,
         IOracle.GroqResponse memory response,
         string memory errorMessage
     ) public onlyOracle {

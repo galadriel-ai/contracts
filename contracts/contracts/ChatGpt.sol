@@ -3,19 +3,7 @@ pragma solidity ^0.8.9;
 
 // Uncomment this line to use console.log
 // import "hardhat/console.sol";
-
-interface IOracle {
-    function createLlmCall(
-        uint promptId
-    ) external returns (uint);
-
-    function createKnowledgeBaseQuery(
-        uint kbQueryCallbackId,
-        string memory cid,
-        string memory query,
-        uint32 num_documents
-    ) external returns (uint i);
-}
+import "./interfaces/IOracle.sol";
 
 contract ChatGpt {
 
@@ -95,7 +83,7 @@ contract ChatGpt {
     function onOracleLlmResponse(
         uint runId,
         string memory response,
-        string memory errorMessage
+        string memory /*errorMessage*/
     ) public onlyOracle {
         ChatRun storage run = chatRuns[runId];
         require(
@@ -113,7 +101,7 @@ contract ChatGpt {
     function onOracleKnowledgeBaseQueryResponse(
         uint runId,
         string [] memory documents,
-        string memory errorMessage
+        string memory /*errorMessage*/
     ) public onlyOracle {
         ChatRun storage run = chatRuns[runId];
         require(

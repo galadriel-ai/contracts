@@ -5,16 +5,11 @@ pragma solidity ^0.8.9;
 // import "hardhat/console.sol";
 import "./interfaces/IOracle.sol";
 
-contract GroqChatGpt {
-
-    struct Message {
-        string role;
-        string content;
-    }
+contract OpenAiChatGptVision {
 
     struct ChatRun {
         address owner;
-        Message[] messages;
+        IOracle.Message[] messages;
         uint messagesCount;
     }
 
@@ -28,25 +23,27 @@ contract GroqChatGpt {
 
     event OracleAddressUpdated(address indexed newOracleAddress);
 
-    IOracle.GroqRequest private config;
+    IOracle.OpenAiRequest private config;
 
     constructor(address initialOracleAddress) {
         owner = msg.sender;
         oracleAddress = initialOracleAddress;
         chatRunsCount = 0;
 
-        config = IOracle.GroqRequest({
-        model : "mixtral-8x7b-32768",
-        frequencyPenalty : 21, // > 20 for null
-        logitBias : "", // empty str for null
-        maxTokens : 1000, // 0 for null
-        presencePenalty : 21, // > 20 for null
-        responseFormat : "{\"type\":\"text\"}",
-        seed : 0, // null
-        stop : "", // null
-        temperature : 10, // Example temperature (scaled up, 10 means 1.0), > 20 means null
-        topP : 101, // Percentage 0-100, > 100 means null
-        user : "" // null
+        config = IOracle.OpenAiRequest({
+            model : "gpt-4-turbo",
+            frequencyPenalty : 21, // > 20 for null
+            logitBias : "", // empty str for null
+            maxTokens : 1000, // 0 for null
+            presencePenalty : 21, // > 20 for null
+            responseFormat : "{\"type\":\"text\"}",
+            seed : 0, // null
+            stop : "", // null
+            temperature : 10, // Example temperature (scaled up, 10 means 1.0), > 20 means null
+            topP : 101, // Percentage 0-100, > 100 means null
+            tools : "",
+            toolChoice : "", // "none" or "auto"
+            user : "" // null
         });
     }
 
@@ -65,28 +62,37 @@ contract GroqChatGpt {
         emit OracleAddressUpdated(newOracleAddress);
     }
 
-    function startChat(string memory message) public returns (uint i) {
+    function startChat(string memory message, string memory imageUrl) public returns (uint i) {
         ChatRun storage run = chatRuns[chatRunsCount];
 
         run.owner = msg.sender;
-        Message memory newMessage;
-        newMessage.content = message;
-        newMessage.role = "user";
+        IOracle.Message memory newMessage = IOracle.Message({
+            role: "user",
+            content: new IOracle.Content[](2)
+        });
+        newMessage.content[0] = IOracle.Content({
+            contentType: "text",
+            value: message
+        });
+        newMessage.content[1] = IOracle.Content({
+            contentType: "image_url",
+            value: imageUrl
+        });
         run.messages.push(newMessage);
         run.messagesCount = 1;
 
         uint currentId = chatRunsCount;
         chatRunsCount = chatRunsCount + 1;
 
-        IOracle(oracleAddress).createGroqLlmCall(currentId, config);
+        IOracle(oracleAddress).createOpenAiLlmCall(currentId, config);
         emit ChatCreated(msg.sender, currentId);
 
         return currentId;
     }
 
-    function onOracleGroqLlmResponse(
+    function onOracleOpenAiLlmResponse(
         uint runId,
-        IOracle.GroqResponse memory response,
+        IOracle.OpenAiResponse memory response,
         string memory errorMessage
     ) public onlyOracle {
         ChatRun storage run = chatRuns[runId];
@@ -94,16 +100,23 @@ contract GroqChatGpt {
             keccak256(abi.encodePacked(run.messages[run.messagesCount - 1].role)) == keccak256(abi.encodePacked("user")),
             "No message to respond to"
         );
+
         if (!compareStrings(errorMessage, "")) {
-            Message memory newMessage;
-            newMessage.role = "assistant";
-            newMessage.content = errorMessage;
+            IOracle.Message memory newMessage = IOracle.Message({
+                role: "assistant",
+                content: new IOracle.Content[](1)
+            });
+            newMessage.content[0].contentType = "text";
+            newMessage.content[0].value = errorMessage;
             run.messages.push(newMessage);
             run.messagesCount++;
         } else {
-            Message memory newMessage;
-            newMessage.role = "assistant";
-            newMessage.content = response.content;
+            IOracle.Message memory newMessage = IOracle.Message({
+                role: "assistant",
+                content: new IOracle.Content[](1)
+            });
+            newMessage.content[0].contentType = "text";
+            newMessage.content[0].value = response.content;
             run.messages.push(newMessage);
             run.messagesCount++;
         }
@@ -119,29 +132,20 @@ contract GroqChatGpt {
             run.owner == msg.sender, "Only chat owner can add messages"
         );
 
-        Message memory newMessage;
-        newMessage.content = message;
-        newMessage.role = "user";
+         IOracle.Message memory newMessage = IOracle.Message({
+            role: "user",
+            content: new IOracle.Content[](1)
+        });
+        newMessage.content[0].contentType = "text";
+        newMessage.content[0].value = message;
         run.messages.push(newMessage);
         run.messagesCount++;
 
-        IOracle(oracleAddress).createGroqLlmCall(runId, config);
+        IOracle(oracleAddress).createOpenAiLlmCall(runId, config);
     }
 
-    function getMessageHistoryContents(uint chatId) public view returns (string[] memory) {
-        string[] memory messages = new string[](chatRuns[chatId].messages.length);
-        for (uint i = 0; i < chatRuns[chatId].messages.length; i++) {
-            messages[i] = chatRuns[chatId].messages[i].content;
-        }
-        return messages;
-    }
-
-    function getMessageHistoryRoles(uint chatId) public view returns (string[] memory) {
-        string[] memory roles = new string[](chatRuns[chatId].messages.length);
-        for (uint i = 0; i < chatRuns[chatId].messages.length; i++) {
-            roles[i] = chatRuns[chatId].messages[i].role;
-        }
-        return roles;
+    function getMessageHistory(uint chatId) public view returns (IOracle.Message[] memory) {
+        return chatRuns[chatId].messages;
     }
 
     function compareStrings(string memory a, string memory b) private pure returns (bool) {

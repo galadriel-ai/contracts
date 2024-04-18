@@ -3,15 +3,7 @@ pragma solidity ^0.8.20;
 
 // Uncomment this line to use console.log
 // import "hardhat/console.sol";
-
-
-interface IOracle {
-    function createFunctionCall(
-        uint functionCallbackId,
-        string memory functionType,
-        string memory functionInput
-    ) external returns (uint i);
-}
+import "./interfaces/IOracle.sol";
 
 contract Quickstart {
     address private owner;
@@ -57,7 +49,7 @@ contract Quickstart {
     }
 
     function onOracleFunctionResponse(
-        uint runId,
+        uint /*runId*/,
         string memory response,
         string memory errorMessage
     ) public onlyOracle {
