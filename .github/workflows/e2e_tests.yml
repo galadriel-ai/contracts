@@ -122,10 +122,10 @@ jobs:
       env:
         PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
     - name: "Test 11 - OpenAI gpt-4-turbo vision"
-        run:
-          cd contracts && npx hardhat openai_vision --contract-address ${{ env.TEST_CONTRACT_ADDRESS }} --model gpt-4-turbo --message "What is on this image?" --image-url ${{env.IMAGE_URL}} --network ${{ env.NETWORK }}
-        env:
-          PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
+      run:
+        cd contracts && npx hardhat openai_vision --contract-address ${{ env.TEST_CONTRACT_ADDRESS }} --model gpt-4-turbo --message "What is on this image?" --image-url ${{env.IMAGE_URL}} --network ${{ env.NETWORK }}
+      env:
+        PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
     - name: Display Oracle Output
       if: always() # Ensures this step runs even if a previous step fails
       run: cat oracles/oracle_output.txt
