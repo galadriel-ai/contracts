@@ -126,6 +126,11 @@ jobs:
         cd contracts && npx hardhat openai_vision --contract-address ${{ env.TEST_CONTRACT_ADDRESS }} --model gpt-4-turbo --message "What is on this image?" --image-url ${{env.IMAGE_URL}} --network ${{ env.NETWORK }}
       env:
         PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
+    - name: "Test 12 - Groq mixtral-8x7b-32768"
+      run:
+        cd contracts && npx hardhat groq --contract-address ${{ env.TEST_CONTRACT_ADDRESS }} --model llama3-70b-8192 --message "Who is the president of USA?" --network ${{ env.NETWORK }}
+      env:
+        PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
     - name: Display Oracle Output
       if: always() # Ensures this step runs even if a previous step fails
       run: cat oracles/oracle_output.txt
