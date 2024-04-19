@@ -54,3 +54,9 @@ async def test_gemma_7b_it():
     chat = await _get_chat("gemma-7b-it")
     result = await generate_response_use_case._generate_groq_with_params(chat)
     assert "hello" in result.choices[0].message.content.lower()
+
+@pytest.mark.asyncio
+async def test_llama3_70b():
+    chat = await _get_chat("llama3-70b-8192")
+    result = await generate_response_use_case._generate_groq_with_params(chat)
+    assert "hello" in result.choices[0].message.content.lower()

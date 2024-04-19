@@ -9,6 +9,7 @@ async def main():
         api_key=settings.GROQ_API_KEY,
     )
     models = [
+        "llama3-70b-8192",
         "llama2-70b-4096",
         "mixtral-8x7b-32768",
         "gemma-7b-it",

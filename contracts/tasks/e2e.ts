@@ -74,6 +74,13 @@ task("e2e", "Runs all e2e tests")
       },
       hre,
     )
+    testResults["Groq llama3-70b-8192"] = result.error || "✅";
+    result = await runGroq(
+      contractAddress,
+      "llama3-70b-8192",
+      "Who is the president of USA?",
+      hre,
+    )
     testResults["OpenAI image_generation"] = result.error || "✅";
     result = await runTaskWithTimeout(
       "web_search",
