@@ -30,6 +30,7 @@ task("e2e", "Runs all e2e tests")
       hre,
     )
     testResults["OpenAI gpt-4-turbo-preview"] = result.error || "✅";
+  
     result = await runOpenAi(
       contractAddress,
       "gpt-3.5-turbo-1106",
@@ -37,13 +38,7 @@ task("e2e", "Runs all e2e tests")
       hre,
     )
     testResults["OpenAI gpt-3.5-turbo-1106"] = result.error || "✅";
-    result = await runGroq(
-      contractAddress,
-      "llama2-70b-4096",
-      "Who is the president of USA?",
-      hre,
-    )
-    testResults["OpenAI gpt-4-turbo"] = result.error || "✅";
+  
     result = await runOpenAiVision(
       contractAddress,
       "gpt-4-turbo",
@@ -51,7 +46,25 @@ task("e2e", "Runs all e2e tests")
       "https://picsum.photos/200/300",
       hre,
     )
-    testResults["Groq llama2-70b-4096"] = result.error || "✅";
+    testResults["Groq gpt-4-turbo vision"] = result.error || "✅";
+  
+    result = await runGroq(
+      contractAddress,
+      "llama3-8b-8192",
+      "Who is the president of USA?",
+      hre,
+    )
+    testResults["Groq llama3-8b-8192"] = result.error || "✅";
+
+    result = await runGroq(
+      contractAddress,
+      "llama3-70b-8192",
+      "Who is the president of USA?",
+      hre,
+    )
+    testResults["Groq llama3-70b-8192"] = result.error || "✅";
+    
+  
     result = await runGroq(
       contractAddress,
       "mixtral-8x7b-32768",
@@ -59,6 +72,7 @@ task("e2e", "Runs all e2e tests")
       hre,
     )
     testResults["Groq mixtral-8x7b-32768"] = result.error || "✅";
+  
     result = await runGroq(
       contractAddress,
       "gemma-7b-it",
@@ -66,6 +80,7 @@ task("e2e", "Runs all e2e tests")
       hre,
     )
     testResults["Groq gemma-7b-it"] = result.error || "✅";
+  
     result = await runTaskWithTimeout(
       "image_generation",
       {
@@ -74,14 +89,8 @@ task("e2e", "Runs all e2e tests")
       },
       hre,
     )
-    testResults["Groq llama3-70b-8192"] = result.error || "✅";
-    result = await runGroq(
-      contractAddress,
-      "llama3-70b-8192",
-      "Who is the president of USA?",
-      hre,
-    )
     testResults["OpenAI image_generation"] = result.error || "✅";
+  
     result = await runTaskWithTimeout(
       "web_search",
       {
@@ -91,6 +100,7 @@ task("e2e", "Runs all e2e tests")
       hre,
     )
     testResults["web_search"] = result.error || "✅";
+  
     result = await runTaskWithTimeout(
       "code_interpreter",
       {
@@ -121,6 +131,7 @@ task("e2e", "Runs all e2e tests")
       hre,
     )
     testResults["query_knowledge_base"] = result.error || "✅";
+  
     const totalTests = Object.keys(testResults).length;
     const passedTests = Object.values(testResults).filter(result => result === "✅").length;
     const failedTests = totalTests - passedTests;
