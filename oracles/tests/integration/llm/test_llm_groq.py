@@ -43,8 +43,8 @@ async def test_mixtral():
 
 
 @pytest.mark.asyncio
-async def test_llama2_70b():
-    chat = await _get_chat("llama2-70b-4096")
+async def test_llama3_8b():
+    chat = await _get_chat("llama3-8b-8192")
     result = await generate_response_use_case._generate_groq_with_params(chat)
     assert "hello" in result.choices[0].message.content.lower()
 
