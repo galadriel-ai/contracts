@@ -68,7 +68,7 @@ jobs:
         OPEN_AI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
-        BEARLY_API_KEY: ${{ secrets.BEARLY_API_KEY }}
+        E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
         PINATA_GATEWAY_TOKEN: ${{ secrets.PINATA_GATEWAY_TOKEN }}
         PINATA_API_JWT: ${{ secrets.PINATA_API_JWT }}
     - name: "OpenAI gpt-4-turbo-preview"
