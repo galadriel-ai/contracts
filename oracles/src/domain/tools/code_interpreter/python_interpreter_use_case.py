@@ -1,4 +1,5 @@
 import re
+import asyncio
 import settings
 from e2b_code_interpreter import CodeInterpreter
 from src.domain.tools.code_interpreter.entities import PythonInterpreterResult
@@ -37,6 +38,4 @@ async def execute(code: str) -> PythonInterpreterResult:
 
 
 if __name__ == "__main__":
-    import asyncio
-
     print(asyncio.run(execute("print(2 + 2)")))
