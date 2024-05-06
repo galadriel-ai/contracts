@@ -1,36 +1,26 @@
 import re
-import json
-import base64
-import aiohttp
 import settings
+from e2b_code_interpreter import CodeInterpreter
 from src.domain.tools.code_interpreter.entities import PythonInterpreterResult
 
 
 async def _interpret_code(code: str) -> PythonInterpreterResult:
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                "https://exec.bearly.ai/v1/interpreter",
-                headers={
-                    "Authorization": settings.BEARLY_API_KEY,
-                },
-                json={
-                    "fileContents": code,
-                    "inputFiles": [],
-                    "outputDir": "output/",
-                    "outputAsLinks": True,
-                },
-            ) as response:
-                response.raise_for_status()
-                data = await response.json()
-                stdout = base64.b64decode(data["stdoutBasesixtyfour"]).decode() if data["stdoutBasesixtyfour"] else ""
-                stderr = base64.b64decode(data["stderrBasesixtyfour"]).decode() if data["stderrBasesixtyfour"] else ""
-                output = json.dumps({"stdout": stdout, "stderr": stderr})
+
+        def interpret_sync():
+            with CodeInterpreter(api_key=settings.E2B_API_KEY) as code_interpreter:
+                exec = code_interpreter.notebook.exec_cell(code)
+                stdout = "".join(exec.logs.stdout)
+                stderr = "".join(exec.logs.stderr)
+                if exec.error and len(stderr) == 0:
+                    stderr = exec.error.traceback_raw
                 return PythonInterpreterResult(
-                    output=output,
-                    error="",
-                    exit_code=data["exitCode"],
+                    output=stdout,
+                    error=stderr,
+                    exit_code=len(stderr),
                 )
+
+        return await asyncio.to_thread(interpret_sync)
     except Exception as e:
         return PythonInterpreterResult(output="", error=str(e), exit_code=1)
 

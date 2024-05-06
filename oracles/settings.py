@@ -18,7 +18,7 @@ ORACLE_ABI_PATH = os.getenv("ORACLE_ABI_PATH", "abi/ChatOracle.json")
 
 GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME", "galadriel-assets")
 SERVE_METRICS = os.getenv("SERVE_METRICS", "False").lower() == "true"
-BEARLY_API_KEY = os.getenv("BEARLY_API_KEY")
+E2B_API_KEY = os.getenv("E2B_API_KEY")
 PINATA_API_JWT = os.getenv("PINATA_API_JWT")
 PINATA_GATEWAY_TOKEN = os.getenv("PINATA_GATEWAY_TOKEN")
 
@@ -26,4 +26,3 @@ KNOWLEDGE_BASE_MAX_SIZE_BYTES = int(
     os.getenv("KNOWLEDGE_BASE_MAX_SIZE_BYTES", 10485760)
 )
 KNOWLEDGE_BASE_CACHE_MAX_SIZE = int(os.getenv("KNOWLEDGE_BASE_CACHE_MAX_SIZE", 100))
-
