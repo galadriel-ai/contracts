@@ -28,7 +28,7 @@ async def execute(
                     )
                     task = asyncio.create_task(
                         _query_knowledge_base(
-                            kb_query, ipfs_repository, kb_repository, semaphore
+                            kb_query, repository, ipfs_repository, kb_repository, semaphore
                         )
                     )
                     KB_QUERY_TASKS[kb_query.id] = task
