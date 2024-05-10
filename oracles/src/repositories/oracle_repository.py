@@ -190,7 +190,7 @@ class OracleRepository:
             ).build_transaction(tx_data)
         return tx
 
-    async def _get_function_call(self, i: int) -> FunctionCall:
+    async def _get_function_call(self, i: int) -> Optional[FunctionCall]:
         try:
             callback_id = await self.oracle_contract.functions.functionCallbackIds(
                 i
@@ -416,7 +416,6 @@ class OracleRepository:
                 if kb_query:
                     self.indexed_kb_queries.append(kb_query)
                 self.last_kb_index_request_count = i + 1
-            self.last_kb_query_count = kb_query_count
 
     async def get_unanswered_kb_queries(self) -> List[KnowledgeBaseQuery]:
         await self._index_new_kb_queries()
