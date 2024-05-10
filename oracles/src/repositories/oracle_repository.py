@@ -24,6 +24,7 @@ from src.entities import PromptType
 from src.entities import KnowledgeBaseIndexingRequest
 from src.entities import KnowledgeBaseQuery
 from web3.types import TxReceipt
+from web3.exceptions import ContractLogicError
 
 
 class OracleRepository:
@@ -45,55 +46,66 @@ class OracleRepository:
             address=settings.ORACLE_ADDRESS, abi=oracle_abi
         )
 
+    async def _get_chat(self, i: int) -> Optional[Chat]:
+        try:
+            config = None
+            callback_id = await self.oracle_contract.functions.promptCallbackIds(
+                i
+            ).call()
+            prompt_type = await self._get_prompt_type(i)
+            is_prompt_processed = (
+                await self.oracle_contract.functions.isPromptProcessed(i).call()
+            )
+            gpt_vision_support = False
+            if prompt_type == PromptType.OPENAI:
+                config = await self._get_openai_config(i)
+                gpt_vision_support = config.model == "gpt-4-turbo"
+            elif prompt_type == PromptType.GROQ:
+                config = await self._get_groq_config(i)
+            messages = []
+            if gpt_vision_support:
+                history = await self.oracle_contract.functions.getMessagesAndRoles(
+                    i, callback_id
+                ).call()
+                messages = await self._format_history(history)
+            else:
+                contents = await self.oracle_contract.functions.getMessages(
+                    i, callback_id
+                ).call()
+                roles = await self.oracle_contract.functions.getRoles(
+                    i, callback_id
+                ).call()
+                for j in range(len(contents)):
+                    messages.append(
+                        {
+                            "role": roles[j],
+                            "content": contents[j],
+                        }
+                    )
+            return Chat(
+                id=i,
+                messages=messages,
+                callback_id=callback_id,
+                is_processed=is_prompt_processed,
+                prompt_type=prompt_type,
+                config=config,
+            )
+        except ContractLogicError as e:
+            print(f"Error getting chat {i}: {e.message}", flush=True)
+            return None
+
     async def _index_new_chats(self):
         chats_count = await self.oracle_contract.functions.promptsCount().call()
-        config = None
         if chats_count > self.last_chats_count:
-            print(f"Indexing new prompts from {self.last_chats_count} to {chats_count}",
-                  flush=True)
+            print(
+                f"Indexing new prompts from {self.last_chats_count} to {chats_count}",
+                flush=True,
+            )
             for i in range(self.last_chats_count, chats_count):
-                callback_id = await self.oracle_contract.functions.promptCallbackIds(
-                    i
-                ).call()
-                is_prompt_processed = (
-                    await self.oracle_contract.functions.isPromptProcessed(i).call()
-                )
-                gpt_vision_support = False
-                prompt_type = await self._get_prompt_type(i)
-                if prompt_type == PromptType.OPENAI:
-                    config = await self._get_openai_config(i)
-                    gpt_vision_support = config.model == "gpt-4-turbo"
-                elif prompt_type == PromptType.GROQ:
-                    config = await self._get_groq_config(i)
-                messages = []
-                if gpt_vision_support:
-                    history = await self.oracle_contract.functions.getMessagesAndRoles(i, callback_id).call()
-                    messages = await self._format_history(history)
-                else:
-                    contents = await self.oracle_contract.functions.getMessages(
-                        i, callback_id
-                    ).call()
-                    roles = await self.oracle_contract.functions.getRoles(
-                        i, callback_id
-                    ).call()
-                    for j in range(len(contents)):
-                        messages.append(
-                            {
-                                "role": roles[j],
-                                "content": contents[j],
-                            }
-                        )
-                self.indexed_chats.append(
-                    Chat(
-                        id=i,
-                        messages=messages,
-                        callback_id=callback_id,
-                        is_processed=is_prompt_processed,
-                        prompt_type=prompt_type,
-                        config=config,
-                    )
-                )
-            self.last_chats_count = chats_count
+                chat = await self._get_chat(i)
+                if chat:
+                    self.indexed_chats.append(chat)
+                self.last_chats_count = i + 1
 
     async def get_unanswered_chats(self) -> List[Chat]:
         await self._index_new_chats()
@@ -178,6 +190,31 @@ class OracleRepository:
             ).build_transaction(tx_data)
         return tx
 
+    async def _get_function_call(self, i: int) -> FunctionCall:
+        try:
+            callback_id = await self.oracle_contract.functions.functionCallbackIds(
+                i
+            ).call()
+            is_function_call_processed = (
+                await self.oracle_contract.functions.isFunctionProcessed(i).call()
+            )
+            function_type = await self.oracle_contract.functions.functionTypes(
+                i
+            ).call()
+            function_input = await self.oracle_contract.functions.functionInputs(
+                i
+            ).call()
+            return FunctionCall(
+                id=i,
+                callback_id=callback_id,
+                is_processed=is_function_call_processed,
+                function_type=function_type,
+                function_input=function_input,
+            )
+        except ContractLogicError as e:
+            print(f"Error getting function call {i}: {e.message}", flush=True)
+            return None
+
     async def _index_new_function_calls(self):
         function_calls_count = (
             await self.oracle_contract.functions.functionsCount().call()
@@ -188,28 +225,10 @@ class OracleRepository:
                 flush=True,
             )
             for i in range(self.last_function_calls_count, function_calls_count):
-                callback_id = await self.oracle_contract.functions.functionCallbackIds(
-                    i
-                ).call()
-                is_function_call_processed = (
-                    await self.oracle_contract.functions.isFunctionProcessed(i).call()
-                )
-                function_type = await self.oracle_contract.functions.functionTypes(
-                    i
-                ).call()
-                function_input = await self.oracle_contract.functions.functionInputs(
-                    i
-                ).call()
-                self.indexed_function_calls.append(
-                    FunctionCall(
-                        id=i,
-                        callback_id=callback_id,
-                        is_processed=is_function_call_processed,
-                        function_type=function_type,
-                        function_input=function_input,
-                    )
-                )
-            self.last_function_calls_count = function_calls_count
+                function_call = await self._get_function_call(i)
+                if function_call:
+                    self.indexed_function_calls.append(function_call)
+                self.last_function_calls_count = i + 1
 
     async def get_unanswered_function_calls(self) -> List[FunctionCall]:
         await self._index_new_function_calls()
@@ -269,6 +288,25 @@ class OracleRepository:
         ).build_transaction(tx_data)
         return await self._sign_and_send_tx(tx)
 
+    async def _get_knowledge_base_indexing_request(self, i: int) -> Optional[KnowledgeBaseIndexingRequest]:
+        try:
+            is_processed = (
+                await self.oracle_contract.functions.isKbIndexingRequestProcessed(
+                    i
+                ).call()
+            )
+            cid = await self.oracle_contract.functions.kbIndexingRequests(i).call()
+            index_cid = await self.oracle_contract.functions.kbIndexes(cid).call()
+            return KnowledgeBaseIndexingRequest(
+                id=i,
+                cid=cid,
+                index_cid=index_cid,
+                is_processed=is_processed,
+            )
+        except ContractLogicError as e:
+            print(f"Error getting knowledge base indexing request {i}: {e.message}")
+            return None
+
     async def _index_new_kb_index_requests(self):
         kb_index_request_count = (
             await self.oracle_contract.functions.kbIndexingRequestCount().call()
@@ -278,22 +316,10 @@ class OracleRepository:
                 f"Indexing new knowledge base indexing requests from {self.last_kb_index_request_count} to {kb_index_request_count}"
             )
             for i in range(self.last_kb_index_request_count, kb_index_request_count):
-                is_processed = (
-                    await self.oracle_contract.functions.isKbIndexingRequestProcessed(
-                        i
-                    ).call()
-                )
-                cid = await self.oracle_contract.functions.kbIndexingRequests(i).call()
-                index_cid = await self.oracle_contract.functions.kbIndexes(cid).call()
-                self.indexed_kb_index_requests.append(
-                    KnowledgeBaseIndexingRequest(
-                        id=i,
-                        cid=cid,
-                        index_cid=index_cid,
-                        is_processed=is_processed,
-                    )
-                )
-            self.last_kb_index_request_count = kb_index_request_count
+                kb_index_request = await self._get_knowledge_base_indexing_request(i)
+                if kb_index_request:
+                    self.indexed_kb_index_requests.append(kb_index_request)
+                self.last_kb_index_request_count = i + 1
 
     async def get_unindexed_knowledge_bases(self) -> List[KnowledgeBaseIndexingRequest]:
         await self._index_new_kb_index_requests()
@@ -353,6 +379,32 @@ class OracleRepository:
         ).build_transaction(tx_data)
         return await self._sign_and_send_tx(tx)
 
+    async def _get_kb_query(self, i: int) -> Optional[KnowledgeBaseQuery]:
+        try:
+            callback_id = await self.oracle_contract.functions.kbQueryCallbackIds(
+                i
+            ).call()
+            is_processed = await self.oracle_contract.functions.isKbQueryProcessed(
+                i
+            ).call()
+            request = await self.oracle_contract.functions.kbQueries(i).call()
+            cid = request[0]
+            query = request[1]
+            num_documents = request[2]
+            index_cid = await self.oracle_contract.functions.kbIndexes(cid).call()
+            return  KnowledgeBaseQuery(
+                id=i,
+                callback_id=callback_id,
+                is_processed=is_processed,
+                cid=cid,
+                index_cid=index_cid,
+                query=query,
+                num_documents=num_documents,
+            )
+        except ContractLogicError as e:
+            print(f"Error getting knowledge base query {i}: {e.message}")
+            return None
+
     async def _index_new_kb_queries(self):
         kb_query_count = await self.oracle_contract.functions.kbQueryCount().call()
         if kb_query_count > self.last_kb_query_count:
@@ -360,28 +412,10 @@ class OracleRepository:
                 f"Indexing new knowledge base queries from {self.last_kb_query_count} to {kb_query_count}"
             )
             for i in range(self.last_kb_query_count, kb_query_count):
-                callback_id = await self.oracle_contract.functions.kbQueryCallbackIds(
-                    i
-                ).call()
-                is_processed = await self.oracle_contract.functions.isKbQueryProcessed(
-                    i
-                ).call()
-                request = await self.oracle_contract.functions.kbQueries(i).call()
-                cid = request[0]
-                query = request[1]
-                num_documents = request[2]
-                index_cid = await self.oracle_contract.functions.kbIndexes(cid).call()
-                self.indexed_kb_queries.append(
-                    KnowledgeBaseQuery(
-                        id=i,
-                        callback_id=callback_id,
-                        is_processed=is_processed,
-                        cid=cid,
-                        index_cid=index_cid,
-                        query=query,
-                        num_documents=num_documents,
-                    )
-                )
+                kb_query = await self._get_kb_query(i)
+                if kb_query:
+                    self.indexed_kb_queries.append(kb_query)
+                self.last_kb_index_request_count = i + 1
             self.last_kb_query_count = kb_query_count
 
     async def get_unanswered_kb_queries(self) -> List[KnowledgeBaseQuery]:
