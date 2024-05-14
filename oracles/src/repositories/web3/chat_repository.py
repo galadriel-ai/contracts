@@ -42,7 +42,7 @@ class Web3ChatRepository(Web3BaseRepository):
             gpt_vision_support = False
             if prompt_type == PromptType.OPENAI:
                 config = await self._get_openai_config(i)
-                gpt_vision_support = config.model == "gpt-4-turbo"
+                gpt_vision_support = (config.model == "gpt-4-turbo" or config.model == "gpt-4o")
             elif prompt_type == PromptType.GROQ:
                 config = await self._get_groq_config(i)
             messages = []

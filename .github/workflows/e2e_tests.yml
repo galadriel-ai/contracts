@@ -86,6 +86,11 @@ jobs:
         cd contracts && npx hardhat openai_vision --contract-address ${{ env.TEST_CONTRACT_ADDRESS }} --model gpt-4-turbo --message "What is on this image?" --image-url ${{env.IMAGE_URL}} --network ${{ env.NETWORK }}
       env:
         PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
+    - name: "OpenAI gpt-4o"
+      run:
+        cd contracts && npx hardhat openai_vision --contract-address ${{ env.TEST_CONTRACT_ADDRESS }} --model gpt-4o --message "What is on this image?" --image-url ${{env.IMAGE_URL}} --network ${{ env.NETWORK }}
+      env:
+        PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
     - name: "Groq llama3-8b-8192"
       run:
         cd contracts && npx hardhat groq --contract-address ${{ env.TEST_CONTRACT_ADDRESS }} --model llama3-8b-8192 --message "Who is the president of USA?" --network ${{ env.NETWORK }}
