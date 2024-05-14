@@ -46,7 +46,16 @@ task("e2e", "Runs all e2e tests")
       "https://picsum.photos/200/300",
       hre,
     )
-    testResults["Groq gpt-4-turbo vision"] = result.error || "✅";
+    testResults["OpenAI gpt-4-turbo vision"] = result.error || "✅";
+  
+    result = await runOpenAiVision(
+      contractAddress,
+      "gpt-4o",
+      "What is on this image",
+      "https://picsum.photos/200/300",
+      hre,
+    )
+    testResults["OpenAI gpt-4o"] = result.error || "✅";
   
     result = await runGroq(
       contractAddress,
