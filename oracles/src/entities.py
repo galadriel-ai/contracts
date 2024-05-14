@@ -11,7 +11,7 @@ from openai.types.chat import ChatCompletionToolParam
 
 ALLOWED_FUNCTION_NAMES = ["image_generation", "web_search", "code_interpreter"]
 
-OpenAiModelType = Literal["gpt-4-turbo", "gpt-4-turbo-preview", "gpt-3.5-turbo-1106"]
+OpenAiModelType = Literal["gpt-4o", "gpt-4-turbo", "gpt-4-turbo-preview", "gpt-3.5-turbo-1106"]
 
 
 class PromptType(str, Enum):
