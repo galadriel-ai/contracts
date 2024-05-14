@@ -10,7 +10,6 @@ from src.domain.tools.code_interpreter import python_interpreter_use_case
 from src.entities import FunctionCall
 from src.repositories.web3.function_repository import Web3FunctionRepository
 
-
 FUNCTION_TASKS = {}
 MAX_CONCURRENT_FUNCTION_CALLS = 5
 
