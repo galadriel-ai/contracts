@@ -1,3 +1,5 @@
+import { task } from "hardhat/config";
+
 // Define the task with the name 'whitelist-address'
 export const whitelistTask = task("whitelist", "Whitelists an address in the Oracle contract")
   .addParam("oracleAddress", "The address of the Oracle contract")
