@@ -51,10 +51,8 @@ describe("GroqChatGpt", function () {
       const response = {
         id: "responseId",
         content: "Hi!",
-        functionName: "functionNameHere",
-        functionArguments: "functionArgumentsHere",
         created: 1618888901, // Example UNIX timestamp
-        model: "gpt-4-turbo-preview",
+        model: "mixtral-8x7b-32768",
         systemFingerprint: "systemFingerprintHere",
         object: "chat.completion",
         completionTokens: 10,
