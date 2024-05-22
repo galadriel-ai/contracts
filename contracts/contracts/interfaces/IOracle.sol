@@ -61,7 +61,7 @@ interface IOracle {
     }
 
     struct GroqRequest {
-        // "llama2-70b-4096", "mixtral-8x7b-32768" or "gemma-7b-it"
+        // "llama3-8b-8192", "llama3-70b-8192", "mixtral-8x7b-32768" or "gemma-7b-it"
         string model;
         // int -20 - 20, Mapped to float -2.0 - 2.0. If bigger than 20 then null
         int8 frequencyPenalty;
