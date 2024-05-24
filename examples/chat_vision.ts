@@ -24,11 +24,18 @@ async function main() {
   const contract = new Contract(contractAddress, ABI, wallet)
 
   // The message you want to start the chat with
-  const imageUrl = await getUserInput("Paste the URL of the image we'll chat about: ");
+  let imageUrls = [];
+  while (true) {
+      const imageUrl = await getUserInput("Paste the URL of an image (or leave blank to proceed to question): ");
+      if (imageUrl === "") {
+          break;
+      }
+      imageUrls.push(imageUrl);
+  }
   const message = await getUserInput("Question: ");
 
   // Call the startChat function
-  const transactionResponse = await contract.startChat(message, imageUrl)
+  const transactionResponse = await contract.startChat(message, imageUrls)
   const receipt = await transactionResponse.wait()
   console.log(`Message sent, tx hash: ${receipt.hash}`)
   console.log(`Chat started with message: "${message}"`)

@@ -62,22 +62,24 @@ contract OpenAiChatGptVision {
         emit OracleAddressUpdated(newOracleAddress);
     }
 
-    function startChat(string memory message, string memory imageUrl) public returns (uint i) {
+    function startChat(string memory message, string[] memory imageUrls) public returns (uint i) {
         ChatRun storage run = chatRuns[chatRunsCount];
 
         run.owner = msg.sender;
         IOracle.Message memory newMessage = IOracle.Message({
             role: "user",
-            content: new IOracle.Content[](2)
+            content: new IOracle.Content[](imageUrls.length + 1)
         });
         newMessage.content[0] = IOracle.Content({
             contentType: "text",
             value: message
         });
-        newMessage.content[1] = IOracle.Content({
-            contentType: "image_url",
-            value: imageUrl
-        });
+        for (uint u = 0; u < imageUrls.length; u++) {
+            newMessage.content[u + 1] = IOracle.Content({
+                contentType: "image_url",
+                value: imageUrls[u]
+            });
+        }
         run.messages.push(newMessage);
         run.messagesCount = 1;
 
