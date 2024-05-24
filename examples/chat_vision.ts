@@ -26,7 +26,7 @@ async function main() {
   // The message you want to start the chat with
   let imageUrls = [];
   while (true) {
-      const imageUrl = await getUserInput("Paste the URL of an image (or leave blank to proceed to question): ");
+      const imageUrl = await getUserInput("Paste the URL of an image (or leave blank to proceed to the question): ");
       if (imageUrl === "") {
           break;
       }
