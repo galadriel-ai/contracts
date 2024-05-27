@@ -13,7 +13,6 @@ from groq.types.chat import ChatCompletion as GroqChatCompletion
 from src.entities import Chat
 from src.entities import PromptType
 from src.domain.llm.entities import LLMResult
-from src.repositories.ipfs_repository import IpfsRepository
 
 import settings
 
@@ -97,7 +96,7 @@ async def _generate_groq_with_params(chat: Chat) -> Optional[GroqChatCompletion]
     return chat_completion
 
 
-async def execute(model: str, chat: Chat, ipfs_repository: IpfsRepository) -> LLMResult:
+async def execute(model: str, chat: Chat) -> LLMResult:
     try:
         if not chat.config or chat.prompt_type == PromptType.DEFAULT:
             chat.prompt_type = PromptType.DEFAULT

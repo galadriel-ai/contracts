@@ -3,6 +3,7 @@ from asyncio import Semaphore
 
 from src.entities import Chat
 from src.domain.llm import generate_response_use_case
+from src.domain.storage import cache_ipfs_on_gcp_cache_use_case
 from src.repositories.ipfs_repository import IpfsRepository
 from src.repositories.web3.chat_repository import Web3ChatRepository
 
@@ -47,9 +48,10 @@ async def _answer_chat(
     try:
         async with semaphore:
             print(f"Answering chat {chat.id}", flush=True)
+            await _cache_ipfs_urls(chat, ipfs_repository)
             if chat.response is None:
                 response = await generate_response_use_case.execute(
-                    "gpt-4-turbo-preview", chat, ipfs_repository
+                    "gpt-4-turbo-preview", chat
                 )
                 chat.response = response.chat_completion
                 chat.error_message = response.error
@@ -62,3 +64,17 @@ async def _answer_chat(
             )
     except Exception as ex:
         print(f"Failed to answer chat {chat.id}, exc: {ex}", flush=True)
+
+
+async def _cache_ipfs_urls(chat: Chat, ipfs_repository: IpfsRepository):
+    for message in chat.messages:
+        contents = message.get("content")
+        if isinstance(contents, list):
+            for content in contents:
+                image_url = content.get("image_url", {}).get("url")
+                if image_url and image_url.startswith("ipfs://"):
+                    cached_url = await cache_ipfs_on_gcp_cache_use_case.execute(
+                        image_url,
+                        ipfs_repository, 
+                    )
+                    content["image_url"]["url"] = cached_url
