@@ -2,11 +2,13 @@ import aiohttp
 import settings
 from typing import Union
 
+from src.domain.storage.entities import IpfsFile
+
 PINATA_LINK_BASE = "https://galadriel.mypinata.cloud/ipfs/{}"
 
 
 class IpfsRepository:
-    async def read_file(self, cid: str, max_bytes: int = 0) -> bytes:
+    async def read_file(self, cid: str, max_bytes: int = 0) -> IpfsFile:
         async with aiohttp.ClientSession() as session:
             headers = {
                 "x-pinata-gateway-token": settings.PINATA_GATEWAY_TOKEN
@@ -23,7 +25,11 @@ class IpfsRepository:
                         raise Exception(
                             f"File exceeded the maximum allowed size of {max_bytes} bytes."
                         )
-                return data
+                return IpfsFile(
+                    cid=cid,
+                    data=data,
+                    content_type=response.headers.get("Content-Type"),
+                )
 
     async def write_file(self, data: Union[str, bytes]) -> str:
         mime_type = (
@@ -52,9 +58,13 @@ if __name__ == "__main__":
 
     async def main():
         ipfs = IpfsRepository()
-        cid = await ipfs.write_file(bytes([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
+        with open("../stack.jpg", "rb") as file:
+            image_bytes = file.read()
+            cid = await ipfs.write_file(image_bytes)
         assert cid is not None
-        data = await ipfs.read_file(cid)
-        assert data == bytes([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+        file = await ipfs.read_file(cid)
+        assert file.cid == cid
+        assert file.content_type == "image/jpeg"
+        assert file.data == image_bytes
 
     asyncio.run(main())

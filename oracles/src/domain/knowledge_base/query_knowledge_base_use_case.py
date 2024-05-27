@@ -14,13 +14,13 @@ async def execute(
 ) -> KnowledgeBaseQueryResult:
     try:
         if not await kb_repository.exists(request.cid):
-            documents_bytes = await ipfs_repository.read_file(
+            documents_file = await ipfs_repository.read_file(
                 request.cid, settings.KNOWLEDGE_BASE_MAX_SIZE_BYTES
             )
-            documents = deserialize_documents(documents_bytes)
-            index = await ipfs_repository.read_file(request.index_cid)
+            documents = deserialize_documents(documents_file.data)
+            index_file = await ipfs_repository.read_file(request.index_cid)
             await kb_repository.deserialize(
-                request.cid, documents=documents, data=index
+                request.cid, documents=documents, data=index_file.data
             )
         documents = await kb_repository.query(
             request.cid, request.query, request.num_documents

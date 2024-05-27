@@ -12,10 +12,10 @@ async def execute(
     kb_repository: KnowledgeBaseRepository,
 ) -> KnowledgeBaseIndexingResult:
     try:
-        documents = await ipfs_repository.read_file(
+        documents_file = await ipfs_repository.read_file(
             request.cid, settings.KNOWLEDGE_BASE_MAX_SIZE_BYTES
         )
-        await kb_repository.create(request.cid, deserialize_documents(documents))
+        await kb_repository.create(request.cid, deserialize_documents(documents_file.data))
         index = await kb_repository.serialize(request.cid)
         index_cid = await ipfs_repository.write_file(index)
         return KnowledgeBaseIndexingResult(

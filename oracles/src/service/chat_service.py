@@ -11,7 +11,7 @@ MAX_CONCURRENT_CHATS = 5
 
 
 async def execute(
-    repository: Web3ChatRepository, 
+    repository: Web3ChatRepository,
     ipfs_repository: IpfsRepository,
 ):
     semaphore = asyncio.Semaphore(MAX_CONCURRENT_CHATS)
@@ -21,7 +21,7 @@ async def execute(
             for chat in chats:
                 if chat.id not in CHAT_TASKS:
                     task = asyncio.create_task(
-                        _answer_chat(repository, chat, semaphore)
+                        _answer_chat(repository, ipfs_repository, chat, semaphore)
                     )
                     CHAT_TASKS[chat.id] = task
             completed_tasks = [
@@ -39,14 +39,17 @@ async def execute(
 
 
 async def _answer_chat(
-    repository: Web3ChatRepository, chat: Chat, semaphore: Semaphore
+    repository: Web3ChatRepository,
+    ipfs_repository: IpfsRepository,
+    chat: Chat,
+    semaphore: Semaphore,
 ):
     try:
         async with semaphore:
             print(f"Answering chat {chat.id}", flush=True)
             if chat.response is None:
                 response = await generate_response_use_case.execute(
-                    "gpt-4-turbo-preview", chat
+                    "gpt-4-turbo-preview", chat, ipfs_repository
                 )
                 chat.response = response.chat_completion
                 chat.error_message = response.error
