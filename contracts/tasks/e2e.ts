@@ -23,102 +23,145 @@ task("e2e", "Runs all e2e tests")
 
     const testResults: Record<string, string> = {};
 
-    let result = await runOpenAi(
-      contractAddress,
-      "gpt-4-turbo-preview",
-      "Who is the president of USA?",
-      hre,
-    )
-    testResults["OpenAI gpt-4-turbo-preview"] = result.error || "✅";
+    try {
+      let result = await runOpenAi(
+        contractAddress,
+        "gpt-4-turbo-preview",
+        "Who is the president of USA?",
+        hre,
+      )
+      testResults["OpenAI gpt-4-turbo-preview"] = result.error || "✅";
+    } catch (e: any) {
+      testResults["OpenAI gpt-4-turbo-preview"] = e.message
+    }
   
-    result = await runOpenAi(
-      contractAddress,
-      "gpt-3.5-turbo-1106",
-      "Who is the president of USA?",
-      hre,
-    )
-    testResults["OpenAI gpt-3.5-turbo-1106"] = result.error || "✅";
-  
-    result = await runOpenAiVision(
-      contractAddress,
-      "gpt-4-turbo",
-      "What is on this image",
-      "https://picsum.photos/200/300",
-      hre,
-    )
-    testResults["OpenAI gpt-4-turbo vision"] = result.error || "✅";
-  
-    result = await runOpenAiVision(
-      contractAddress,
-      "gpt-4o",
-      "What is on this image",
-      "https://picsum.photos/200/300",
-      hre,
-    )
-    testResults["OpenAI gpt-4o"] = result.error || "✅";
-  
-    result = await runGroq(
-      contractAddress,
-      "llama3-8b-8192",
-      "Who is the president of USA?",
-      hre,
-    )
-    testResults["Groq llama3-8b-8192"] = result.error || "✅";
-
-    result = await runGroq(
-      contractAddress,
-      "llama3-70b-8192",
-      "Who is the president of USA?",
-      hre,
-    )
-    testResults["Groq llama3-70b-8192"] = result.error || "✅";
+    try {
+      let result = await runOpenAi(
+        contractAddress,
+        "gpt-3.5-turbo-1106",
+        "Who is the president of USA?",
+        hre,
+      )
+      testResults["OpenAI gpt-3.5-turbo-1106"] = result.error || "✅";
+    } catch (e: any) {
+      testResults["OpenAI gpt-3.5-turbo-1106"] = e.message
+    }
     
-  
-    result = await runGroq(
-      contractAddress,
-      "mixtral-8x7b-32768",
-      "Who is the president of USA?",
-      hre,
-    )
-    testResults["Groq mixtral-8x7b-32768"] = result.error || "✅";
-  
-    result = await runGroq(
-      contractAddress,
-      "gemma-7b-it",
-      "Who is the president of USA?",
-      hre,
-    )
-    testResults["Groq gemma-7b-it"] = result.error || "✅";
-  
-    result = await runTaskWithTimeout(
-      "image_generation",
-      {
+    try {
+      let result = await runOpenAiVision(
         contractAddress,
-        query: "Red rose",
-      },
-      hre,
-    )
-    testResults["OpenAI image_generation"] = result.error || "✅";
-  
-    result = await runTaskWithTimeout(
-      "web_search",
-      {
+        "gpt-4-turbo",
+        "What is on this image",
+        "https://picsum.photos/200/300",
+        hre,
+      )
+      testResults["OpenAI gpt-4-turbo vision"] = result.error || "✅";
+    } catch (e: any) {
+      testResults["OpenAI gpt-4-turbo vision"] = e.message
+    }
+    
+    try {
+      let result = await runOpenAiVision(
         contractAddress,
-        query: "Capital of Germany",
-      },
-      hre,
-    )
-    testResults["web_search"] = result.error || "✅";
+        "gpt-4o",
+        "What is on this image",
+        "https://picsum.photos/200/300",
+        hre,
+      )
+      testResults["OpenAI gpt-4o"] = result.error || "✅";
+    } catch (e: any) {
+      testResults["OpenAI gpt-4o"] = e.message
+    }
   
-    result = await runTaskWithTimeout(
-      "code_interpreter",
-      {
+    try {
+      let result = await runGroq(
         contractAddress,
-        query: "print(2+2)",
-      },
-      hre,
-    )
-    testResults["code_interpreter"] = result.error || "✅";
+        "llama3-8b-8192",
+        "Who is the president of USA?",
+        hre,
+      )
+      testResults["Groq llama3-8b-8192"] = result.error || "✅";
+    } catch (e: any) {
+      testResults["Groq llama3-8b-8192"] = e.message
+    }
+
+    try {
+      let result = await runGroq(
+        contractAddress,
+        "llama3-70b-8192",
+        "Who is the president of USA?",
+        hre,
+      )
+      testResults["Groq llama3-70b-8192"] = result.error || "✅";
+    } catch (e: any) {
+      testResults["Groq llama3-70b-8192"] = e.message
+    }
+  
+    try {
+      let result = await runGroq(
+        contractAddress,
+        "mixtral-8x7b-32768",
+        "Who is the president of USA?",
+        hre,
+      )
+      testResults["Groq mixtral-8x7b-32768"] = result.error || "✅";
+    } catch (e: any) {
+      testResults["Groq mixtral-8x7b-32768"] = e.message
+    }
+
+    try {
+      let result = await runGroq(
+        contractAddress,
+        "gemma-7b-it",
+        "Who is the president of USA?",
+        hre,
+      )
+      testResults["Groq gemma-7b-it"] = result.error || "✅";
+    } catch (e: any) {
+      testResults["Groq gemma-7b-it"] = e.message
+    }
+  
+    try {
+      let result = await runTaskWithTimeout(
+        "image_generation",
+        {
+          contractAddress,
+          query: "Red rose",
+        },
+        hre,
+      )
+      testResults["OpenAI image_generation"] = result.error || "✅";
+    } catch (e: any) {
+      testResults["OpenAI image_generation"] = e.message
+    }
+  
+    try {
+      let result = await runTaskWithTimeout(
+        "web_search",
+        {
+          contractAddress,
+          query: "Capital of Germany",
+        },
+        hre,
+      )
+      testResults["web_search"] = result.error || "✅";
+    } catch (e: any) {
+      testResults["web_search"] = e.message
+    }
+  
+    try {
+      let result = await runTaskWithTimeout(
+        "code_interpreter",
+        {
+          contractAddress,
+          query: "print(2+2)",
+        },
+        hre,
+      )
+      testResults["code_interpreter"] = result.error || "✅";
+    } catch (e: any) {
+      testResults["code_interpreter"] = e.message
+    }
 
     // console.log(`Running "add_knowledge_base"`)
     // await runTaskWithTimeout(
@@ -130,16 +173,20 @@ task("e2e", "Runs all e2e tests")
     //   hre,
     // )
     // console.log(`DONE Running "add_knowledge_base"`)
-    result = await runTaskWithTimeout(
-      "query_knowledge_base",
-      {
-        contractAddress,
-        cid: "QmdCgbMawRVE6Kc1joZmhgDo2mSZFgRgWvBCqUvJV9JwkF",
-        query: "What is the oracle smart contract address?",
-      },
-      hre,
-    )
-    testResults["query_knowledge_base"] = result.error || "✅";
+    try {
+      let result = await runTaskWithTimeout(
+        "query_knowledge_base",
+        {
+          contractAddress,
+          cid: "QmdCgbMawRVE6Kc1joZmhgDo2mSZFgRgWvBCqUvJV9JwkF",
+          query: "What is the oracle smart contract address?",
+        },
+        hre,
+      )
+      testResults["query_knowledge_base"] = result.error || "✅";
+    } catch (e: any) {
+      testResults["query_knowledge_base"] = e.message
+    }
   
     const totalTests = Object.keys(testResults).length;
     const passedTests = Object.values(testResults).filter(result => result === "✅").length;
