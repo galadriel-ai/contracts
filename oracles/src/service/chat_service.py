@@ -3,13 +3,17 @@ from asyncio import Semaphore
 
 from src.entities import Chat
 from src.domain.llm import generate_response_use_case
+from src.repositories.ipfs_repository import IpfsRepository
 from src.repositories.web3.chat_repository import Web3ChatRepository
 
 CHAT_TASKS = {}
 MAX_CONCURRENT_CHATS = 5
 
 
-async def execute(repository: Web3ChatRepository):
+async def execute(
+    repository: Web3ChatRepository, 
+    ipfs_repository: IpfsRepository,
+):
     semaphore = asyncio.Semaphore(MAX_CONCURRENT_CHATS)
     while True:
         try:

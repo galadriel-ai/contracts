@@ -2,7 +2,7 @@ import asyncio
 from asyncio import Semaphore
 
 from src.entities import FunctionCall
-from src.domain.storage import reupload_to_gcp_use_case
+from src.domain.storage import reupload_url_to_gcp_use_case
 from src.domain.tools import utils
 from src.domain.tools.image_generation import generate_image_use_case
 from src.domain.tools.search import web_search_use_case
@@ -57,7 +57,7 @@ async def _call_function(
                 if function_call.function_type == "image_generation":
                     image = await generate_image_use_case.execute(formatted_input)
                     response = (
-                        await reupload_to_gcp_use_case.execute(image.url)
+                        await reupload_url_to_gcp_use_case.execute(image.url)
                         if image.url != ""
                         else ""
                     )
