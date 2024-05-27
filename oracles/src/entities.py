@@ -3,7 +3,6 @@ from typing import Dict
 from typing import List
 from typing import Literal
 from typing import Optional
-from dataclasses import field
 from dataclasses import dataclass
 from typing import Union
 from openai.types.chat import ChatCompletion

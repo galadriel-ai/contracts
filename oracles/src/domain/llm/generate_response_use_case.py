@@ -11,10 +11,11 @@ from openai.types.chat import ChatCompletion
 from groq.types.chat import ChatCompletion as GroqChatCompletion
 
 from src.entities import Chat
+from src.entities import PromptType
 from src.domain.llm.entities import LLMResult
 
 import settings
-from src.entities import PromptType
+
 
 TIMEOUT = httpx.Timeout(timeout=600.0, connect=10.0)
 

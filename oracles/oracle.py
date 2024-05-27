@@ -21,7 +21,7 @@ kb_repository = KnowledgeBaseRepository(max_size=settings.KNOWLEDGE_BASE_CACHE_M
 
 async def main():
     tasks = [
-        chat_service.execute(web3_chat_repository),
+        chat_service.execute(web3_chat_repository, ipfs_repository),
         functions_service.execute(web3_function_repository),
         knowledge_base_indexing_service.execute(web3_kb_repository, ipfs_repository, kb_repository),
         knowledge_base_query_service.execute(web3_kb_repository, ipfs_repository, kb_repository),
