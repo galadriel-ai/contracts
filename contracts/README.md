@@ -105,3 +105,13 @@ ts-node tasks/e2eCron.ts
 ```
 docker compose -f docker/docker-compose-e2e.yml up --build -d
 ```
+
+# Contract debugging
+
+To see if your custom CHAT contract acts as expected can use the debug script
+```
+npm run debug
+```
+If your contract has any custom parameters or function names then the configuration at the start of the 
+debug script has to be changed `./scripts/debugContract.ts`
+
