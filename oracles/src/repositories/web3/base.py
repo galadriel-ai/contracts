@@ -22,13 +22,19 @@ class Web3BaseRepository:
         }
 
     async def _sign_and_send_tx(self, tx) -> TxReceipt:
-        signed_tx = self.web3_client.eth.account.sign_transaction(
-            tx, private_key=self.account.key
-        )
-        tx_hash = await self.web3_client.eth.send_raw_transaction(
-            signed_tx.rawTransaction
-        )
-        return await self.web3_client.eth.wait_for_transaction_receipt(tx_hash)
+        try:
+            signed_tx = self.web3_client.eth.account.sign_transaction(
+                tx, private_key=self.account.key
+            )
+            tx_hash = await self.web3_client.eth.send_raw_transaction(
+                signed_tx.rawTransaction
+            )
+            return await self.web3_client.eth.wait_for_transaction_receipt(tx_hash)
+        except Exception as e:
+            self.metrics["errors"] += 1
+            raise e
+        finally:
+            self.metrics["transactions_sent"] += 1
 
     def get_metrics(self):
         return self.metrics
