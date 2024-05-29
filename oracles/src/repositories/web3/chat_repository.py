@@ -131,7 +131,6 @@ class Web3ChatRepository(Web3BaseRepository):
         tx_receipt = await self._sign_and_send_tx(tx)
         chat.transaction_receipt = tx_receipt
         chat.is_processed = bool(tx_receipt.get("status"))
-        self.metrics["transactions_sent"] += 1
         if chat.is_processed:
             self.metrics["chats_answered"] += 1
         else:

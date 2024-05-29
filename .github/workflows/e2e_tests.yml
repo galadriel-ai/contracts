@@ -153,7 +153,7 @@ jobs:
           assert 'errors' in metrics, 'errors key is missing'
           assert len(metrics.keys()) == 27, 'metrics.json should have 27 keys'
           assert metrics['errors'] == 0, 'errors should be 0'
-          assert metrics['transactions_sent'] == 21, 'transactions_sent should be 21'
+          assert metrics['transactions_sent'] == 14, 'transactions_sent should be 14'
           assert metrics['chats_count'] == 8, 'chats_count should be 8'
           assert metrics['chats_read'] == 8, 'chats_read should be 8'
           assert metrics['chats_answered'] == 8, 'chats_answered should be 8'
