@@ -146,12 +146,12 @@ jobs:
     - name: Validate Metrics Content
       run: |
         python -c "
-          import json
-          with open('oracles/metrics.json') as f:
-              metrics = json.load(f)
-              assert 'transactions_sent' in metrics, 'transactions_sent key is missing'
-              assert 'errors' in metrics, 'errors key is missing'
-              assert len(metrics.keys()) == 27, 'metrics.json should have 27 keys'
-              print(metrics)
-              print('Metrics validation passed.')
+        import json
+        with open('oracles/metrics.json') as f:
+          metrics = json.load(f)
+          assert 'transactions_sent' in metrics, 'transactions_sent key is missing'
+          assert 'errors' in metrics, 'errors key is missing'
+          assert len(metrics.keys()) == 27, 'metrics.json should have 27 keys'
+          print(metrics)
+          print('Metrics validation passed.')
         "
