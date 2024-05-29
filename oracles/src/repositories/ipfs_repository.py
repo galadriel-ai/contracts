@@ -10,10 +10,10 @@ PINATA_LINK_BASE = "https://galadriel.mypinata.cloud/ipfs/{}"
 class IpfsRepository:
     async def read_file(self, cid: str, max_bytes: int = 0) -> IpfsFile:
         async with aiohttp.ClientSession() as session:
-            headers = {
-                "x-pinata-gateway-token": settings.PINATA_GATEWAY_TOKEN
-            }
-            async with session.get(PINATA_LINK_BASE.format(cid), headers=headers) as response:
+            headers = {"x-pinata-gateway-token": settings.PINATA_GATEWAY_TOKEN}
+            async with session.get(
+                PINATA_LINK_BASE.format(cid), headers=headers
+            ) as response:
                 response.raise_for_status()
                 data = bytearray()
                 while True:
@@ -36,10 +36,7 @@ class IpfsRepository:
             "text/plain" if isinstance(data, str) else "application/octet-stream"
         )
         form_data = aiohttp.FormData()
-        form_data.add_field("file",
-                    data,
-                    filename="file",
-                    content_type=mime_type)
+        form_data.add_field("file", data, filename="file", content_type=mime_type)
         async with aiohttp.ClientSession() as session:
             async with session.post(
                 "https://api.pinata.cloud/pinning/pinFileToIPFS",

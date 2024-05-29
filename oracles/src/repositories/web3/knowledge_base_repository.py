@@ -1,4 +1,3 @@
-
 from typing import List
 from typing import Optional
 
@@ -18,7 +17,23 @@ class Web3KnowledgeBaseRepository(Web3BaseRepository):
         self.indexed_kb_index_requests = []
         self.last_kb_query_count = 0
         self.indexed_kb_queries = []
-
+        self.metrics.update(
+            {
+                "knowledgebase_index_count": 0,
+                "knowledgebase_query_count": 0,
+                "knowledgebase_index_read": 0,
+                "knowledgebase_query_read": 0,
+                "knowledgebase_index_answered": 0,
+                "knowledgebase_query_answered": 0,
+                "knowledgebase_index_read_errors": 0,
+                "knowledgebase_query_read_errors": 0,
+                "knowledgebase_index_write_errors": 0,
+                "knowledgebase_query_write_errors": 0,
+                "knowledgebase_index_marked_as_done": 0,
+                "knowledgebase_query_marked_as_done": 0,
+            }
+        )
+        
     async def _get_knowledge_base_indexing_request(
         self, i: int
     ) -> Optional[KnowledgeBaseIndexingRequest]:
@@ -44,6 +59,7 @@ class Web3KnowledgeBaseRepository(Web3BaseRepository):
         kb_index_request_count = (
             await self.oracle_contract.functions.kbIndexingRequestCount().call()
         )
+        self.metrics["knowledgebase_index_count"] = kb_index_request_count
         if kb_index_request_count > self.last_kb_index_request_count:
             print(
                 f"Indexing new knowledge base indexing requests from {self.last_kb_index_request_count} to {kb_index_request_count}"
@@ -52,6 +68,9 @@ class Web3KnowledgeBaseRepository(Web3BaseRepository):
                 kb_index_request = await self._get_knowledge_base_indexing_request(i)
                 if kb_index_request:
                     self.indexed_kb_index_requests.append(kb_index_request)
+                    self.metrics["knowledgebase_index_read"] += 1
+                else:
+                    self.metrics["knowledgebase_index_read_errors"] += 1
                 self.last_kb_index_request_count = i + 1
 
     async def get_unindexed_knowledge_bases(self) -> List[KnowledgeBaseIndexingRequest]:
@@ -87,11 +106,14 @@ class Web3KnowledgeBaseRepository(Web3BaseRepository):
         except Exception as e:
             request.is_processed = True
             request.transaction_receipt = {"error": str(e)}
+            self.metrics["knowledgebase_index_write_errors"] += 1
             await self.mark_kb_indexing_request_as_done(request)
             return False
         tx_receipt = await self._sign_and_send_tx(tx)
         request.transaction_receipt = tx_receipt
         request.is_processed = bool(tx_receipt.get("status"))
+        if request.is_processed:
+            self.metrics["knowledgebase_index_answered"] += 1
         return bool(tx_receipt.get("status"))
 
     async def mark_kb_indexing_request_as_done(
@@ -112,7 +134,10 @@ class Web3KnowledgeBaseRepository(Web3BaseRepository):
         tx = await self.oracle_contract.functions.markKnowledgeBaseAsProcessed(
             request.id,
         ).build_transaction(tx_data)
-        return await self._sign_and_send_tx(tx)
+        tx_receipt = await self._sign_and_send_tx(tx)
+        if bool(tx_receipt.get("status")):
+            self.metrics["knowledgebase_index_marked_as_done"] += 1
+        return tx_receipt
 
     async def _get_kb_query(self, i: int) -> Optional[KnowledgeBaseQuery]:
         try:
@@ -142,6 +167,7 @@ class Web3KnowledgeBaseRepository(Web3BaseRepository):
 
     async def _index_new_kb_queries(self):
         kb_query_count = await self.oracle_contract.functions.kbQueryCount().call()
+        self.metrics["knowledgebase_query_count"] = kb_query_count
         if kb_query_count > self.last_kb_query_count:
             print(
                 f"Indexing new knowledge base queries from {self.last_kb_query_count} to {kb_query_count}"
@@ -150,7 +176,10 @@ class Web3KnowledgeBaseRepository(Web3BaseRepository):
                 kb_query = await self._get_kb_query(i)
                 if kb_query:
                     self.indexed_kb_queries.append(kb_query)
-                self.last_kb_index_request_count = i + 1
+                    self.metrics["knowledgebase_query_read"] += 1
+                else:
+                    self.metrics["knowledgebase_query_read_errors"] += 1
+                self.last_kb_query_count = i + 1
 
     async def get_unanswered_kb_queries(self) -> List[KnowledgeBaseQuery]:
         await self._index_new_kb_queries()
@@ -185,11 +214,14 @@ class Web3KnowledgeBaseRepository(Web3BaseRepository):
         except Exception as e:
             request.is_processed = True
             request.transaction_receipt = {"error": str(e)}
+            self.metrics["knowledgebase_query_write_errors"] += 1
             await self.mark_kb_query_as_done(request)
             return False
         tx_receipt = await self._sign_and_send_tx(tx)
         request.transaction_receipt = tx_receipt
         request.is_processed = bool(tx_receipt.get("status"))
+        if request.is_processed:
+            self.metrics["knowledgebase_query_answered"] += 1
         return bool(tx_receipt.get("status"))
 
     async def mark_kb_query_as_done(self, query: KnowledgeBaseQuery):
@@ -208,4 +240,7 @@ class Web3KnowledgeBaseRepository(Web3BaseRepository):
         tx = await self.oracle_contract.functions.markKnowledgeBaseQueryAsProcessed(
             query.id,
         ).build_transaction(tx_data)
-        return await self._sign_and_send_tx(tx)
+        tx_receipt = await self._sign_and_send_tx(tx)
+        if bool(tx_receipt.get("status")):
+            self.metrics["knowledgebase_query_marked_as_done"] += 1
+        return tx_receipt

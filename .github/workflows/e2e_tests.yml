@@ -139,3 +139,9 @@ jobs:
     - name: Display Oracle Output
       if: always() # Ensures this step runs even if a previous step fails
       run: cat oracles/oracle_output.txt
+    - name: Wait for Metrics File Creation
+      run: sleep 10
+    - name: Check Metrics File
+      run: test -f oracles/metrics.json && echo "metrics.json exists."
+    - name: Validate Metrics Content
+      run: cd oracles && python tests/e2e/check_metrics.py

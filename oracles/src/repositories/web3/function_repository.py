@@ -14,6 +14,16 @@ class Web3FunctionRepository(Web3BaseRepository):
         super().__init__()
         self.last_function_calls_count = 0
         self.indexed_function_calls = []
+        self.metrics.update(
+            {
+                "functions_count": 0,
+                "functions_read": 0,
+                "functions_answered": 0,
+                "functions_read_errors": 0,
+                "functions_write_errors": 0,
+                "functions_marked_as_done": 0,
+            }
+        )
 
     async def _get_function_call(self, i: int) -> Optional[FunctionCall]:
         try:
@@ -36,12 +46,14 @@ class Web3FunctionRepository(Web3BaseRepository):
             )
         except ContractLogicError as e:
             print(f"Error getting function call {i}: {e.message}", flush=True)
+            self.metrics["functions_read_errors"] += 1
             return None
 
     async def _index_new_function_calls(self):
         function_calls_count = (
             await self.oracle_contract.functions.functionsCount().call()
         )
+        self.metrics["functions_count"] = function_calls_count
         if function_calls_count > self.last_function_calls_count:
             print(
                 f"Indexing new function calls from {self.last_function_calls_count} to {function_calls_count}",
@@ -51,6 +63,7 @@ class Web3FunctionRepository(Web3BaseRepository):
                 function_call = await self._get_function_call(i)
                 if function_call:
                     self.indexed_function_calls.append(function_call)
+                    self.metrics["functions_read"] += 1
                 self.last_function_calls_count = i + 1
 
     async def get_unanswered_function_calls(self) -> List[FunctionCall]:
@@ -86,11 +99,16 @@ class Web3FunctionRepository(Web3BaseRepository):
         except Exception as e:
             function_call.is_processed = True
             function_call.transaction_receipt = {"error": str(e)}
+            self.metrics["functions_write_errors"] += 1
             await self.mark_function_call_as_done(function_call)
             return False
         tx_receipt = await self._sign_and_send_tx(tx)
         function_call.transaction_receipt = tx_receipt
         function_call.is_processed = bool(tx_receipt.get("status"))
+        if function_call.is_processed:
+            self.metrics["functions_answered"] += 1
+        else:
+            self.metrics["functions_write_errors"] += 1
         return bool(tx_receipt.get("status"))
 
     async def mark_function_call_as_done(self, function_call: FunctionCall):
@@ -109,4 +127,7 @@ class Web3FunctionRepository(Web3BaseRepository):
         tx = await self.oracle_contract.functions.markFunctionAsProcessed(
             function_call.id,
         ).build_transaction(tx_data)
-        return await self._sign_and_send_tx(tx)
+        tx_receipt = await self._sign_and_send_tx(tx)
+        if bool(tx_receipt.get("status")):
+            self.metrics["functions_marked_as_done"] += 1
+        return tx_receipt
