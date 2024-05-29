@@ -179,7 +179,7 @@ class Web3KnowledgeBaseRepository(Web3BaseRepository):
                     self.metrics["knowledgebase_query_read"] += 1
                 else:
                     self.metrics["knowledgebase_query_read_errors"] += 1
-                self.last_kb_index_request_count = i + 1
+                self.last_kb_query_count = i + 1
 
     async def get_unanswered_kb_queries(self) -> List[KnowledgeBaseQuery]:
         await self._index_new_kb_queries()
