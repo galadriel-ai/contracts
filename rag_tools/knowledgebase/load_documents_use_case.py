@@ -4,6 +4,7 @@ import settings
 from typing import List
 
 from langchain_community.document_loaders import UnstructuredFileLoader
+from langchain_community.document_loaders import TextLoader
 from langchain.schema import Document
 from langchain.text_splitter import TextSplitter
 
@@ -33,7 +34,11 @@ def execute(data_dir: str, text_splitter: TextSplitter) -> List[Document]:
             )
             continue
         try:
-            loader = UnstructuredFileLoader(file_path)
+            if file_path.endswith(".json") or file_path.endswith(".txt"):
+                # treat as text file, unstructured will try to load as json and fail
+                loader = TextLoader(file_path)
+            else:
+                loader = UnstructuredFileLoader(file_path)
             new_documents = loader.load()
         except Exception as e:
             print(f"Error loading {file_path}, skipping.")
