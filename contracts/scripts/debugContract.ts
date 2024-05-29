@@ -4,9 +4,10 @@ import {ethers} from "hardhat";
 import {Contract} from "ethers";
 import {HardhatEthersSigner} from "@nomicfoundation/hardhat-ethers/signers";
 
-// These tests only work for chat contracts (default chat, OpenAI, Groq or OpenAi vision)
+// These tests only work for chat contracts (default chat, OpenAI, Groq or OpenAi vision, or any similar custom chat contract)
 // Might need to configure the constructor arguments with parameters and/or extra logic
 //   and modify the "startChat" function to have the correct name and parameters and extra logic
+//   the "addUserMessage" should be modified if your contract has any custom logic/parameters for adding user messages
 
 // CONFIGURATION: modify these values to match your contract
 // Use either "ChatGpt", "OpenAiChatGpt", "GroqChatGpt", "OpenAiChatGptVision" or your own Chat contract
