@@ -17,12 +17,13 @@ def check_metrics(metrics: dict):
         metrics["chats_history_read_errors"] == 0
     ), "chats_history_read_errors should be 0"
     assert metrics["chats_write_errors"] == 0, "chats_write_errors should be 0"
-    assert metrics["chats_marked_as_done"] == 0, "chats_marked_as_done should be 0"
+    assert metrics["chats_marked_as_done"] == 8, "chats_marked_as_done should be 8"
     assert metrics["functions_count"] == 3, "functions_count should be 3"
     assert metrics["functions_read"] == 3, "functions_read should be 3"
     assert metrics["functions_answered"] == 3, "functions_answered should be 3"
     assert metrics["functions_read_errors"] == 0, "functions_read_errors should be 0"
     assert metrics["functions_write_errors"] == 0, "functions_write_errors should be 0"
+    assert metrics["functions_marked_as_done"] == 3, "functions_marked_as_done should be 3"
     assert (
         metrics["knowledgebase_index_count"] == 1
     ), "knowledgebase_index_count should be 1"
@@ -39,8 +40,8 @@ def check_metrics(metrics: dict):
         metrics["knowledgebase_index_write_errors"] == 0
     ), "knowledgebase_index_write_errors should be 0"
     assert (
-        metrics["knowledgebase_index_marked_as_done"] == 0
-    ), "knowledgebase_index_marked_as_done should be 0"
+        metrics["knowledgebase_index_marked_as_done"] == 1
+    ), "knowledgebase_index_marked_as_done should be 1"
     assert (
         metrics["knowledgebase_query_count"] == 1
     ), "knowledgebase_query_count should be 1"
@@ -57,8 +58,8 @@ def check_metrics(metrics: dict):
         metrics["knowledgebase_query_write_errors"] == 0
     ), "knowledgebase_query_write_errors should be 0"
     assert (
-        metrics["knowledgebase_query_marked_as_done"] == 0
-    ), "knowledgebase_query_marked_as_done should be 0"
+        metrics["knowledgebase_query_marked_as_done"] == 1
+    ), "knowledgebase_query_marked_as_done should be 1"
     print("Metrics validation passed.")
 
 

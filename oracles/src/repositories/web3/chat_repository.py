@@ -110,6 +110,8 @@ class Web3ChatRepository(Web3BaseRepository):
                 if chat:
                     self.indexed_chats.append(chat)
                     self.metrics["chats_read"] += 1
+                    if chat.is_processed:
+                        self.metrics["chats_marked_as_done"] += 1
                 self.last_chats_count = i + 1
 
     async def get_unanswered_chats(self) -> List[Chat]:
@@ -133,6 +135,7 @@ class Web3ChatRepository(Web3BaseRepository):
         chat.is_processed = bool(tx_receipt.get("status"))
         if chat.is_processed:
             self.metrics["chats_answered"] += 1
+            self.metrics["chats_marked_as_done"] += 1
         else:
             self.metrics["chats_write_errors"] += 1
         return bool(tx_receipt.get("status"))

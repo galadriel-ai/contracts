@@ -64,6 +64,8 @@ class Web3FunctionRepository(Web3BaseRepository):
                 if function_call:
                     self.indexed_function_calls.append(function_call)
                     self.metrics["functions_read"] += 1
+                    if function_call.is_processed:
+                        self.metrics["functions_marked_as_done"] += 1
                 self.last_function_calls_count = i + 1
 
     async def get_unanswered_function_calls(self) -> List[FunctionCall]:
@@ -107,6 +109,7 @@ class Web3FunctionRepository(Web3BaseRepository):
         function_call.is_processed = bool(tx_receipt.get("status"))
         if function_call.is_processed:
             self.metrics["functions_answered"] += 1
+            self.metrics["functions_marked_as_done"] += 1
         else:
             self.metrics["functions_write_errors"] += 1
         return bool(tx_receipt.get("status"))
