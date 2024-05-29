@@ -14,7 +14,8 @@
     "deployTest:localhost": "npx hardhat run scripts/deployTest.ts --network localhost",
     "deployTest:galadriel": "npx hardhat run scripts/deployTest.ts --network galadriel",
     "callQuickstart": "npx hardhat run scripts/callQuickstart.ts --network galadriel",
-    "generateStandardJson": "npx hardhat solidity-json"
+    "generateStandardJson": "npx hardhat solidity-json",
+    "debug": "npx hardhat test scripts/debugContract.ts"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
