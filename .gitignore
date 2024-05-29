@@ -13,3 +13,4 @@ contracts/agent-old/build
 contracts/agent2/build
 arbitrum-contracts/node_modules
 .DS_Store
+oracles/metrics.json
