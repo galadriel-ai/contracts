@@ -69,6 +69,8 @@ class Web3KnowledgeBaseRepository(Web3BaseRepository):
                 if kb_index_request:
                     self.indexed_kb_index_requests.append(kb_index_request)
                     self.metrics["knowledgebase_index_read"] += 1
+                    if kb_index_request.is_processed:
+                        self.metrics["knowledgebase_index_marked_as_done"] += 1
                 else:
                     self.metrics["knowledgebase_index_read_errors"] += 1
                 self.last_kb_index_request_count = i + 1
@@ -114,6 +116,7 @@ class Web3KnowledgeBaseRepository(Web3BaseRepository):
         request.is_processed = bool(tx_receipt.get("status"))
         if request.is_processed:
             self.metrics["knowledgebase_index_answered"] += 1
+            self.metrics["knowledgebase_index_marked_as_done"] += 1
         return bool(tx_receipt.get("status"))
 
     async def mark_kb_indexing_request_as_done(
@@ -177,6 +180,8 @@ class Web3KnowledgeBaseRepository(Web3BaseRepository):
                 if kb_query:
                     self.indexed_kb_queries.append(kb_query)
                     self.metrics["knowledgebase_query_read"] += 1
+                    if kb_query.is_processed:
+                        self.metrics["knowledgebase_query_marked_as_done"] += 1
                 else:
                     self.metrics["knowledgebase_query_read_errors"] += 1
                 self.last_kb_query_count = i + 1
@@ -222,6 +227,7 @@ class Web3KnowledgeBaseRepository(Web3BaseRepository):
         request.is_processed = bool(tx_receipt.get("status"))
         if request.is_processed:
             self.metrics["knowledgebase_query_answered"] += 1
+            self.metrics["knowledgebase_query_marked_as_done"] += 1
         return bool(tx_receipt.get("status"))
 
     async def mark_kb_query_as_done(self, query: KnowledgeBaseQuery):
