@@ -28,13 +28,23 @@ class Web3ChatRepository(Web3BaseRepository):
         super().__init__()
         self.last_chats_count = 0
         self.indexed_chats = []
+        self.metrics.update(
+            {
+                "chats_count": 0,
+                "chats_read": 0,
+                "chats_answered": 0,
+                "chats_configuration_errors": 0,
+                "chats_history_read_errors": 0,
+                "chats_write_errors": 0,
+                "chats_marked_as_done": 0,
+            }
+        )
 
     async def _get_chat(self, i: int) -> Optional[Chat]:
+        config = None
+        callback_id = await self.oracle_contract.functions.promptCallbackIds(i).call()
+
         try:
-            config = None
-            callback_id = await self.oracle_contract.functions.promptCallbackIds(
-                i
-            ).call()
             prompt_type = await self._get_prompt_type(i)
             is_prompt_processed = (
                 await self.oracle_contract.functions.isPromptProcessed(i).call()
@@ -42,10 +52,18 @@ class Web3ChatRepository(Web3BaseRepository):
             gpt_vision_support = False
             if prompt_type == PromptType.OPENAI:
                 config = await self._get_openai_config(i)
-                gpt_vision_support = (config.model == "gpt-4-turbo" or config.model == "gpt-4o")
+                gpt_vision_support = (
+                    config.model == "gpt-4-turbo" or config.model == "gpt-4o"
+                )
             elif prompt_type == PromptType.GROQ:
                 config = await self._get_groq_config(i)
-            messages = []
+        except Exception as e:
+            print(f"Error getting chat {i} configuration: {e.message}", flush=True)
+            self.metrics["chats_configuration_errors"] += 1
+            return None
+
+        messages = []
+        try:
             if gpt_vision_support:
                 history = await self.oracle_contract.functions.getMessagesAndRoles(
                     i, callback_id
@@ -65,20 +83,23 @@ class Web3ChatRepository(Web3BaseRepository):
                             "content": contents[j],
                         }
                     )
-            return Chat(
-                id=i,
-                messages=messages,
-                callback_id=callback_id,
-                is_processed=is_prompt_processed,
-                prompt_type=prompt_type,
-                config=config,
-            )
-        except ContractLogicError as e:
-            print(f"Error getting chat {i}: {e.message}", flush=True)
+        except Exception as e:
+            print(f"Error getting chat {i} history: {e.message}", flush=True)
+            self.metrics["chats_history_read_errors"] += 1
             return None
+
+        return Chat(
+            id=i,
+            messages=messages,
+            callback_id=callback_id,
+            is_processed=is_prompt_processed,
+            prompt_type=prompt_type,
+            config=config,
+        )
 
     async def _index_new_chats(self):
         chats_count = await self.oracle_contract.functions.promptsCount().call()
+        self.metrics["chats_count"] = chats_count
         if chats_count > self.last_chats_count:
             print(
                 f"Indexing new prompts from {self.last_chats_count} to {chats_count}",
@@ -88,6 +109,7 @@ class Web3ChatRepository(Web3BaseRepository):
                 chat = await self._get_chat(i)
                 if chat:
                     self.indexed_chats.append(chat)
+                    self.metrics["chats_read"] += 1
                 self.last_chats_count = i + 1
 
     async def get_unanswered_chats(self) -> List[Chat]:
@@ -103,11 +125,17 @@ class Web3ChatRepository(Web3BaseRepository):
         except Exception as e:
             chat.is_processed = True
             chat.transaction_receipt = {"error": str(e)}
+            self.metrics["chats_write_errors"] += 1
             await self.mark_as_done(chat)
             return False
         tx_receipt = await self._sign_and_send_tx(tx)
         chat.transaction_receipt = tx_receipt
         chat.is_processed = bool(tx_receipt.get("status"))
+        self.metrics["transactions_sent"] += 1
+        if chat.is_processed:
+            self.metrics["chats_answered"] += 1
+        else:
+            self.metrics["chats_write_errors"] += 1
         return bool(tx_receipt.get("status"))
 
     async def mark_as_done(self, chat: Chat):
@@ -135,7 +163,10 @@ class Web3ChatRepository(Web3BaseRepository):
             tx = await self.oracle_contract.functions.markPromptAsProcessed(
                 chat.id,
             ).build_transaction(tx_data)
-        return await self._sign_and_send_tx(tx)
+        tx_receipt = await self._sign_and_send_tx(tx)
+        if bool(tx_receipt.get("status")):
+            self.metrics["chats_marked_as_done"] += 1
+        return tx_receipt
 
     async def _build_response_tx(self, chat: Chat):
         nonce = await self.web3_client.eth.get_transaction_count(self.account.address)

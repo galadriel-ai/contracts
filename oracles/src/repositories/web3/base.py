@@ -16,6 +16,10 @@ class Web3BaseRepository:
         self.oracle_contract = self.web3_client.eth.contract(
             address=settings.ORACLE_ADDRESS, abi=oracle_abi
         )
+        self.metrics = {
+            "transactions_sent": 0,
+            "errors": 0,
+        }
 
     async def _sign_and_send_tx(self, tx) -> TxReceipt:
         signed_tx = self.web3_client.eth.account.sign_transaction(
@@ -25,3 +29,6 @@ class Web3BaseRepository:
             signed_tx.rawTransaction
         )
         return await self.web3_client.eth.wait_for_transaction_receipt(tx_hash)
+
+    def get_metrics(self):
+        return self.metrics

@@ -49,9 +49,7 @@ class KnowledgeBaseRepository:
         dimension = len(embeddings[0])
         np_embeddings = np.array(embeddings).astype("float32")
         index = faiss.IndexFlatL2(dimension)
-        await asyncio.get_running_loop().run_in_executor(
-            None, index.add, np_embeddings
-        )
+        await asyncio.get_running_loop().run_in_executor(None, index.add, np_embeddings)
         print(f"KB: Created {name}", flush=True)
         await self._add_knowledge_base(name, index, documents)
 
@@ -81,9 +79,7 @@ class KnowledgeBaseRepository:
             query_embedding = await self._create_embedding([query])
             query_vector = np.array([query_embedding[0]]).astype("float32")
             _, indexes = index.search(query_vector, k)
-            results = [
-                doc_store[indexes[0][i]] for i in range(len(indexes[0]))
-            ]
+            results = [doc_store[indexes[0][i]] for i in range(len(indexes[0]))]
             return results
 
     async def exists(self, name: str) -> bool:
