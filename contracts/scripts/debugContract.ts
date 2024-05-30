@@ -29,7 +29,7 @@ async function deployContract(
   For example:
   constructor(address initialOracleAddress, address someAddress)
   -> constructorArgsPrefixes = []
-  -> constructorArgsSuffixes = ["0xsomeAddress"]
+  -> constructorArgsSuffixes = ["0xsomeAddress"] or [allSigners[0]]
 
   For contractName use either "ChatGpt", "OpenAiChatGpt", "GroqChatGpt", "OpenAiChatGptVision" or your own Chat contract
   */
@@ -52,8 +52,8 @@ async function startChat(contract: Contract | any, callerAddress: any, message: 
   For example:
   function myFunctionForStart(address someAddress, string memory message, address someAddress2) public returns (uint i)
   -> startChatFunctionName = "myFunctionForStart"
-  -> startChatArgsPrefixes = ["0xSomeAddress"]
-  -> startChatArgsSuffixes = ["0xSomeAddress2"]
+  -> startChatArgsPrefixes = ["0xSomeAddress"] or [allSigners[0]]
+  -> startChatArgsSuffixes = ["0xSomeAddress2"] or [allSigners[1]]
    */
   const startChatFunctionName = "startChat"
   const startChatArgsPrefixes: any[] = []
@@ -77,9 +77,9 @@ async function addUserMessage(chatGpt: Contract | any, message: string, runId: n
   /* CONFIGURE: modify these values to match your contract
 
   For example:
-  function addMessage123(address chatOwner, string memory message, uint256 runId) public onlyManager
+  function addMessage123(address someAddress, string memory message, uint256 runId) public onlyManager
   -> addMessageFunctionName = "addMessage123"
-  -> addMessageArgsPrefixes = [allSigners[0]]
+  -> addMessageArgsPrefixes = ["0xSomeAddress"] or [allSigners[0]]
   -> addMessageArgsSuffixes = [runId]
   */
   const addMessageFunctionName = "addMessage"
