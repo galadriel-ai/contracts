@@ -44,7 +44,7 @@ interface IOracle {
     struct OpenAiResponse {
         string id;
 
-        // either content is an empty srt or functionName and functionArguments
+        // either content is an empty str or functionName and functionArguments
         string content;
         string functionName;
         string functionArguments;
