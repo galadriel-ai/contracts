@@ -78,7 +78,7 @@ def _wait_for_indexing(
 
 def execute(cid: str) -> KnowledgeBaseIndexingResponse:
     index_cid = _get_index_cid(cid)
-    if len(index_cid) > 0:
+    if len(index_cid) and index_cid[0]:
         return KnowledgeBaseIndexingResponse(
             id=None, is_processed=True, index_cid=index_cid, error=None
         )
