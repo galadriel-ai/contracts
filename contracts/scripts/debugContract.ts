@@ -8,13 +8,10 @@ import {HardhatEthersSigner} from "@nomicfoundation/hardhat-ethers/signers";
 // Might need to configure the constructor arguments with parameters and/or extra logic
 //   and modify the "startChat" function to have the correct name and parameters and extra logic
 //   the "addUserMessage" should be modified if your contract has any custom logic/parameters for adding user messages
+// search for "CONFIGURATION" to find the relevant parts to modify
 
-// CONFIGURATION: modify these values to match your contract
-// Use either "ChatGpt", "OpenAiChatGpt", "GroqChatGpt", "OpenAiChatGptVision" or your own Chat contract
+// CONFIGURATION: modify this value to match your contract name
 const contractName: string = "OpenAiChatGpt"
-// If your contract has extra parameters in the constructor
-const constructorArgsPrefixes: any[] = []
-const constructorArgsSuffixes: any[] = []
 
 // Any custom logic your contract constructor requires, eg some addresses
 async function deployContract(
@@ -22,10 +19,24 @@ async function deployContract(
   oracle: Contract | any,
   allSigners: HardhatEthersSigner[]
 ): Promise<Contract | null> {
-  // Modify parameters as needed
+  /*
+  CONFIGURATION: modify these values to match your contract
   const constructorArgs = [...constructorArgsPrefixes, oracle.target, ...constructorArgsSuffixes]
-  // For example to add 1st account in parameters
-  // const constructorArgs = [...constructorArgsPrefixes, oracle.target, ...constructorArgsSuffixes, allSigners[0].address]
+  * oracle.target = the address of the oracle contract that needs to be whitelisted in most cases aka ´initialOracleAddress´
+  * constructorArgsPrefixes = any extra parameters that need to be added before the oracle address
+  * constructorArgsSuffixes = any extra parameters that need to be added after the oracle address
+
+  For example:
+  constructor(address initialOracleAddress, address someAddress)
+  -> constructorArgsPrefixes = []
+  -> constructorArgsSuffixes = ["0xsomeAddress"]
+
+  For contractName use either "ChatGpt", "OpenAiChatGpt", "GroqChatGpt", "OpenAiChatGptVision" or your own Chat contract
+  */
+  const constructorArgsPrefixes: any[] = []
+  const constructorArgsSuffixes: any[] = []
+
+  const constructorArgs = [...constructorArgsPrefixes, oracle.target, ...constructorArgsSuffixes]
   try {
     return await contract.deploy(...constructorArgs);
   } catch (e) {
@@ -33,44 +44,57 @@ async function deployContract(
   }
 }
 
-// If your contract has a different function for starting a chat
-const startChatFunctionName = "startChat"
-// Whatever extra arguments your "startChat" function requires
-// prefix arguments get prepended and suffix ones appended to message string
-const startChatArgsPrefixes: any[] = []
-const startChatArgsSuffixes: any[] = []
-
 // Start chat function overwrite
 async function startChat(contract: Contract | any, callerAddress: any, message: string) {
+  /*
+  CONFIGURATION: modify these values to match your contract
+
+  For example:
+  function myFunctionForStart(address someAddress, string memory message, address someAddress2) public returns (uint i)
+  -> startChatFunctionName = "myFunctionForStart"
+  -> startChatArgsPrefixes = ["0xSomeAddress"]
+  -> startChatArgsSuffixes = ["0xSomeAddress2"]
+   */
+  const startChatFunctionName = "startChat"
+  const startChatArgsPrefixes: any[] = []
+  const startChatArgsSuffixes: any[] = []
+
+  const args = [...startChatArgsPrefixes, message, ...startChatArgsSuffixes]
+
   let error: any | null = null
   try {
-    // If your startChat function is different then update the next line accordingly!
-    const args = [...startChatArgsPrefixes, message, ...startChatArgsSuffixes]
-    // For example to add callerAddress in param
-    // const args = [callerAddress, ...startChatArgsPrefixes, message, ...startChatArgsSuffixes]
     await contract.connect(callerAddress)[startChatFunctionName](...args);
   } catch (e) {
     error = e
   }
   expect(error).to.equal(
     null,
-    `Failed to call "${startChatFunctionName}", ensure this method is called correctly, or update it accordingly.`
+    `Failed to call "${startChatFunctionName}" with args: "${args}, ensure this method is called correctly, or update it accordingly.`
   )
 }
 
 async function addUserMessage(chatGpt: Contract | any, message: string, runId: number, allSigners: HardhatEthersSigner[]) {
+  /* CONFIGURE: modify these values to match your contract
+
+  For example:
+  function addMessage123(address chatOwner, string memory message, uint256 runId) public onlyManager
+  -> addMessageFunctionName = "addMessage123"
+  -> addMessageArgsPrefixes = [allSigners[0]]
+  -> addMessageArgsSuffixes = [runId]
+  */
+  const addMessageFunctionName = "addMessage"
+  const addMessageArgsPrefixes: any[] = []
+  const addMessageArgsSuffixes: any[] = [runId]
+  const args = [...addMessageArgsPrefixes, message, ...addMessageArgsSuffixes]
   let error = null
   try {
-    // If your contract has a different function to add messages, then modify this accordingly
-    await chatGpt.addMessage(message, runId);
-    // For example to add first account in the function parameters
-    // await chatGpt.addMessage(allSigners[0], message, runId);
+    await chatGpt.connect(allSigners[0])[addMessageFunctionName](...args);
   } catch (e) {
     error = e
   }
   expect(error).to.equal(
     null,
-    `Failed to add a user message, check the implementation and update it accordingly\n`
+    `Failed to add a user message with args: "${args}", check the implementation and update it accordingly\n`
   )
 }
 
