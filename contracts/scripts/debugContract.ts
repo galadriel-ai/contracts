@@ -45,7 +45,7 @@ async function deployContract(
 }
 
 // Start chat function overwrite
-async function startChat(contract: Contract | any, callerAddress: any, message: string) {
+async function startChat(contract: Contract | any, allSigners: HardhatEthersSigner[], message: string) {
   /*
   CONFIGURATION: modify these values to match your contract
 
@@ -63,7 +63,7 @@ async function startChat(contract: Contract | any, callerAddress: any, message: 
 
   let error: any | null = null
   try {
-    await contract.connect(callerAddress)[startChatFunctionName](...args);
+    await contract.connect(allSigners[0])[startChatFunctionName](...args);
   } catch (e) {
     error = e
   }
@@ -221,7 +221,7 @@ describe("Contract", function () {
       const {chatGpt, oracle, allSigners} = await loadFixture(deploy);
 
       const message = "Hello"
-      await startChat(chatGpt, allSigners[0], message);
+      await startChat(chatGpt, allSigners, message);
       const messages = await getMessages(oracle, 0, 0);
       expect(messages.length).to.above(0)
       expect(messages[0].message).to.not.equal(null, `Expected the first message from the "getMessages" function not to be null`)
@@ -238,7 +238,7 @@ describe("Contract", function () {
 
       const promptId: number = 0
       const promptCallbackId: number = 0
-      await startChat(chatGpt, allSigners[0], "Hello");
+      await startChat(chatGpt, allSigners, "Hello");
       await addOracleResponse(oracle, oracleAccount, "Hi", promptId, promptCallbackId);
       const messages = await getMessages(oracle, promptId, promptCallbackId);
       expect(messages.length).to.above(1, "Expected message history to contain at least 2 messages")
@@ -256,7 +256,7 @@ describe("Contract", function () {
 
       const promptId: number = 0
       const promptCallbackId: number = 0
-      await startChat(chatGpt, allSigners[0], "Hello");
+      await startChat(chatGpt, allSigners, "Hello");
       await addOracleResponse(oracle, oracleAccount, "Hi", promptId, promptCallbackId);
 
       await addUserMessage(chatGpt, "message", promptId, allSigners);
@@ -276,7 +276,7 @@ describe("Contract", function () {
 
       let promptId = 0;
       const promptCallbackId: number = 0
-      await startChat(chatGpt, allSigners[0], "Hello");
+      await startChat(chatGpt, allSigners, "Hello");
       const chatIterationsCount: number = 50
       for (let i = 0; i < chatIterationsCount; i++) {
         await addOracleResponse(oracle, oracleAccount, `Hi-${i}`, i, promptCallbackId);
@@ -295,7 +295,7 @@ describe("Contract", function () {
     it("User cannot start chat and add another message", async () => {
       const {chatGpt, oracle, allSigners} = await loadFixture(deploy);
 
-      await startChat(chatGpt, allSigners[0], "Hello")
+      await startChat(chatGpt, allSigners, "Hello")
       let error = null
       try {
         await addUserMessage(chatGpt, `message`, 0, allSigners)
@@ -314,7 +314,7 @@ describe("Contract", function () {
       const oracleAccount = allSigners[6];
       await oracle.updateWhitelist(oracleAccount, true);
 
-      await startChat(chatGpt, allSigners[0], "Message1")
+      await startChat(chatGpt, allSigners, "Message1")
       await addOracleResponse(oracle, oracleAccount, "Hi", 0, 0)
 
       let isErrored = false
