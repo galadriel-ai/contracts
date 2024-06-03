@@ -17,6 +17,7 @@ def execute(documents: List[Document]) -> str:
         },
         files=multipart_data,
     )
+    response.raise_for_status()
     return response.json().get("IpfsHash")
 
 
