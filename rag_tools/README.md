@@ -14,7 +14,7 @@ The RAG (Retrieval-Augmented Generation) Knowledge Base Script is designed to au
 Before you begin, ensure you have the following:
 - Python 3.11 or later installed on your system.
 - A funded wallet and corresponding private key
-- An API key for `nft.storage` to facilitate document uploading to IPFS. You can obtain this key by registering at [nft.storage](https://nft.storage).
+- An API key for `pinata.cloud` to facilitate document uploading to IPFS. You can obtain this key by registering at [pinata.cloud](https://www.pinata.cloud).
 
 ## Setup
 

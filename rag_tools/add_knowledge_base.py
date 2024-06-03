@@ -39,7 +39,7 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--chunk-overlap", type=int, default=100)
     args = parser.parse_args()
 
-    assert settings.STORAGE_KEY, "NFT_STORAGE_API_KEY missing from .env"
+    assert settings.STORAGE_KEY, "PINATA_API_KEY missing from .env"
 
     if not os.path.exists(args.directory):
         print(f"Directory {args.directory} does not exist, exiting.")
