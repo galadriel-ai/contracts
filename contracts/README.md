@@ -58,7 +58,7 @@ npm run deployAll:galadriel
 ### Running e2e
 
 To run the whole flow e2e either locally or on Galadriel devnet check out
-[e2e deployment readme](/contracts/contracts/README_e2e.md).
+[e2e deployment readme](contracts/README_e2e.md).
 
 ### Generating standard Solidity input JSON
 
