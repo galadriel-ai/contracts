@@ -22,7 +22,7 @@ Rest of this README assumes you are in the `contracts` directory
 
 Get the [oracle address](https://docs.galadriel.com/oracle-address) from the docs and replace `<oracle address>` with
 the address.  
-Check the available example contracts at `./contracts/contracts`
+Check the available example contracts in the [contracts](contracts) directory
 
 ```
 npx hardhat deploy --network [network (galadriel or localhost)] --contract [contract name] --oracleaddress [oracle_address] [space separated extra constructor args]
