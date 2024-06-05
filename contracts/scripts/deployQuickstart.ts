@@ -15,9 +15,7 @@ async function deployQuickstart(oracleAddress: string) {
 
   await agent.waitForDeployment();
 
-  console.log(
-    `Quickstart contract deployed to ${agent.target}`
-  );
+  console.log(`Quickstart contract deployed to ${agent.target}`);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
