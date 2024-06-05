@@ -16,7 +16,8 @@ npm run node
 This runs a chain on: http://localhost:8545  
 Chain ID: 1337
 
-Take some private key from local node and add to .env `PRIVATE_KEY_LOCALHOST`
+Take some private key from local node and add to .env `PRIVATE_KEY_LOCALHOST`  
+If deploying on Galadriel devnet add your private key to .env `PRIVATE_KEY_GALADRIEL`
 
 ## Deploy the oracle contract and all examples
 

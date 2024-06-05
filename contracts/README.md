@@ -34,7 +34,7 @@ npx hardhat deploy --network galadriel --contract DalleNft --oracleaddress [orac
 npx hardhat deploy --network localhost --contract GroqChatGpt --oracleaddress [oracle_address]
 ```
 
-### Galadriel testnet
+### Deploy quickstart on Galadriel devnet
 
 Update `.env`:
 
@@ -46,13 +46,6 @@ Update `.env`:
 
 ```
 npm run deployQuickstart
-```
-
-**Deploy the oracle contract and all examples to Galadriel testnet**  
-**This requires running your own oracle and is not recommended unless you are looking to modify the oracle behaviour**
-
-```
-npm run deployAll:galadriel
 ```
 
 ### Running e2e
