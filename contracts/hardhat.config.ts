@@ -2,7 +2,7 @@ import {HardhatUserConfig} from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "@xyrusworx/hardhat-solidity-json";
 import "./tasks/whitelist";
-import "./tasks/deployments";
+import "./tasks/deploy";
 import "./tasks/e2e";
 import "./tasks/functions";
 
