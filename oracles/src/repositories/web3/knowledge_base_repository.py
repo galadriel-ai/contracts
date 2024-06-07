@@ -60,7 +60,7 @@ class Web3KnowledgeBaseRepository(Web3BaseRepository):
             await self.oracle_contract.functions.kbIndexingRequestCount().call()
         )
         self.metrics["knowledgebase_index_count"] = kb_index_request_count
-        if not self.last_kb_index_request_count:
+        if not self.last_kb_index_request_count and kb_index_request_count > 0:
             self.last_kb_index_request_count = await self._find_first_unprocessed(
                 kb_index_request_count,
                 lambda index: self.oracle_contract.functions.isKbIndexingRequestProcessed(
@@ -185,7 +185,7 @@ class Web3KnowledgeBaseRepository(Web3BaseRepository):
     async def _index_new_kb_queries(self):
         kb_query_count = await self.oracle_contract.functions.kbQueryCount().call()
         self.metrics["knowledgebase_query_count"] = kb_query_count
-        if not self.last_kb_query_count:
+        if not self.last_kb_query_count and kb_query_count > 0:
             self.last_kb_query_count = await self._find_first_unprocessed(
                 kb_query_count,
                 lambda index: self.oracle_contract.functions.isKbQueryProcessed(

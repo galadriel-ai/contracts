@@ -54,7 +54,7 @@ class Web3FunctionRepository(Web3BaseRepository):
             await self.oracle_contract.functions.functionsCount().call()
         )
         self.metrics["functions_count"] = function_calls_count
-        if not self.last_function_calls_count:
+        if not self.last_function_calls_count and function_calls_count > 0:
             self.last_function_calls_count = await self._find_first_unprocessed(
                 function_calls_count,
                 lambda index: self.oracle_contract.functions.isFunctionProcessed(

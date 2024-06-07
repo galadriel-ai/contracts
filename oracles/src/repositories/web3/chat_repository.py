@@ -100,7 +100,7 @@ class Web3ChatRepository(Web3BaseRepository):
     async def _index_new_chats(self):
         chats_count = await self.oracle_contract.functions.promptsCount().call()
         self.metrics["chats_count"] = chats_count
-        if not self.last_chats_count:
+        if not self.last_chats_count and chats_count > 0:
             self.last_chats_count = await self._find_first_unprocessed(
                 chats_count,
                 lambda index: self.oracle_contract.functions.isPromptProcessed(
