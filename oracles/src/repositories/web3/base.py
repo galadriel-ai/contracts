@@ -21,6 +21,29 @@ class Web3BaseRepository:
             "errors": 0,
         }
 
+    async def _find_first_unprocessed(self, count, is_processed_func, max_retries=3):
+        low = 0
+        high = count
+        while low < high:
+            index = (low + high) // 2
+            retries = 0
+            while retries < max_retries:
+                try:
+                    is_prompt_processed = await is_processed_func(index)
+                    if is_prompt_processed:
+                        low = index + 1
+                    else:
+                        high = index
+                    break
+                except Exception as e:
+                    print(f"Error getting job state at index {index}: {e}. Retrying ({retries + 1}/{max_retries})...")
+                    retries += 1
+                    if retries == max_retries:
+                        print(f"Skipping unreadable job at index {index} after {max_retries} retries.")
+                        low = index + 1
+                        break
+        return low
+
     async def _sign_and_send_tx(self, tx) -> TxReceipt:
         try:
             signed_tx = self.web3_client.eth.account.sign_transaction(
