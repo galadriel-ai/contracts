@@ -54,6 +54,18 @@ class Web3FunctionRepository(Web3BaseRepository):
             await self.oracle_contract.functions.functionsCount().call()
         )
         self.metrics["functions_count"] = function_calls_count
+        if not self.last_function_calls_count:
+            self.last_function_calls_count = await self._find_first_unprocessed(
+                function_calls_count,
+                lambda index: self.oracle_contract.functions.isFunctionProcessed(
+                    index
+                ).call(),
+            )
+            self.metrics["functions_marked_as_done"] = self.last_function_calls_count
+            print(
+                f"Found first unprocessed functions {self.last_function_calls_count} on cold start, marking all previous as processed",
+                flush=True,
+            )
         if function_calls_count > self.last_function_calls_count:
             print(
                 f"Indexing new function calls from {self.last_function_calls_count} to {function_calls_count}",

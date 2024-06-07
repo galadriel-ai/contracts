@@ -33,7 +33,7 @@ class Web3KnowledgeBaseRepository(Web3BaseRepository):
                 "knowledgebase_query_marked_as_done": 0,
             }
         )
-        
+
     async def _get_knowledge_base_indexing_request(
         self, i: int
     ) -> Optional[KnowledgeBaseIndexingRequest]:
@@ -60,6 +60,20 @@ class Web3KnowledgeBaseRepository(Web3BaseRepository):
             await self.oracle_contract.functions.kbIndexingRequestCount().call()
         )
         self.metrics["knowledgebase_index_count"] = kb_index_request_count
+        if not self.last_kb_index_request_count:
+            self.last_kb_index_request_count = await self._find_first_unprocessed(
+                kb_index_request_count,
+                lambda index: self.oracle_contract.functions.isKbIndexingRequestProcessed(
+                    index
+                ).call(),
+            )
+            self.metrics["knowledgebase_index_marked_as_done"] = (
+                self.last_kb_index_request_count
+            )
+            print(
+                f"Found first unprocessed kb indexing request {self.last_kb_index_request_count} on cold start, marking all previous as processed",
+                flush=True,
+            )
         if kb_index_request_count > self.last_kb_index_request_count:
             print(
                 f"Indexing new knowledge base indexing requests from {self.last_kb_index_request_count} to {kb_index_request_count}"
@@ -171,6 +185,20 @@ class Web3KnowledgeBaseRepository(Web3BaseRepository):
     async def _index_new_kb_queries(self):
         kb_query_count = await self.oracle_contract.functions.kbQueryCount().call()
         self.metrics["knowledgebase_query_count"] = kb_query_count
+        if not self.last_kb_query_count:
+            self.last_kb_query_count = await self._find_first_unprocessed(
+                kb_query_count,
+                lambda index: self.oracle_contract.functions.isKbQueryProcessed(
+                    index
+                ).call(),
+            )
+            self.metrics["knowledgebase_query_marked_as_done"] = (
+                self.last_kb_query_count
+            )
+            print(
+                f"Found first unprocessed kb query request {self.last_kb_query_count} on cold start, marking all previous as processed",
+                flush=True,
+            )
         if kb_query_count > self.last_kb_query_count:
             print(
                 f"Indexing new knowledge base queries from {self.last_kb_query_count} to {kb_query_count}"

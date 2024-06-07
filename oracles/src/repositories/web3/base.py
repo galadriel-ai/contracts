@@ -21,6 +21,22 @@ class Web3BaseRepository:
             "errors": 0,
         }
 
+    async def _find_first_unprocessed(self, count, is_processed_func):
+        low = 0
+        high = count
+        while low < high:
+            index = (low + high) // 2
+            try:
+                is_prompt_processed = await is_processed_func(index)
+                if is_prompt_processed:
+                    low = index + 1
+                else:
+                    high = index
+            except Exception as e:
+                print(f"Skipping unreadable job at index {index}: {e}")
+                low = index + 1
+        return low
+
     async def _sign_and_send_tx(self, tx) -> TxReceipt:
         try:
             signed_tx = self.web3_client.eth.account.sign_transaction(
