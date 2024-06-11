@@ -51,6 +51,7 @@ async function runTests(
 ): Promise<boolean> {
   let isSuccess = false;
   let stdoutData = '';
+  let stderrData = '';
   try {
     isSuccess = await new Promise((resolve) => {
       const childProcess = spawn(command, args, { shell: true });
@@ -61,6 +62,7 @@ async function runTests(
       });
 
       childProcess.stderr.on('data', (data) => {
+        stderrData += data.toString();
         console.error(data.toString());
       });
 
@@ -83,7 +85,7 @@ async function runTests(
   // If isSuccess is false, you might want to send a message to Slack here as well
   if (!isSuccess || (isSuccess && !previousResult)) {
     await postSlackMessage(
-      stdoutData,
+      stdoutData.length > 0 ? stdoutData : stderrData,
       slackWebHookUrl,
     );
   }
