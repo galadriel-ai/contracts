@@ -2,8 +2,7 @@ import {task} from "hardhat/config";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
 
 const TIMEOUT_SECONDS: number = 300
-const green = "\x1b[32m"
-const reset = "\x1b[0m"
+const MAX_ERROR_LEN: number = 40;
 
 class TimeoutError extends Error {
   constructor(message: string) {
@@ -30,9 +29,9 @@ task("e2e", "Runs all e2e tests")
         "Who is the president of USA?",
         hre,
       )
-      testResults["OpenAI gpt-4-turbo-preview"] = result.error || "✅";
+      testResults["OpenAI gpt-4-turbo-preview"] = result.error ? truncateMessage(result.error) : "✅";
     } catch (e: any) {
-      testResults["OpenAI gpt-4-turbo-preview"] = e.message
+      testResults["OpenAI gpt-4-turbo-preview"] = truncateMessage(e.message)
     }
   
     try {
@@ -42,9 +41,9 @@ task("e2e", "Runs all e2e tests")
         "Who is the president of USA?",
         hre,
       )
-      testResults["OpenAI gpt-3.5-turbo-1106"] = result.error || "✅";
+      testResults["OpenAI gpt-3.5-turbo-1106"] = result.error ? truncateMessage(result.error) : "✅";
     } catch (e: any) {
-      testResults["OpenAI gpt-3.5-turbo-1106"] = e.message
+      testResults["OpenAI gpt-3.5-turbo-1106"] = truncateMessage(e.message)
     }
     
     try {
@@ -55,9 +54,9 @@ task("e2e", "Runs all e2e tests")
         "https://picsum.photos/200/300",
         hre,
       )
-      testResults["OpenAI gpt-4-turbo vision"] = result.error || "✅";
+      testResults["OpenAI gpt-4-turbo vision"] = result.error ? truncateMessage(result.error) : "✅";
     } catch (e: any) {
-      testResults["OpenAI gpt-4-turbo vision"] = e.message
+      testResults["OpenAI gpt-4-turbo vision"] = truncateMessage(e.message)
     }
     
     try {
@@ -68,9 +67,9 @@ task("e2e", "Runs all e2e tests")
         "https://picsum.photos/200/300",
         hre,
       )
-      testResults["OpenAI gpt-4o"] = result.error || "✅";
+      testResults["OpenAI gpt-4o"] = result.error ? truncateMessage(result.error) : "✅";
     } catch (e: any) {
-      testResults["OpenAI gpt-4o"] = e.message
+      testResults["OpenAI gpt-4o"] = truncateMessage(e.message)
     }
   
     try {
@@ -80,9 +79,9 @@ task("e2e", "Runs all e2e tests")
         "Who is the president of USA?",
         hre,
       )
-      testResults["Groq llama3-8b-8192"] = result.error || "✅";
+      testResults["Groq llama3-8b-8192"] = result.error ? truncateMessage(result.error) : "✅";
     } catch (e: any) {
-      testResults["Groq llama3-8b-8192"] = e.message
+      testResults["Groq llama3-8b-8192"] = truncateMessage(e.message)
     }
 
     try {
@@ -92,9 +91,9 @@ task("e2e", "Runs all e2e tests")
         "Who is the president of USA?",
         hre,
       )
-      testResults["Groq llama3-70b-8192"] = result.error || "✅";
+      testResults["Groq llama3-70b-8192"] = result.error ? truncateMessage(result.error) : "✅";
     } catch (e: any) {
-      testResults["Groq llama3-70b-8192"] = e.message
+      testResults["Groq llama3-70b-8192"] = truncateMessage(e.message)
     }
   
     try {
@@ -104,9 +103,9 @@ task("e2e", "Runs all e2e tests")
         "Who is the president of USA?",
         hre,
       )
-      testResults["Groq mixtral-8x7b-32768"] = result.error || "✅";
+      testResults["Groq mixtral-8x7b-32768"] = result.error ? truncateMessage(result.error) : "✅";
     } catch (e: any) {
-      testResults["Groq mixtral-8x7b-32768"] = e.message
+      testResults["Groq mixtral-8x7b-32768"] = truncateMessage(e.message)
     }
 
     try {
@@ -116,9 +115,9 @@ task("e2e", "Runs all e2e tests")
         "Who is the president of USA?",
         hre,
       )
-      testResults["Groq gemma-7b-it"] = result.error || "✅";
+      testResults["Groq gemma-7b-it"] = result.error ? truncateMessage(result.error) : "✅";
     } catch (e: any) {
-      testResults["Groq gemma-7b-it"] = e.message
+      testResults["Groq gemma-7b-it"] = truncateMessage(e.message)
     }
   
     try {
@@ -130,9 +129,9 @@ task("e2e", "Runs all e2e tests")
         },
         hre,
       )
-      testResults["OpenAI image_generation"] = result.error || "✅";
+      testResults["OpenAI image_generation"] = result.error ? truncateMessage(result.error) : "✅";
     } catch (e: any) {
-      testResults["OpenAI image_generation"] = e.message
+      testResults["OpenAI image_generation"] = truncateMessage(e.message)
     }
   
     try {
@@ -144,9 +143,9 @@ task("e2e", "Runs all e2e tests")
         },
         hre,
       )
-      testResults["web_search"] = result.error || "✅";
+      testResults["web_search"] = result.error ? truncateMessage(result.error) : "✅";
     } catch (e: any) {
-      testResults["web_search"] = e.message
+      testResults["web_search"] = truncateMessage(e.message)
     }
   
     try {
@@ -158,9 +157,9 @@ task("e2e", "Runs all e2e tests")
         },
         hre,
       )
-      testResults["code_interpreter"] = result.error || "✅";
+      testResults["code_interpreter"] = result.error ? truncateMessage(result.error) : "✅";
     } catch (e: any) {
-      testResults["code_interpreter"] = e.message
+      testResults["code_interpreter"] = truncateMessage(e.message)
     }
 
     // console.log(`Running "add_knowledge_base"`)
@@ -183,9 +182,9 @@ task("e2e", "Runs all e2e tests")
         },
         hre,
       )
-      testResults["query_knowledge_base"] = result.error || "✅";
+      testResults["query_knowledge_base"] = result.error ? truncateMessage(result.error) : "✅";
     } catch (e: any) {
-      testResults["query_knowledge_base"] = e.message
+      testResults["query_knowledge_base"] = truncateMessage(e.message)
     }
   
     const totalTests = Object.keys(testResults).length;
@@ -281,4 +280,8 @@ async function runGroq(
     hre,
   )
   return result;
+}
+
+function truncateMessage(message: string) {
+  return message.length > MAX_ERROR_LEN ? message.slice(0, MAX_ERROR_LEN - 3) + '...' : message;
 }
