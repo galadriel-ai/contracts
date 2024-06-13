@@ -5,6 +5,8 @@ pragma solidity ^0.8.9;
 // import "hardhat/console.sol";
 import "./interfaces/IOracle.sol";
 
+// @title OpenAiChatGptVision
+// @notice This contract interacts with teeML oracle to handle multi-modal chat interactions using the OpenAI model.
 contract OpenAiChatGptVision {
 
     struct ChatRun {
@@ -13,18 +15,26 @@ contract OpenAiChatGptVision {
         uint messagesCount;
     }
 
+    // @notice Mapping from chat ID to ChatRun
     mapping(uint => ChatRun) public chatRuns;
     uint private chatRunsCount;
 
+    // @notice Event emitted when a new chat is created
     event ChatCreated(address indexed owner, uint indexed chatId);
 
+    // @notice Address of the contract owner
     address private owner;
+
+    // @notice Address of the oracle contract
     address public oracleAddress;
 
+    // @notice Event emitted when the oracle address is updated
     event OracleAddressUpdated(address indexed newOracleAddress);
 
+    // @notice Configuration for the OpenAI request
     IOracle.OpenAiRequest private config;
 
+    // @param initialOracleAddress Initial address of the oracle contract
     constructor(address initialOracleAddress) {
         owner = msg.sender;
         oracleAddress = initialOracleAddress;
@@ -47,22 +57,30 @@ contract OpenAiChatGptVision {
         });
     }
 
+    // @notice Ensures the caller is the contract owner
     modifier onlyOwner() {
         require(msg.sender == owner, "Caller is not owner");
         _;
     }
 
+    // @notice Ensures the caller is the oracle contract
     modifier onlyOracle() {
         require(msg.sender == oracleAddress, "Caller is not oracle");
         _;
     }
 
+    // @notice Updates the oracle address
+    // @param newOracleAddress The new oracle address to set
     function setOracleAddress(address newOracleAddress) public onlyOwner {
         oracleAddress = newOracleAddress;
         emit OracleAddressUpdated(newOracleAddress);
     }
 
-    function startChat(string memory message, string[] memory imageUrls) public returns (uint i) {
+    // @notice Starts a new chat with an initial message and optional image URLs
+    // @param message The initial text message
+    // @param imageUrls The array of image URLs
+    // @return The ID of the newly created chat
+    function startChat(string memory message, string[] memory imageUrls) public returns (uint) {
         ChatRun storage run = chatRuns[chatRunsCount];
 
         run.owner = msg.sender;
@@ -92,6 +110,11 @@ contract OpenAiChatGptVision {
         return currentId;
     }
 
+    // @notice Handles the response from the oracle for an OpenAI LLM call
+    // @param runId The ID of the chat run
+    // @param response The response from the oracle
+    // @param errorMessage Any error message
+    // @dev Called by teeML oracle
     function onOracleOpenAiLlmResponse(
         uint runId,
         IOracle.OpenAiResponse memory response,
@@ -124,6 +147,9 @@ contract OpenAiChatGptVision {
         }
     }
 
+    // @notice Adds a new message to an existing chat run
+    // @param message The new message to add
+    // @param runId The ID of the chat run
     function addMessage(string memory message, uint runId) public {
         ChatRun storage run = chatRuns[runId];
         require(
@@ -146,10 +172,18 @@ contract OpenAiChatGptVision {
         IOracle(oracleAddress).createOpenAiLlmCall(runId, config);
     }
 
+    // @notice Retrieves the message history of a chat run
+    // @param chatId The ID of the chat run
+    // @return An array of messages
+    // @dev Called by teeML oracle
     function getMessageHistory(uint chatId) public view returns (IOracle.Message[] memory) {
         return chatRuns[chatId].messages;
     }
 
+    // @notice Compares two strings for equality
+    // @param a The first string
+    // @param b The second string
+    // @return True if the strings are equal, false otherwise
     function compareStrings(string memory a, string memory b) private pure returns (bool) {
         return (keccak256(abi.encodePacked((a))) == keccak256(abi.encodePacked((b))));
     }

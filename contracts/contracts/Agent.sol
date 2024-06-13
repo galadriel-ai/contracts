@@ -5,6 +5,8 @@ pragma solidity ^0.8.9;
 // import "hardhat/console.sol";
 import "./interfaces/IOracle.sol";
 
+// @title Agent
+// @notice This contract interacts with teeML oracle to run agents that perform multiple iterations of querying and responding using a large language model (LLM).
 contract Agent {
 
     string public prompt;
@@ -22,18 +24,27 @@ contract Agent {
         bool is_finished;
     }
 
+    // @notice Mapping from run ID to AgentRun
     mapping(uint => AgentRun) public agentRuns;
     uint private agentRunCount;
 
+    // @notice Event emitted when a new agent run is created
     event AgentRunCreated(address indexed owner, uint indexed runId);
 
+    // @notice Address of the contract owner
     address private owner;
+
+    // @notice Address of the oracle contract
     address public oracleAddress;
 
+    // @notice Event emitted when the oracle address is updated
     event OracleAddressUpdated(address indexed newOracleAddress);
 
+    // @notice Configuration for the OpenAI request
     IOracle.OpenAiRequest private config;
 
+    // @param initialOracleAddress Initial address of the oracle contract
+    // @param systemPrompt Initial prompt for the system message
     constructor(
         address initialOracleAddress,         
         string memory systemPrompt
@@ -59,23 +70,31 @@ contract Agent {
         });
     }
 
+    // @notice Ensures the caller is the contract owner
     modifier onlyOwner() {
         require(msg.sender == owner, "Caller is not owner");
         _;
     }
 
+    // @notice Ensures the caller is the oracle contract
     modifier onlyOracle() {
         require(msg.sender == oracleAddress, "Caller is not oracle");
         _;
     }
 
+    // @notice Updates the oracle address
+    // @param newOracleAddress The new oracle address to set
     function setOracleAddress(address newOracleAddress) public onlyOwner {
         require(msg.sender == owner, "Caller is not the owner");
         oracleAddress = newOracleAddress;
         emit OracleAddressUpdated(newOracleAddress);
     }
 
-    function runAgent(string memory query, uint8 max_iterations) public returns (uint i) {
+    // @notice Starts a new agent run
+    // @param query The initial user query
+    // @param max_iterations The maximum number of iterations for the agent run
+    // @return The ID of the newly created agent run
+    function runAgent(string memory query, uint8 max_iterations) public returns (uint) {
         AgentRun storage run = agentRuns[agentRunCount];
 
         run.owner = msg.sender;
@@ -102,6 +121,11 @@ contract Agent {
         return currentId;
     }
 
+    // @notice Handles the response from the oracle for an OpenAI LLM call
+    // @param runId The ID of the agent run
+    // @param response The response from the oracle
+    // @param errorMessage Any error message
+    // @dev Called by teeML oracle
     function onOracleOpenAiLlmResponse(
         uint runId,
         IOracle.OpenAiResponse memory response,
@@ -136,19 +160,24 @@ contract Agent {
         run.is_finished = true;
     }
 
+    // @notice Handles the response from the oracle for a function call
+    // @param runId The ID of the agent run
+    // @param response The response from the oracle
+    // @param errorMessage Any error message
+    // @dev Called by teeML oracle
     function onOracleFunctionResponse(
         uint runId,
         string memory response,
         string memory errorMessage
     ) public onlyOracle {
         AgentRun storage run = agentRuns[runId];
-        require(
-            !run.is_finished, "Run is finished"
-        );
+        require(!run.is_finished, "Run is finished");
+
         string memory result = response;
         if (!compareStrings(errorMessage, "")) {
             result = errorMessage;
         }
+
         Message memory newMessage;
         newMessage.role = "user";
         newMessage.content = result;
@@ -157,6 +186,10 @@ contract Agent {
         IOracle(oracleAddress).createOpenAiLlmCall(runId, config);
     }
 
+    // @notice Retrieves the message history contents for a given agent run
+    // @param agentId The ID of the agent run
+    // @return An array of message contents
+    // @dev Called by teeML oracle
     function getMessageHistoryContents(uint agentId) public view returns (string[] memory) {
         string[] memory messages = new string[](agentRuns[agentId].messages.length);
         for (uint i = 0; i < agentRuns[agentId].messages.length; i++) {
@@ -165,6 +198,10 @@ contract Agent {
         return messages;
     }
 
+    // @notice Retrieves the roles of the messages in a given agent run
+    // @param agentId The ID of the agent run
+    // @return An array of message roles
+    // @dev Called by teeML oracle
     function getMessageHistoryRoles(uint agentId) public view returns (string[] memory) {
         string[] memory roles = new string[](agentRuns[agentId].messages.length);
         for (uint i = 0; i < agentRuns[agentId].messages.length; i++) {
@@ -173,10 +210,17 @@ contract Agent {
         return roles;
     }
 
+    // @notice Checks if a given agent run is finished
+    // @param runId The ID of the agent run
+    // @return True if the run is finished, false otherwise
     function isRunFinished(uint runId) public view returns (bool) {
         return agentRuns[runId].is_finished;
     }
 
+    // @notice Compares two strings for equality
+    // @param a The first string
+    // @param b The second string
+    // @return True if the strings are equal, false otherwise
     function compareStrings(string memory a, string memory b) private pure returns (bool) {
         return (keccak256(abi.encodePacked((a))) == keccak256(abi.encodePacked((b))));
     }
