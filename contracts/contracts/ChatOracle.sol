@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-// Uncomment the line below to use console.log
+// Uncomment this line to use console.log
 // import "hardhat/console.sol";
 import "./interfaces/IChatGpt.sol";
 import "./interfaces/IOracle.sol";
@@ -144,7 +144,7 @@ contract ChatOracle is IOracle {
     }
 
     modifier onlyOwner() {
-        require(msg.sender == owner, "Caller is not the owner");
+        require(msg.sender == owner, "Caller is not owner");
         _;
     }
 
