@@ -66,3 +66,4 @@ If you have any questions about Galadriel, feel free to do:
 
 * [Join our Discord](https://discord.com/invite/bHnFgSTKrP) and ask for help.
 * Report bugs or feature requests in [GitHub issues](https://github.com/galadriel-ai/contracts/issues).
+.
