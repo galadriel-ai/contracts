@@ -5,6 +5,8 @@ pragma solidity ^0.8.9;
 // import "hardhat/console.sol";
 import "./interfaces/IOracle.sol";
 
+// @title ChatGpt
+// @notice This contract handles chat interactions and integrates with teeML oracle for LLM and knowledge base queries.
 contract ChatGpt {
 
     struct Message {
@@ -18,39 +20,56 @@ contract ChatGpt {
         uint messagesCount;
     }
 
+    // @notice Mapping from chat ID to ChatRun
     mapping(uint => ChatRun) public chatRuns;
     uint private chatRunsCount;
 
+    // @notice Event emitted when a new chat is created
     event ChatCreated(address indexed owner, uint indexed chatId);
 
+    // @notice Address of the contract owner
     address private owner;
+    
+    // @notice Address of the oracle contract
     address public oracleAddress;
+    
+    // @notice CID of the knowledge base
     string public knowledgeBase;
 
+    // @notice Event emitted when the oracle address is updated
     event OracleAddressUpdated(address indexed newOracleAddress);
 
+    // @param initialOracleAddress Initial address of the oracle contract
+    // @param knowledgeBaseCID CID of the initial knowledge base
     constructor(address initialOracleAddress, string memory knowledgeBaseCID) {
         owner = msg.sender;
         oracleAddress = initialOracleAddress;
         knowledgeBase = knowledgeBaseCID;
     }
 
+    // @notice Ensures the caller is the contract owner
     modifier onlyOwner() {
         require(msg.sender == owner, "Caller is not owner");
         _;
     }
 
+    // @notice Ensures the caller is the oracle contract
     modifier onlyOracle() {
         require(msg.sender == oracleAddress, "Caller is not oracle");
         _;
     }
 
+    // @notice Sets a new oracle address
+    // @param newOracleAddress The new oracle address
     function setOracleAddress(address newOracleAddress) public onlyOwner {
         oracleAddress = newOracleAddress;
         emit OracleAddressUpdated(newOracleAddress);
     }
 
-    function startChat(string memory message) public returns (uint i) {
+    // @notice Starts a new chat
+    // @param message The initial message to start the chat with
+    // @return The ID of the newly created chat
+    function startChat(string memory message) public returns (uint) {
         ChatRun storage run = chatRuns[chatRunsCount];
 
         run.owner = msg.sender;
@@ -61,7 +80,7 @@ contract ChatGpt {
         run.messagesCount = 1;
 
         uint currentId = chatRunsCount;
-        chatRunsCount = chatRunsCount + 1;
+        chatRunsCount++;
 
         // If there is a knowledge base, create a knowledge base query
         if (bytes(knowledgeBase).length > 0) {
@@ -80,6 +99,10 @@ contract ChatGpt {
         return currentId;
     }
 
+    // @notice Handles the response from the oracle for an LLM call
+    // @param runId The ID of the chat run
+    // @param response The response from the oracle
+    // @dev Called by teeML oracle
     function onOracleLlmResponse(
         uint runId,
         string memory response,
@@ -98,9 +121,13 @@ contract ChatGpt {
         run.messagesCount++;
     }
 
+    // @notice Handles the response from the oracle for a knowledge base query
+    // @param runId The ID of the chat run
+    // @param documents The array of retrieved documents
+    // @dev Called by teeML oracle
     function onOracleKnowledgeBaseQueryResponse(
         uint runId,
-        string [] memory documents,
+        string[] memory documents,
         string memory /*errorMessage*/
     ) public onlyOracle {
         ChatRun storage run = chatRuns[runId];
@@ -131,6 +158,9 @@ contract ChatGpt {
         IOracle(oracleAddress).createLlmCall(runId);
     }
 
+    // @notice Adds a new message to an existing chat run
+    // @param message The new message to add
+    // @param runId The ID of the chat run
     function addMessage(string memory message, uint runId) public {
         ChatRun storage run = chatRuns[runId];
         require(
@@ -160,6 +190,10 @@ contract ChatGpt {
         }
     }
 
+    // @notice Retrieves the message history contents of a chat run
+    // @param chatId The ID of the chat run
+    // @return An array of message contents
+    // @dev Called by teeML oracle
     function getMessageHistoryContents(uint chatId) public view returns (string[] memory) {
         string[] memory messages = new string[](chatRuns[chatId].messages.length);
         for (uint i = 0; i < chatRuns[chatId].messages.length; i++) {
@@ -168,6 +202,10 @@ contract ChatGpt {
         return messages;
     }
 
+    // @notice Retrieves the roles of the messages in a chat run
+    // @param chatId The ID of the chat run
+    // @return An array of message roles
+    // @dev Called by teeML oracle
     function getMessageHistoryRoles(uint chatId) public view returns (string[] memory) {
         string[] memory roles = new string[](chatRuns[chatId].messages.length);
         for (uint i = 0; i < chatRuns[chatId].messages.length; i++) {
