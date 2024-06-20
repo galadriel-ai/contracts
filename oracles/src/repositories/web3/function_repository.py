@@ -45,7 +45,7 @@ class Web3FunctionRepository(Web3BaseRepository):
                 function_input=function_input,
             )
         except ContractLogicError as e:
-            print(f"Error getting function call {i}: {e.message}", flush=True)
+            print(f"Error getting function call {i}: {e}", flush=True)
             self.metrics["functions_read_errors"] += 1
             return None
 

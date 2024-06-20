@@ -52,7 +52,7 @@ class Web3KnowledgeBaseRepository(Web3BaseRepository):
                 is_processed=is_processed,
             )
         except ContractLogicError as e:
-            print(f"Error getting knowledge base indexing request {i}: {e.message}")
+            print(f"Error getting knowledge base indexing request {i}: {e}")
             return None
 
     async def _index_new_kb_index_requests(self):
@@ -179,7 +179,7 @@ class Web3KnowledgeBaseRepository(Web3BaseRepository):
                 num_documents=num_documents,
             )
         except ContractLogicError as e:
-            print(f"Error getting knowledge base query {i}: {e.message}")
+            print(f"Error getting knowledge base query {i}: {e}")
             return None
 
     async def _index_new_kb_queries(self):

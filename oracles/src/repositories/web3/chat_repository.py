@@ -58,7 +58,7 @@ class Web3ChatRepository(Web3BaseRepository):
             elif prompt_type == PromptType.GROQ:
                 config = await self._get_groq_config(i)
         except Exception as e:
-            print(f"Error getting chat {i} configuration: {e.message}", flush=True)
+            print(f"Error getting chat {i} configuration: {e}", flush=True)
             self.metrics["chats_configuration_errors"] += 1
             return None
 
@@ -84,7 +84,7 @@ class Web3ChatRepository(Web3BaseRepository):
                         }
                     )
         except Exception as e:
-            print(f"Error getting chat {i} history: {e.message}", flush=True)
+            print(f"Error getting chat {i} history: {e}", flush=True)
             self.metrics["chats_history_read_errors"] += 1
             return None
 
