@@ -21,6 +21,8 @@ async def _get_config(model: str) -> GroqConfig:
         temperature=0.0,
         top_p=1.0,
         user=None,
+        tools=None,
+        tool_choice=None,
     )
 
 

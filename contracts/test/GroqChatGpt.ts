@@ -38,7 +38,47 @@ describe("GroqChatGpt", function () {
       await chatGpt.startChat("Hello");
       // promptId: 0, callbackId: 0
       const groqConf = await oracle.groqConfigurations(0)
-      expect(groqConf.toString()).to.equal("mixtral-8x7b-32768,21,,1000,21,{\"type\":\"text\"},0,,10,101,")
+      const tools = [
+        {
+          "type": "function",
+          "function": {
+            "name": "web_search",
+            "description": "Search the internet",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "Search query"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "code_interpreter",
+            "description": "Evaluates python code in a sandbox environment. The environment resets on every execution. You must send the whole script every time and print your outputs. Script should be pure python code that can be evaluated. It should be in python format NOT markdown. The code should NOT be wrapped in backticks. All python packages including requests, matplotlib, scipy, numpy, pandas, etc are available. Output can only be read from stdout, and stdin. Do not use things like plot.show() as it will not work. print() any output and results so you can capture the output.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "The pure python script to be evaluated. The contents will be in main.py. It should not be in markdown format."
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        }
+      ];
+      expect(groqConf.toString()).to.equal(`mixtral-8x7b-32768,21,,1000,21,{\"type\":\"text\"},0,,10,101,${JSON.stringify(tools)},auto,`)
     });
     it("Oracle can add response", async () => {
       const {chatGpt, oracle, allSigners} = await loadFixture(deploy);
@@ -51,6 +91,8 @@ describe("GroqChatGpt", function () {
       const response = {
         id: "responseId",
         content: "Hi!",
+        functionName: "functionNameHere",
+        functionArguments: "functionArgumentsHere",
         created: 1618888901, // Example UNIX timestamp
         model: "mixtral-8x7b-32768",
         systemFingerprint: "systemFingerprintHere",

@@ -87,6 +87,8 @@ async def _generate_groq_with_params(chat: Chat) -> Optional[GroqChatCompletion]
         stop=chat.config.stop,
         temperature=chat.config.temperature,
         top_p=chat.config.top_p,
+        tools=chat.config.tools,
+        tool_choice=chat.config.tool_choice,
         user=chat.config.user,
     )
     assert (

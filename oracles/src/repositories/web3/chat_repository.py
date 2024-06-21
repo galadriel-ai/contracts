@@ -263,7 +263,13 @@ class Web3ChatRepository(Web3BaseRepository):
                 stop=_value_or_none(config[7]),
                 temperature=_parse_float_from_int(config[8], 0, 20),
                 top_p=_parse_float_from_int(config[9], 0, 100, decimals=2),
-                user=_value_or_none(config[10]),
+                tools=_parse_tools(config[10]),
+                tool_choice=(
+                    config[11]
+                    if (config[11] and config[11] in get_args(OpenaiToolChoiceType))
+                    else None
+                ),
+                user=_value_or_none(config[12]),
             )
         except:
             return None
@@ -374,6 +380,8 @@ def _format_groq_response(completion: Optional[GroqChatCompletion]) -> Dict:
         return {
             "id": "",
             "content": "",
+            "functionName": "",
+            "functionArguments": "",
             "created": 0,
             "model": "",
             "systemFingerprint": "",
@@ -386,6 +394,10 @@ def _format_groq_response(completion: Optional[GroqChatCompletion]) -> Dict:
     return {
         "id": completion.id,
         "content": choice.content if choice.content else "",
+        "functionName": choice.tool_calls[0].function.name if choice.tool_calls else "",
+        "functionArguments": (
+            choice.tool_calls[0].function.arguments if choice.tool_calls else ""
+        ),
         "created": completion.created,
         "model": completion.model,
         "systemFingerprint": completion.system_fingerprint or "",

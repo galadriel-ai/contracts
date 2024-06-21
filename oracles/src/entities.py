@@ -56,6 +56,8 @@ class GroqConfig:
     stop: Optional[str]
     temperature: Optional[float]
     top_p: Optional[float]
+    tools: Optional[List[ChatCompletionToolParam]]
+    tool_choice: Optional[OpenaiToolChoiceType]
     user: Optional[str]
 
 

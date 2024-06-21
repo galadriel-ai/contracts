@@ -81,13 +81,19 @@ interface IOracle {
         uint temperature;
         // 0-100  percentage, > 100 for null
         uint topP;
+        string tools;
+        // "none", "auto" or empty str which defaults to auto on OpenAI side
+        string toolChoice;
         string user;
     }
 
     struct GroqResponse {
         string id;
 
+        // either content is an empty str or functionName and functionArguments
         string content;
+        string functionName;
+        string functionArguments;
 
         uint64 created;
         string model;

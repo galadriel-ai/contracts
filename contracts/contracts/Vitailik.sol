@@ -66,6 +66,8 @@ contract Vitailik {
         stop : "", // null
         temperature : 21, // Example temperature (scaled up, 10 means 1.0), > 20 means null
         topP : 101, // Percentage 0-100, > 100 means null
+        tools : "",
+        toolChoice : "", // "none" or "auto"
         user : "" // null
         });
     }
