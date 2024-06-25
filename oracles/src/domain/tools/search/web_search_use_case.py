@@ -27,13 +27,3 @@ async def execute(query: str) -> WebSearchResult:
             result="",
             error=str(e),
         )
-
-
-if __name__ == "__main__":
-    import asyncio
-
-    async def main():
-        result = await execute("varazdin current weather")
-        print(result)
-
-    asyncio.run(main())
