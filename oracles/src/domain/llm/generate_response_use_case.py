@@ -14,7 +14,6 @@ from src.domain.llm.entities import LLMResult
 from src.domain.llm.utils import TIMEOUT
 
 
-
 async def execute(chat: Chat) -> LLMResult:
     try:
         if not chat.config or chat.prompt_type == PromptType.DEFAULT:
