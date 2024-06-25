@@ -5,6 +5,11 @@
         "internalType": "address",
         "name": "initialOracleAddress",
         "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "knowledgeBaseCID",
+        "type": "string"
       }
     ],
     "stateMutability": "nonpayable",
@@ -123,6 +128,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "knowledgeBase",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -132,6 +150,114 @@
       {
         "internalType": "string",
         "name": "response",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "errorMessage",
+        "type": "string"
+      }
+    ],
+    "name": "onOracleFunctionResponse",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "runId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string[]",
+        "name": "documents",
+        "type": "string[]"
+      },
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "name": "onOracleKnowledgeBaseQueryResponse",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "runId",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "string",
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "content",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "functionName",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "functionArguments",
+            "type": "string"
+          },
+          {
+            "internalType": "uint64",
+            "name": "created",
+            "type": "uint64"
+          },
+          {
+            "internalType": "string",
+            "name": "model",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "systemFingerprint",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "object",
+            "type": "string"
+          },
+          {
+            "internalType": "uint32",
+            "name": "completionTokens",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "promptTokens",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "totalTokens",
+            "type": "uint32"
+          }
+        ],
+        "internalType": "struct IOracle.LlmResponse",
+        "name": "response",
+        "type": "tuple"
+      },
+      {
+        "internalType": "string",
+        "name": "errorMessage",
         "type": "string"
       }
     ],
@@ -178,11 +304,30 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "i",
+        "name": "",
         "type": "uint256"
       }
     ],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "toolRunning",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   }
 ]

@@ -33,6 +33,9 @@ contract GroqChatGpt {
     // @notice Address of the oracle contract
     address public oracleAddress;
 
+    // @notice Mapping from chat ID to the tool currently running
+    mapping(uint => string) public toolRunning;
+
     // @notice Event emitted when the oracle address is updated
     event OracleAddressUpdated(address indexed newOracleAddress);
 
@@ -124,15 +127,17 @@ contract GroqChatGpt {
             run.messages.push(newMessage);
             run.messagesCount++;
         } else {
-            if (compareStrings(response.content, "")) {
+            if (!compareStrings(response.functionName, "")) {
+                toolRunning[runId] = response.functionName;
                 IOracle(oracleAddress).createFunctionCall(runId, response.functionName, response.functionArguments);
             } else {
-                Message memory newMessage;
-                newMessage.role = "assistant";
-                newMessage.content = response.content;
-                run.messages.push(newMessage);
-                run.messagesCount++;
+                toolRunning[runId] = "";
             }
+            Message memory newMessage;
+            newMessage.role = "assistant";
+            newMessage.content = response.content;
+            run.messages.push(newMessage);
+            run.messagesCount++;
         }
     }
 
@@ -146,11 +151,11 @@ contract GroqChatGpt {
         string memory response,
         string memory errorMessage
     ) public onlyOracle {
-        ChatRun storage run = chatRuns[runId];
         require(
-            compareStrings(run.messages[run.messagesCount - 1].role, "user"),
+            !compareStrings(toolRunning[runId], ""),
             "No function to respond to"
         );
+        ChatRun storage run = chatRuns[runId];
         if (compareStrings(errorMessage, "")) {
             Message memory newMessage;
             newMessage.role = "user";

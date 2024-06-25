@@ -106,6 +106,54 @@ interface IOracle {
         uint32 totalTokens;
     }
 
+ struct LlmRequest {
+        // "gpt-4-turbo", "gpt-4-turbo-preview" or "gpt-3.5-turbo-1106"
+        string model;
+        // int -20 - 20, Mapped to float -2.0 - 2.0. If bigger than 20 then null
+        int8 frequencyPenalty;
+        // JSON string or empty string
+        string logitBias;
+        // 0 for null
+        uint32 maxTokens;
+        // int -20 - 20, Mapped to float -2.0 - 2.0. If bigger than 20 then null
+        int8 presencePenalty;
+        // JSON string or empty string
+        string responseFormat;
+        // 0 for null
+        uint seed;
+        // empty str for null
+        string stop;
+        // 0-20, > 20 for null
+        uint temperature;
+        // 0-100  percentage, > 100 for null
+        uint topP;
+        // JSON list for tools in OpenAI format, empty for null, names have to match the supported tools
+        string tools;
+        // "none", "auto" or empty str which defaults to auto on OpenAI side
+        string toolChoice;
+        string user;
+    }
+
+    struct LlmResponse {
+        string id;
+
+        // either content is an empty str or functionName and functionArguments
+        string content;
+        string functionName;
+        string functionArguments;
+
+        uint64 created;
+        string model;
+        string systemFingerprint;
+        // kind of pointless since its always "chat.completion"?
+        string object;
+
+        uint32 completionTokens;
+        uint32 promptTokens;
+        uint32 totalTokens;
+    }
+
+
     struct KnowledgeBaseQueryRequest {
         string cid;
         string query;
@@ -113,7 +161,8 @@ interface IOracle {
     }
 
     function createLlmCall(
-        uint promptId
+        uint promptId,
+        LlmRequest memory request
     ) external returns (uint);
 
     function createGroqLlmCall(

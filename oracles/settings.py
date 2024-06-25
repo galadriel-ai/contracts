@@ -7,6 +7,7 @@ ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
 
 OPEN_AI_API_KEY = os.getenv("OPEN_AI_API_KEY")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 
 SERPER_API_KEY = os.getenv("SERPER_API_KEY")
 

@@ -10,8 +10,41 @@ from openai.types.chat import ChatCompletionToolParam
 
 ALLOWED_FUNCTION_NAMES = ["image_generation", "web_search", "code_interpreter"]
 
-OpenAiModelType = Literal["gpt-4o", "gpt-4-turbo", "gpt-4-turbo-preview", "gpt-3.5-turbo-1106"]
-
+OpenAiModelType = Literal[
+    "gpt-4o", "gpt-4-turbo", "gpt-4-turbo-preview", "gpt-3.5-turbo-1106"
+]
+GroqModelType = Literal[
+    "llama3-8b-8192", "llama3-70b-8192", "mixtral-8x7b-32768", "gemma-7b-it"
+]
+AnthropicModelType = Literal[
+    "claude-3-5-sonnet-20240620",
+    "claude-3-opus-20240229",
+    "claude-3-sonnet-20240229",
+    "claude-3-haiku-20240307",
+    "claude-2.1",
+    "claude-2.0",
+    "claude-instant-1.2",
+]
+LlmModelType = Literal[
+    # OpenAI models
+    "gpt-4o", 
+    "gpt-4-turbo", 
+    "gpt-4-turbo-preview", 
+    "gpt-3.5-turbo-1106", 
+    # Groq models
+    "llama3-8b-8192",
+    "llama3-70b-8192",
+    "mixtral-8x7b-32768",
+    "gemma-7b-it",
+    # Anthropic models 
+    "claude-3-5-sonnet-20240620",
+    "claude-3-opus-20240229",
+    "claude-3-sonnet-20240229",
+    "claude-3-haiku-20240307",
+    "claude-2.1",
+    "claude-2.0",
+    "claude-instant-1.2",
+]
 
 class PromptType(str, Enum):
     DEFAULT = "default"
@@ -21,7 +54,24 @@ class PromptType(str, Enum):
 
 PromptTypeLiteral = Literal[PromptType.DEFAULT, PromptType.OPENAI, PromptType.GROQ]
 
-OpenaiToolChoiceType = Literal["none", "auto"]
+ToolChoiceType = Literal["none", "auto"]
+
+
+@dataclass
+class LlmConfig:
+    model: LlmModelType
+    frequency_penalty: Optional[float]
+    logit_bias: Optional[Dict]
+    max_tokens: Optional[int]
+    presence_penalty: Optional[float]
+    response_format: Optional[Union[str, Dict]]
+    seed: Optional[int]
+    stop: Optional[str]
+    temperature: Optional[float]
+    top_p: Optional[float]
+    tools: Optional[List[ChatCompletionToolParam]]
+    tool_choice: Optional[ToolChoiceType]
+    user: Optional[str]
 
 
 @dataclass
@@ -37,11 +87,8 @@ class OpenAiConfig:
     temperature: Optional[float]
     top_p: Optional[float]
     tools: Optional[List[ChatCompletionToolParam]]
-    tool_choice: Optional[OpenaiToolChoiceType]
+    tool_choice: Optional[ToolChoiceType]
     user: Optional[str]
-
-
-GroqModelType = Literal["llama3-8b-8192", "llama3-70b-8192", "mixtral-8x7b-32768", "gemma-7b-it"]
 
 
 @dataclass
@@ -57,7 +104,7 @@ class GroqConfig:
     temperature: Optional[float]
     top_p: Optional[float]
     tools: Optional[List[ChatCompletionToolParam]]
-    tool_choice: Optional[OpenaiToolChoiceType]
+    tool_choice: Optional[ToolChoiceType]
     user: Optional[str]
 
 
@@ -67,8 +114,8 @@ class Chat:
     callback_id: int
     is_processed: bool
     prompt_type: PromptTypeLiteral
-    config: Optional[Union[OpenAiConfig, GroqConfig]]
     messages: List[dict]
+    config: Optional[LlmConfig] = None
     response: Optional[Union[str, ChatCompletion]] = None
     error_message: Optional[str] = None
     transaction_receipt: dict = None

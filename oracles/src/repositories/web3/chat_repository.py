@@ -9,7 +9,6 @@ from groq.types.chat import ChatCompletion as GroqChatCompletion
 from openai.types.chat import ChatCompletion
 from openai.types.chat import ChatCompletionToolParam
 from pydantic import TypeAdapter
-from web3.exceptions import ContractLogicError
 
 import settings
 from src.entities import ALLOWED_FUNCTION_NAMES
@@ -18,7 +17,9 @@ from src.entities import GroqConfig
 from src.entities import GroqModelType
 from src.entities import OpenAiConfig
 from src.entities import OpenAiModelType
-from src.entities import OpenaiToolChoiceType
+from src.entities import ToolChoiceType
+from src.entities import LlmConfig
+from src.entities import LlmModelType
 from src.entities import PromptType
 from src.repositories.web3.base import Web3BaseRepository
 
@@ -57,6 +58,8 @@ class Web3ChatRepository(Web3BaseRepository):
                 )
             elif prompt_type == PromptType.GROQ:
                 config = await self._get_groq_config(i)
+            else:
+                config = await self._get_llm_config(i)
         except Exception as e:
             print(f"Error getting chat {i} configuration: {e}", flush=True)
             self.metrics["chats_configuration_errors"] += 1
@@ -213,10 +216,39 @@ class Web3ChatRepository(Web3BaseRepository):
             tx = await self.oracle_contract.functions.addResponse(
                 chat.id,
                 chat.callback_id,
-                chat.response,
+                _format_llm_response(chat.response),
                 chat.error_message,
             ).build_transaction(tx_data)
         return tx
+
+    async def _get_llm_config(self, i: int) -> Optional[LlmConfig]:
+        config = await self.oracle_contract.functions.llmConfigurations(i).call()
+        if not config or not config[0] or not config[0] in get_args(LlmModelType):
+            print(config[0])
+            return None
+        try:
+            return LlmConfig(
+                model=config[0],
+                frequency_penalty=_parse_float_from_int(config[1], -20, 20),
+                logit_bias=_parse_json_string(config[2]),
+                # Check max value?
+                max_tokens=_value_or_none(config[3]),
+                presence_penalty=_parse_float_from_int(config[4], -20, 20),
+                response_format=_get_response_format(config[5]),
+                seed=_value_or_none(config[6]),
+                stop=_value_or_none(config[7]),
+                temperature=_parse_float_from_int(config[8], 0, 20),
+                top_p=_parse_float_from_int(config[9], 0, 100, decimals=2),
+                tools=_parse_tools(config[10]),
+                tool_choice=(
+                    config[11]
+                    if (config[11] and config[11] in get_args(ToolChoiceType))
+                    else None
+                ),
+                user=_value_or_none(config[12]),
+            )
+        except:
+            return None
 
     async def _get_openai_config(self, i: int) -> Optional[OpenAiConfig]:
         config = await self.oracle_contract.functions.openAiConfigurations(i).call()
@@ -238,7 +270,7 @@ class Web3ChatRepository(Web3BaseRepository):
                 tools=_parse_tools(config[10]),
                 tool_choice=(
                     config[11]
-                    if (config[11] and config[11] in get_args(OpenaiToolChoiceType))
+                    if (config[11] and config[11] in get_args(ToolChoiceType))
                     else None
                 ),
                 user=_value_or_none(config[12]),
@@ -266,7 +298,7 @@ class Web3ChatRepository(Web3BaseRepository):
                 tools=_parse_tools(config[10]),
                 tool_choice=(
                     config[11]
-                    if (config[11] and config[11] in get_args(OpenaiToolChoiceType))
+                    if (config[11] and config[11] in get_args(ToolChoiceType))
                     else None
                 ),
                 user=_value_or_none(config[12]),
@@ -341,8 +373,40 @@ def _get_response_format(value: Optional[str]):
         return parsed
     return None
 
+def _format_llm_response(completion: Optional[ChatCompletion]) -> Dict:
+    if not completion:
+        return {
+            "id": "",
+            "content": "",
+            "functionName": "",
+            "functionArguments": "",
+            "created": 0,
+            "model": "",
+            "systemFingerprint": "",
+            "object": "",
+            "completionTokens": 0,
+            "promptTokens": 0,
+            "totalTokens": 0,
+        }
+    choice = completion.choices[0].message
+    return {
+        "id": completion.id,
+        "content": choice.content if choice.content else "",
+        "functionName": choice.tool_calls[0].function.name if choice.tool_calls else "",
+        "functionArguments": (
+            choice.tool_calls[0].function.arguments if choice.tool_calls else ""
+        ),
+        "created": completion.created,
+        "model": completion.model,
+        "systemFingerprint": completion.system_fingerprint or "",
+        "object": completion.object,
+        "completionTokens": completion.usage.completion_tokens,
+        "promptTokens": completion.usage.prompt_tokens,
+        "totalTokens": completion.usage.total_tokens,
+    }
 
 def _format_openai_response(completion: Optional[ChatCompletion]) -> Dict:
+    print(completion)
     if not completion:
         return {
             "id": "",

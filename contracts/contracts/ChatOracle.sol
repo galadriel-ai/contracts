@@ -43,6 +43,9 @@ contract ChatOracle is IOracle {
     // @dev Default is OpenAI
     mapping(uint => string) public promptType;
 
+    // @notice Mapping of prompt ID to the LLM configuration
+    mapping(uint => IOracle.LlmRequest) public llmConfigurations;
+
     // @notice Mapping of prompt ID to the OpenAI configuration
     mapping(uint => IOracle.OpenAiRequest) public openAiConfigurations;
 
@@ -178,7 +181,7 @@ contract ChatOracle is IOracle {
     // @notice Creates a new LLM call
     // @param promptCallbackId The callback ID for the LLM call
     // @return The ID of the created prompt
-    function createLlmCall(uint promptCallbackId) public returns (uint) {
+    function createLlmCall(uint promptCallbackId, IOracle.LlmRequest memory request) public returns (uint) {
         uint promptId = promptsCount;
         callbackAddresses[promptId] = msg.sender;
         promptCallbackIds[promptId] = promptCallbackId;
@@ -187,6 +190,7 @@ contract ChatOracle is IOracle {
 
         promptsCount++;
 
+        llmConfigurations[promptId] = request;
         emit PromptAdded(promptId, promptCallbackId, msg.sender);
 
         return promptId;
@@ -201,7 +205,7 @@ contract ChatOracle is IOracle {
     function addResponse(
         uint promptId,
         uint promptCallBackId,
-        string memory response,
+        IOracle.LlmResponse memory response,
         string memory errorMessage
     ) public onlyWhitelisted {
         require(!isPromptProcessed[promptId], "Prompt already processed");

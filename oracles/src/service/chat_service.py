@@ -50,9 +50,7 @@ async def _answer_chat(
             print(f"Answering chat {chat.id}", flush=True)
             await _cache_ipfs_urls(chat, ipfs_repository)
             if chat.response is None:
-                response = await generate_response_use_case.execute(
-                    "gpt-4-turbo-preview", chat
-                )
+                response = await generate_response_use_case.execute(chat)
                 chat.response = response.chat_completion
                 chat.error_message = response.error
 
@@ -75,6 +73,6 @@ async def _cache_ipfs_urls(chat: Chat, ipfs_repository: IpfsRepository):
                 if image_url and image_url.startswith("ipfs://"):
                     cached_url = await cache_ipfs_on_gcp_cache_use_case.execute(
                         image_url,
-                        ipfs_repository, 
+                        ipfs_repository,
                     )
                     content["image_url"]["url"] = cached_url

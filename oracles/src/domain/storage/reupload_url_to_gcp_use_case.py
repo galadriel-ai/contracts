@@ -8,6 +8,7 @@ from urllib.parse import urlparse, unquote
 from src.domain.storage import upload_to_gcp_use_case
 from src.domain.storage.entities import UploadToGCPRequest
 
+
 async def execute(download_url: str) -> Optional[str]:
     # don't reupload to GCP if we are in local environment
     if settings.ENVIRONMENT == "local":

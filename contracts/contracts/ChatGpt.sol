@@ -32,9 +32,15 @@ contract ChatGpt {
     
     // @notice Address of the oracle contract
     address public oracleAddress;
+
+    // @notice Configuration for the LLM request
+    IOracle.LlmRequest private config;
     
     // @notice CID of the knowledge base
     string public knowledgeBase;
+
+    // @notice Mapping from chat ID to the tool currently running
+    mapping(uint => string) public toolRunning;
 
     // @notice Event emitted when the oracle address is updated
     event OracleAddressUpdated(address indexed newOracleAddress);
@@ -45,6 +51,22 @@ contract ChatGpt {
         owner = msg.sender;
         oracleAddress = initialOracleAddress;
         knowledgeBase = knowledgeBaseCID;
+
+        config = IOracle.LlmRequest({
+            model : "claude-3-5-sonnet-20240620",
+            frequencyPenalty : 21, // > 20 for null
+            logitBias : "", // empty str for null
+            maxTokens : 1000, // 0 for null
+            presencePenalty : 21, // > 20 for null
+            responseFormat : "{\"type\":\"text\"}",
+            seed : 0, // null
+            stop : "", // null
+            temperature : 10, // Example temperature (scaled up, 10 means 1.0), > 20 means null
+            topP : 101, // Percentage 0-100, > 100 means null
+            tools : "[{\"type\":\"function\",\"function\":{\"name\":\"web_search\",\"description\":\"Search the internet\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"Search query\"}},\"required\":[\"query\"]}}},{\"type\":\"function\",\"function\":{\"name\":\"code_interpreter\",\"description\":\"Evaluates python code in a sandbox environment. The environment resets on every execution. You must send the whole script every time and print your outputs. Script should be pure python code that can be evaluated. It should be in python format NOT markdown. The code should NOT be wrapped in backticks. All python packages including requests, matplotlib, scipy, numpy, pandas, etc are available. Output can only be read from stdout, and stdin. Do not use things like plot.show() as it will not work. print() any output and results so you can capture the output.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"code\":{\"type\":\"string\",\"description\":\"The pure python script to be evaluated. The contents will be in main.py. It should not be in markdown format.\"}},\"required\":[\"code\"]}}}]",
+            toolChoice : "auto", // "none" or "auto"
+            user : "" // null
+        });
     }
 
     // @notice Ensures the caller is the contract owner
@@ -92,7 +114,7 @@ contract ChatGpt {
             );
         } else {
             // Otherwise, create an LLM call
-            IOracle(oracleAddress).createLlmCall(currentId);
+            IOracle(oracleAddress).createLlmCall(currentId, config);
         }
         emit ChatCreated(msg.sender, currentId);
 
@@ -105,8 +127,8 @@ contract ChatGpt {
     // @dev Called by teeML oracle
     function onOracleLlmResponse(
         uint runId,
-        string memory response,
-        string memory /*errorMessage*/
+        IOracle.LlmResponse memory response,
+        string memory errorMessage
     ) public onlyOracle {
         ChatRun storage run = chatRuns[runId];
         require(
@@ -115,10 +137,48 @@ contract ChatGpt {
         );
 
         Message memory newMessage;
-        newMessage.content = response;
-        newMessage.role = "assistant";
-        run.messages.push(newMessage);
-        run.messagesCount++;
+        if (!compareStrings(errorMessage, "")) {
+            newMessage.role = "assistant";
+            newMessage.content = errorMessage;
+            run.messages.push(newMessage);
+            run.messagesCount++;
+        } else {
+            if (!compareStrings(response.functionName, "")) {
+                toolRunning[runId] = response.functionName;
+                IOracle(oracleAddress).createFunctionCall(runId, response.functionName, response.functionArguments);
+            } else {
+                toolRunning[runId] = "";
+            }
+            newMessage.role = "assistant";
+            newMessage.content = response.content;
+            run.messages.push(newMessage);
+            run.messagesCount++;
+        }
+    }
+
+    // @notice Handles the response from the oracle for a function call
+    // @param runId The ID of the chat run
+    // @param response The response from the oracle
+    // @param errorMessage Any error message
+    // @dev Called by teeML oracle
+    function onOracleFunctionResponse(
+        uint runId,
+        string memory response,
+        string memory errorMessage
+    ) public onlyOracle {
+        require(
+            !compareStrings(toolRunning[runId], ""),
+            "No function to respond to"
+        );
+        ChatRun storage run = chatRuns[runId];
+        if (compareStrings(errorMessage, "")) {
+            Message memory newMessage;
+            newMessage.role = "user";
+            newMessage.content = response;
+            run.messages.push(newMessage);
+            run.messagesCount++;
+            IOracle(oracleAddress).createLlmCall(runId, config);
+        }
     }
 
     // @notice Handles the response from the oracle for a knowledge base query
@@ -155,7 +215,7 @@ contract ChatGpt {
         lastMessage.content = newContent;
 
         // Call LLM
-        IOracle(oracleAddress).createLlmCall(runId);
+        IOracle(oracleAddress).createLlmCall(runId, config);
     }
 
     // @notice Adds a new message to an existing chat run
@@ -186,7 +246,7 @@ contract ChatGpt {
             );
         } else {
             // Otherwise, create an LLM call
-            IOracle(oracleAddress).createLlmCall(runId);
+            IOracle(oracleAddress).createLlmCall(runId, config);
         }
     }
 
@@ -212,5 +272,13 @@ contract ChatGpt {
             roles[i] = chatRuns[chatId].messages[i].role;
         }
         return roles;
+    }
+
+    // @notice Compares two strings for equality
+    // @param a The first string
+    // @param b The second string
+    // @return True if the strings are equal, false otherwise
+    function compareStrings(string memory a, string memory b) private pure returns (bool) {
+        return (keccak256(abi.encodePacked((a))) == keccak256(abi.encodePacked((b))));
     }
 }
