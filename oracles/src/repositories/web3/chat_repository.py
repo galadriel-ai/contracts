@@ -224,7 +224,6 @@ class Web3ChatRepository(Web3BaseRepository):
     async def _get_llm_config(self, i: int) -> Optional[LlmConfig]:
         config = await self.oracle_contract.functions.llmConfigurations(i).call()
         if not config or not config[0] or not config[0] in get_args(LlmModelType):
-            print(config[0])
             return None
         try:
             return LlmConfig(
@@ -406,7 +405,6 @@ def _format_llm_response(completion: Optional[ChatCompletion]) -> Dict:
     }
 
 def _format_openai_response(completion: Optional[ChatCompletion]) -> Dict:
-    print(completion)
     if not completion:
         return {
             "id": "",

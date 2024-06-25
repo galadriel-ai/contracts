@@ -7,6 +7,20 @@ interface FunctionResponse {
   error: string,
 }
 
+task("llm", "Calls an LLM")
+  .addParam("contractAddress", "The address of the Test contract")
+  .addParam("model", "The model to use")
+  .addParam("message", "The message to send to the model")
+  .setAction(async (taskArgs, hre) => {
+    const contractAddress = taskArgs.contractAddress;
+    const model = taskArgs.model;
+    const message = taskArgs.message;
+
+    const contract = await getContract("Test", contractAddress, hre);
+    const response = await queryLLM(contract, model, message, hre);
+    return checkResult(response);
+  });
+
 task("openai", "Calls the OpenAI LLM")
   .addParam("contractAddress", "The address of the Test contract")
   .addParam("model", "The model to use")
@@ -131,6 +145,29 @@ async function getContract(
   const signer = (await hre.ethers.getSigners())[0];
   const ContractArtifact = await hre.artifacts.readArtifact(name);
   return new hre.ethers.Contract(contractAddress, ContractArtifact.abi, signer);
+}
+
+async function queryLLM(
+  contract: Contract,
+  model: string,
+  message: string,
+  hre: HardhatRuntimeEnvironment
+): Promise<FunctionResponse> {
+  try {
+    const txResponse = await contract.callLLM(model, message);
+    await txResponse.wait();
+    let response = await contract.lastResponse();
+    let error = await contract.lastError();
+    while (response.length === 0 && error.length === 0) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      response = await contract.lastResponse();
+      error = await contract.lastError();
+    }
+    return { response: response, error: error };
+  } catch (error) {
+    console.error(`Error calling contract function: ${error}`);
+  }
+  return { response: "", error: "Call failed" };
 }
 
 async function queryOpenAiLLM(

@@ -54,6 +54,36 @@ contract Test {
         return currentId;
     }
 
+    function callLLM(string memory model, string memory message) public returns (uint i) {
+        uint currentId = callsCount;
+        callsCount = currentId + 1;
+
+        llmMessage = message;
+        lastResponse = "";
+        lastError = "";
+    
+        IOracle(oracleAddress).createLlmCall(
+            currentId,
+            IOracle.LlmRequest({
+                model: model,
+                frequencyPenalty : 21, // > 20 for null
+                logitBias : "", // empty str for null
+                maxTokens : 1000, // 0 for null
+                presencePenalty : 21, // > 20 for null
+                responseFormat : "{\"type\":\"text\"}",
+                seed : 0, // null
+                stop : "", // null
+                temperature : 10, // Example temperature (scaled up, 10 means 1.0), > 20 means null
+                topP : 101, // Percentage 0-100, > 100 means null
+                tools : "",
+                toolChoice : "", // "none" or "auto"
+                user : "" // null
+            })
+        );
+
+        return currentId;
+    }
+
     function callOpenAiLLM(string memory model, string memory message) public returns (uint i) {
         uint currentId = callsCount;
         callsCount = currentId + 1;
@@ -209,6 +239,15 @@ contract Test {
             newContent = string(abi.encodePacked(newContent, documents[i], "\n"));
         }
         lastResponse = newContent;
+        lastError = errorMessage;
+    }
+
+    function onOracleLlmResponse(
+        uint /*runId*/,
+        IOracle.LlmResponse memory response,
+        string memory errorMessage
+    ) public onlyOracle {
+        lastResponse = response.content;
         lastError = errorMessage;
     }
 

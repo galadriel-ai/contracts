@@ -19,6 +19,7 @@ from anthropic import AsyncAnthropic, NOT_GIVEN
 from src.entities import Chat
 from src.entities import PromptType
 from src.entities import LlmConfig
+
 import settings
 
 
@@ -106,44 +107,3 @@ async def execute(chat: Chat) -> Optional[ChatCompletion]:
             total_tokens=message.usage.input_tokens + message.usage.output_tokens,
         ),
     )
-
-
-
-
-
-async def main():
-    chat = Chat(
-        messages=[
-            {
-                "role": "user",
-                "content": "Hello, Claude",
-            }
-        ],
-        config=LlmConfig(
-            model="claude-3-5-sonnet-20240620",
-            frequency_penalty=0.0,
-            logit_bias=None,
-            max_tokens=None,
-            presence_penalty=0.0,
-            response_format=None,
-            seed=None,
-            stop=None,
-            temperature=0.0,
-            top_p=1.0,
-            tools=None,
-            tool_choice=None,
-            user=None,
-        ),
-        prompt_type=PromptType.DEFAULT,
-        id=1,
-        callback_id=1,
-        is_processed=False,
-    )
-    result = await execute(chat=chat)
-    print(result)
-
-
-if __name__ == "__main__":
-    import asyncio
-
-    asyncio.run(main())
