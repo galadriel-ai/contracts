@@ -33,14 +33,11 @@ contract GroqChatGpt {
     // @notice Address of the oracle contract
     address public oracleAddress;
 
-    // @notice Mapping from chat ID to the tool currently running
-    mapping(uint => string) public toolRunning;
-
     // @notice Event emitted when the oracle address is updated
     event OracleAddressUpdated(address indexed newOracleAddress);
 
-    // @notice Configuration for the LLM request
-    IOracle.LlmRequest private config;
+    // @notice Configuration for the Groq request
+    IOracle.GroqRequest private config;
 
     // @param initialOracleAddress Initial address of the oracle contract
     constructor(address initialOracleAddress) {
@@ -48,7 +45,7 @@ contract GroqChatGpt {
         oracleAddress = initialOracleAddress;
         chatRunsCount = 0;
 
-        config = IOracle.LlmRequest({
+        config = IOracle.GroqRequest({
         model : "mixtral-8x7b-32768",
         frequencyPenalty : 21, // > 20 for null
         logitBias : "", // empty str for null
@@ -59,8 +56,6 @@ contract GroqChatGpt {
         stop : "", // null
         temperature : 10, // Example temperature (scaled up, 10 means 1.0), > 20 means null
         topP : 101, // Percentage 0-100, > 100 means null
-        tools : "[{\"type\":\"function\",\"function\":{\"name\":\"web_search\",\"description\":\"Search the internet\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"Search query\"}},\"required\":[\"query\"]}}},{\"type\":\"function\",\"function\":{\"name\":\"code_interpreter\",\"description\":\"Evaluates python code in a sandbox environment. The environment resets on every execution. You must send the whole script every time and print your outputs. Script should be pure python code that can be evaluated. It should be in python format NOT markdown. The code should NOT be wrapped in backticks. All python packages including requests, matplotlib, scipy, numpy, pandas, etc are available. Output can only be read from stdout, and stdin. Do not use things like plot.show() as it will not work. print() any output and results so you can capture the output.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"code\":{\"type\":\"string\",\"description\":\"The pure python script to be evaluated. The contents will be in main.py. It should not be in markdown format.\"}},\"required\":[\"code\"]}}}]",
-        toolChoice : "auto", // "none" or "auto"
         user : "" // null
         });
     }
@@ -99,20 +94,20 @@ contract GroqChatGpt {
         uint currentId = chatRunsCount;
         chatRunsCount = chatRunsCount + 1;
 
-        IOracle(oracleAddress).createLlmCall(currentId, config);
+        IOracle(oracleAddress).createGroqLlmCall(currentId, config);
         emit ChatCreated(msg.sender, currentId);
 
         return currentId;
     }
 
-    // @notice Handles the response from the oracle for an LLM call
+    // @notice Handles the response from the oracle for a Groq LLM call
     // @param runId The ID of the chat run
     // @param response The response from the oracle
     // @param errorMessage Any error message
     // @dev Called by teeML oracle
-    function onOracleLlmResponse(
+    function onOracleGroqLlmResponse(
         uint runId,
-        IOracle.LlmResponse memory response,
+        IOracle.GroqResponse memory response,
         string memory errorMessage
     ) public onlyOracle {
         ChatRun storage run = chatRuns[runId];
@@ -127,42 +122,11 @@ contract GroqChatGpt {
             run.messages.push(newMessage);
             run.messagesCount++;
         } else {
-            if (!compareStrings(response.functionName, "")) {
-                toolRunning[runId] = response.functionName;
-                IOracle(oracleAddress).createFunctionCall(runId, response.functionName, response.functionArguments);
-            } else {
-                toolRunning[runId] = "";
-            }
             Message memory newMessage;
             newMessage.role = "assistant";
             newMessage.content = response.content;
             run.messages.push(newMessage);
             run.messagesCount++;
-        }
-    }
-
-    // @notice Handles the response from the oracle for a function call
-    // @param runId The ID of the chat run
-    // @param response The response from the oracle
-    // @param errorMessage Any error message
-    // @dev Called by teeML oracle
-    function onOracleFunctionResponse(
-        uint runId,
-        string memory response,
-        string memory errorMessage
-    ) public onlyOracle {
-        require(
-            !compareStrings(toolRunning[runId], ""),
-            "No function to respond to"
-        );
-        ChatRun storage run = chatRuns[runId];
-        if (compareStrings(errorMessage, "")) {
-            Message memory newMessage;
-            newMessage.role = "user";
-            newMessage.content = response;
-            run.messages.push(newMessage);
-            run.messagesCount++;
-            IOracle(oracleAddress).createLlmCall(runId, config);
         }
     }
 
@@ -185,7 +149,7 @@ contract GroqChatGpt {
         run.messages.push(newMessage);
         run.messagesCount++;
 
-        IOracle(oracleAddress).createLlmCall(runId, config);
+        IOracle(oracleAddress).createGroqLlmCall(runId, config);
     }
 
     // @notice Retrieves the message history contents of a chat run

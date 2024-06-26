@@ -177,8 +177,6 @@ contract Test {
                 stop : "", // null
                 temperature : 10, // Example temperature (scaled up, 10 means 1.0), > 20 means null
                 topP : 101, // Percentage 0-100, > 100 means null
-                tools : "",
-                toolChoice : "none", // "none" or "auto"
                 user : "" // null
             })
         );

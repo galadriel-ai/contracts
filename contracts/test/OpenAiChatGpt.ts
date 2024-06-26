@@ -37,7 +37,7 @@ describe("OpenAiChatGpt", function () {
 
       await chatGpt.startChat("Hello");
       // promptId: 0, callbackId: 0
-      const openAiConf = await oracle.llmConfigurations(0)
+      const openAiConf = await oracle.openAiConfigurations(0)
       const tools = [
         {
           "type": "function",
@@ -101,7 +101,7 @@ describe("OpenAiChatGpt", function () {
         promptTokens: 5,
         totalTokens: 15
       };
-      await oracle.connect(oracleAccount).addResponse(0, 0, response, "");
+      await oracle.connect(oracleAccount).addOpenAiResponse(0, 0, response, "");
 
       const messages = await oracle.getMessages(0, 0)
       expect(messages.length).to.equal(2)

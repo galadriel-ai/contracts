@@ -31,8 +31,8 @@ contract OpenAiChatGptVision {
     // @notice Event emitted when the oracle address is updated
     event OracleAddressUpdated(address indexed newOracleAddress);
 
-    // @notice Configuration for the LLM request
-    IOracle.LlmRequest private config;
+    // @notice Configuration for the OpenAI request
+    IOracle.OpenAiRequest private config;
 
     // @param initialOracleAddress Initial address of the oracle contract
     constructor(address initialOracleAddress) {
@@ -40,7 +40,7 @@ contract OpenAiChatGptVision {
         oracleAddress = initialOracleAddress;
         chatRunsCount = 0;
 
-        config = IOracle.LlmRequest({
+        config = IOracle.OpenAiRequest({
             model : "gpt-4-turbo",
             frequencyPenalty : 21, // > 20 for null
             logitBias : "", // empty str for null
@@ -104,20 +104,20 @@ contract OpenAiChatGptVision {
         uint currentId = chatRunsCount;
         chatRunsCount = chatRunsCount + 1;
 
-        IOracle(oracleAddress).createLlmCall(currentId, config);
+        IOracle(oracleAddress).createOpenAiLlmCall(currentId, config);
         emit ChatCreated(msg.sender, currentId);
 
         return currentId;
     }
 
-    // @notice Handles the response from the oracle for an LLM call
+    // @notice Handles the response from the oracle for an OpenAI LLM call
     // @param runId The ID of the chat run
     // @param response The response from the oracle
     // @param errorMessage Any error message
     // @dev Called by teeML oracle
-    function onOracleLlmResponse(
+    function onOracleOpenAiLlmResponse(
         uint runId,
-        IOracle.LlmResponse memory response,
+        IOracle.OpenAiResponse memory response,
         string memory errorMessage
     ) public onlyOracle {
         ChatRun storage run = chatRuns[runId];
@@ -169,7 +169,7 @@ contract OpenAiChatGptVision {
         run.messages.push(newMessage);
         run.messagesCount++;
 
-        IOracle(oracleAddress).createLlmCall(runId, config);
+        IOracle(oracleAddress).createOpenAiLlmCall(runId, config);
     }
 
     // @notice Retrieves the message history of a chat run

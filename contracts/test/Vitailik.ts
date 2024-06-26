@@ -93,8 +93,6 @@ describe("Vitailik", function () {
         {
           id: "123",
           content: "oracle response",
-          functionName: "",
-          functionArguments: "",
           created: 1337,
           model: "mixtral-8x7b-32768",
           systemFingerprint: "asd",
@@ -130,8 +128,6 @@ describe("Vitailik", function () {
         {
           id: "123",
           content: "oracle response",
-          functionName: "",
-          functionArguments: "",
           created: 1337,
           model: "mixtral-8x7b-32768",
           systemFingerprint: "asd",
@@ -150,8 +146,6 @@ describe("Vitailik", function () {
         {
           id: "123",
           content: "oracle response2",
-          functionName: "",
-          functionArguments: "",
           created: 1337,
           model: "mixtral-8x7b-32768",
           systemFingerprint: "asd",
@@ -187,8 +181,6 @@ describe("Vitailik", function () {
         {
           id: "123",
           content: "oracle response",
-          functionName: "",
-          functionArguments: "",
           created: 1337,
           model: "mixtral-8x7b-32768",
           systemFingerprint: "asd",
@@ -230,8 +222,6 @@ describe("Vitailik", function () {
         {
           id: "123",
           content: "oracle response\nYour HP: 0",
-          functionName: "",
-          functionArguments: "",
           created: 1337,
           model: "mixtral-8x7b-32768",
           systemFingerprint: "asd",
@@ -265,8 +255,6 @@ describe("Vitailik", function () {
         {
           id: "123",
           content: "oracle response\n<IMAGE fun image\n",
-          functionName: "",
-          functionArguments: "",
           created: 1337,
           model: "mixtral-8x7b-32768",
           systemFingerprint: "asd",
@@ -299,8 +287,6 @@ describe("Vitailik", function () {
         {
           id: "123",
           content: "oracle response\n",
-          functionName: "",
-          functionArguments: "",
           created: 1337,
           model: "mixtral-8x7b-32768",
           systemFingerprint: "asd",
@@ -333,8 +319,6 @@ describe("Vitailik", function () {
         {
           id: "123",
           content: "asd\n<IMAGE Description\n",
-          functionName: "",
-          functionArguments: "",
           created: 1337,
           model: "mixtral-8x7b-32768",
           systemFingerprint: "asd",
@@ -369,8 +353,6 @@ describe("Vitailik", function () {
         {
           id: "123",
           content: "asd\n<IMAGE Description\n",
-          functionName: "",
-          functionArguments: "",
           created: 1337,
           model: "mixtral-8x7b-32768",
           systemFingerprint: "asd",
@@ -408,8 +390,6 @@ describe("Vitailik", function () {
         {
           id: "123",
           content: "oracle response",
-          functionName: "",
-          functionArguments: "",
           created: 1337,
           model: "mixtral-8x7b-32768",
           systemFingerprint: "asd",
@@ -427,8 +407,6 @@ describe("Vitailik", function () {
           {
             id: "123",
             content: "oracle response 2",
-            functionName: "",
-            functionArguments: "",
             created: 1337,
             model: "mixtral-8x7b-32768",
             systemFingerprint: "asd",
@@ -457,8 +435,6 @@ describe("Vitailik", function () {
         {
           id: "123",
           content: "oracle response HP: 0",
-          functionName: "",
-          functionArguments: "",
           created: 1337,
           model: "mixtral-8x7b-32768",
           systemFingerprint: "asd",
@@ -490,8 +466,6 @@ describe("Vitailik", function () {
         {
           id: "123",
           content: "oracle response",
-          functionName: "",
-          functionArguments: "",
           created: 1337,
           model: "mixtral-8x7b-32768",
           systemFingerprint: "asd",

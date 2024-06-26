@@ -43,22 +43,7 @@ describe("ChatGpt", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await chatGpt.startChat("Hello");
-
-      const response = {
-        id: "responseId",
-        content: "Hi",
-        functionName: "functionNameHere",
-        functionArguments: "functionArgumentsHere",
-        created: 1618888901, // Example UNIX timestamp
-        model: "gpt-4-turbo-preview",
-        systemFingerprint: "systemFingerprintHere",
-        object: "chat.completion",
-        completionTokens: 10,
-        promptTokens: 5,
-        totalTokens: 15
-      };
-
-      await oracle.connect(oracleAccount).addResponse(0, 0, response, "");
+      await oracle.connect(oracleAccount).addResponse(0, 0, "Hi", "");
       const messages = await oracle.getMessages(0, 0)
       expect(messages.length).to.equal(2)
       expect(messages[1]).to.equal("Hi")
@@ -75,20 +60,7 @@ describe("ChatGpt", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await chatGpt.startChat("Hello");
-      const response = {
-        id: "responseId",
-        content: "Hi",
-        functionName: "functionNameHere",
-        functionArguments: "functionArgumentsHere",
-        created: 1618888901, // Example UNIX timestamp
-        model: "gpt-4-turbo-preview",
-        systemFingerprint: "systemFingerprintHere",
-        object: "chat.completion",
-        completionTokens: 10,
-        promptTokens: 5,
-        totalTokens: 15
-      };
-      await oracle.connect(oracleAccount).addResponse(0, 0, response, "");
+      await oracle.connect(oracleAccount).addResponse(0, 0, "Hi", "");
       await chatGpt.addMessage("message", 0);
 
       const messages = await oracle.getMessages(0, 0)
@@ -113,24 +85,10 @@ describe("ChatGpt", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await chatGpt.startChat("Hello");
-
-      const response = {
-        id: "responseId",
-        content: "Hi",
-        functionName: "functionNameHere",
-        functionArguments: "functionArgumentsHere",
-        created: 1618888901, // Example UNIX timestamp
-        model: "gpt-4-turbo-preview",
-        systemFingerprint: "systemFingerprintHere",
-        object: "chat.completion",
-        completionTokens: 10,
-        promptTokens: 5,
-        totalTokens: 15
-      };
-      await oracle.connect(oracleAccount).addResponse(0, 0,  response, "");
+      await oracle.connect(oracleAccount).addResponse(0, 0, "Hi", "");
       await oracle.connect(oracleAccount).markPromptAsProcessed(0);
       await expect(
-        oracle.connect(oracleAccount).addResponse(0, 0, response, "")
+        oracle.connect(oracleAccount).addResponse(0, 0, "Hi", "")
       ).to.be.revertedWith("Prompt already processed");
     });
     it("Oracle cannot add 2 responses", async () => {
@@ -145,27 +103,14 @@ describe("ChatGpt", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await chatGpt.startChat("Hello");
-      const response = {
-        id: "responseId",
-        content: "Hi",
-        functionName: "functionNameHere",
-        functionArguments: "functionArgumentsHere",
-        created: 1618888901, // Example UNIX timestamp
-        model: "gpt-4-turbo-preview",
-        systemFingerprint: "systemFingerprintHere",
-        object: "chat.completion",
-        completionTokens: 10,
-        promptTokens: 5,
-        totalTokens: 15
-      };
-      await oracle.connect(oracleAccount).addResponse(0, 0, response, "");
+      await oracle.connect(oracleAccount).addResponse(0, 0, "Hi", "");
 
       // Ultimate edge-case, user whitelisted some random address
       const randomAccount = allSigners[7];
       await chatGpt.setOracleAddress(randomAccount);
 
       await expect(
-        chatGpt.connect(randomAccount).onOracleLlmResponse(0, response, "")
+        chatGpt.connect(randomAccount).onOracleLlmResponse(0, "Hi", "")
       ).to.be.revertedWith("No message to respond to");
     });
 

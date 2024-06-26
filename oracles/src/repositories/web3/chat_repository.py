@@ -442,8 +442,6 @@ def _format_groq_response(completion: Optional[GroqChatCompletion]) -> Dict:
         return {
             "id": "",
             "content": "",
-            "functionName": "",
-            "functionArguments": "",
             "created": 0,
             "model": "",
             "systemFingerprint": "",
@@ -456,10 +454,6 @@ def _format_groq_response(completion: Optional[GroqChatCompletion]) -> Dict:
     return {
         "id": completion.id,
         "content": choice.content if choice.content else "",
-        "functionName": choice.tool_calls[0].function.name if choice.tool_calls else "",
-        "functionArguments": (
-            choice.tool_calls[0].function.arguments if choice.tool_calls else ""
-        ),
         "created": completion.created,
         "model": completion.model,
         "systemFingerprint": completion.system_fingerprint or "",
