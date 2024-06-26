@@ -19,7 +19,7 @@ from src.entities import OpenAiConfig
 from src.entities import OpenAiModelType
 from src.entities import ToolChoiceType
 from src.entities import LlmConfig
-from src.entities import LlmModelType
+from src.entities import AnthropicModelType
 from src.entities import PromptType
 from src.repositories.web3.base import Web3BaseRepository
 
@@ -231,7 +231,7 @@ class Web3ChatRepository(Web3BaseRepository):
 
     async def _get_llm_config(self, i: int) -> Optional[LlmConfig]:
         config = await self.oracle_contract.functions.llmConfigurations(i).call()
-        if not config or not config[0] or not config[0] in get_args(LlmModelType):
+        if not config or not config[0] or not config[0] in get_args(AnthropicModelType):
             return None
         try:
             return LlmConfig(
