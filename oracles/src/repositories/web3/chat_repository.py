@@ -302,13 +302,7 @@ class Web3ChatRepository(Web3BaseRepository):
                 stop=_value_or_none(config[7]),
                 temperature=_parse_float_from_int(config[8], 0, 20),
                 top_p=_parse_float_from_int(config[9], 0, 100, decimals=2),
-                tools=_parse_tools(config[10]),
-                tool_choice=(
-                    config[11]
-                    if (config[11] and config[11] in get_args(ToolChoiceType))
-                    else None
-                ),
-                user=_value_or_none(config[12]),
+                user=_value_or_none(config[10]),
             )
         except:
             return None

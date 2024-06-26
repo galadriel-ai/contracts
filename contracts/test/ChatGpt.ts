@@ -3,6 +3,7 @@ import {expect} from "chai";
 import {ethers} from "hardhat";
 
 describe("ChatGpt", function () {
+    const addResponseSignature = "addResponse(uint256,uint256,string,string)";
   // We define a fixture to reuse the same setup in every test.
   // We use loadFixture to run this setup once, snapshot that state,
   // and reset Hardhat Network to that snapshot in every test.
@@ -43,7 +44,7 @@ describe("ChatGpt", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await chatGpt.startChat("Hello");
-      await oracle.connect(oracleAccount).addResponse(0, 0, "Hi", "");
+      await oracle.connect(oracleAccount)[addResponseSignature](0, 0, "Hi", "");
       const messages = await oracle.getMessages(0, 0)
       expect(messages.length).to.equal(2)
       expect(messages[1]).to.equal("Hi")
@@ -60,7 +61,7 @@ describe("ChatGpt", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await chatGpt.startChat("Hello");
-      await oracle.connect(oracleAccount).addResponse(0, 0, "Hi", "");
+      await oracle.connect(oracleAccount)[addResponseSignature](0, 0, "Hi", "");
       await chatGpt.addMessage("message", 0);
 
       const messages = await oracle.getMessages(0, 0)
@@ -85,10 +86,10 @@ describe("ChatGpt", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await chatGpt.startChat("Hello");
-      await oracle.connect(oracleAccount).addResponse(0, 0, "Hi", "");
+      await oracle.connect(oracleAccount)[addResponseSignature](0, 0, "Hi", "");
       await oracle.connect(oracleAccount).markPromptAsProcessed(0);
       await expect(
-        oracle.connect(oracleAccount).addResponse(0, 0, "Hi", "")
+        oracle.connect(oracleAccount)[addResponseSignature](0, 0, "Hi", "")
       ).to.be.revertedWith("Prompt already processed");
     });
     it("Oracle cannot add 2 responses", async () => {
@@ -103,7 +104,7 @@ describe("ChatGpt", function () {
       await oracle.updateWhitelist(oracleAccount, true);
 
       await chatGpt.startChat("Hello");
-      await oracle.connect(oracleAccount).addResponse(0, 0, "Hi", "");
+      await oracle.connect(oracleAccount)[addResponseSignature](0, 0, "Hi", "");
 
       // Ultimate edge-case, user whitelisted some random address
       const randomAccount = allSigners[7];
