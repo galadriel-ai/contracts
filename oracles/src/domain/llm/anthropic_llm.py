@@ -35,7 +35,7 @@ async def execute(chat: Chat) -> Optional[ChatCompletion]:
     system_prompt = NOT_GIVEN
     messages = chat.messages
 
-    if messages[0]["role"] == "system":
+    if len(messages) > 0 and messages[0]["role"] == "system":
         system_prompt = messages[0]["content"]
         messages = messages[1:]
     message = await client.messages.create(
