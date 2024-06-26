@@ -47,11 +47,9 @@ contract ChatOracle is IOracle {
     mapping(uint => IOracle.LlmRequest) public llmConfigurations;
 
     // @notice Mapping of prompt ID to the OpenAI configuration
-    // @deprecated Will be removed in future versions
     mapping(uint => IOracle.OpenAiRequest) public openAiConfigurations;
 
     // @notice Mapping of prompt ID to the Groq configuration
-    // @deprecated Will be removed in future versions
     mapping(uint => IOracle.GroqRequest) public groqConfigurations;
 
     // @notice Total number of prompts
@@ -268,7 +266,6 @@ contract ChatOracle is IOracle {
     // @param promptId The ID of the prompt
     // @param promptCallBackId The callback ID for the prompt
     // @return An array of message history contents
-    // @deprecated Will be removed in future versions
     function getMessages(
         uint promptId,
         uint promptCallBackId
@@ -280,7 +277,6 @@ contract ChatOracle is IOracle {
     // @param promptId The ID of the prompt
     // @param promptCallBackId The callback ID for the prompt
     // @return An array of message history roles
-    // @deprecated Will be removed in future versions
     function getRoles(
         uint promptId,
         uint promptCallBackId
@@ -356,7 +352,6 @@ contract ChatOracle is IOracle {
     // @param promptCallbackId The callback ID for the LLM call
     // @param config The OpenAI request configuration
     // @return The ID of the created prompt
-    // @deprecated Use createLlmCall instead
     function createOpenAiLlmCall(uint promptCallbackId, IOracle.OpenAiRequest memory config) public returns (uint) {
         uint promptId = promptsCount;
         callbackAddresses[promptId] = msg.sender;
@@ -378,7 +373,6 @@ contract ChatOracle is IOracle {
     // @param response The OpenAI response
     // @param errorMessage Any error message
     // @dev Called by teeML oracle
-    // @deprecated Will be removed in future versions
     function addOpenAiResponse(
         uint promptId,
         uint promptCallBackId,
@@ -397,7 +391,6 @@ contract ChatOracle is IOracle {
     // @notice Marks an OpenAI prompt as processed
     // @param promptId The ID of the prompt
     // @dev Called by teeML oracle
-    // @deprecated Will be removed in future versions
     function markOpenAiPromptAsProcessed(uint promptId) public onlyWhitelisted {
         isPromptProcessed[promptId] = true;
     }
@@ -406,7 +399,6 @@ contract ChatOracle is IOracle {
     // @param promptCallbackId The callback ID for the LLM call
     // @param config The Groq request configuration
     // @return The ID of the created prompt
-    // @deprecated Use createLlmCall instead
     function createGroqLlmCall(uint promptCallbackId, IOracle.GroqRequest memory config) public returns (uint) {
         uint promptId = promptsCount;
         callbackAddresses[promptId] = msg.sender;
@@ -428,7 +420,6 @@ contract ChatOracle is IOracle {
     // @param response The Groq response
     // @param errorMessage Any error message
     // @dev Called by teeML oracle
-    // @deprecated Will be removed in future versions
     function addGroqResponse(
         uint promptId,
         uint promptCallBackId,
@@ -447,7 +438,6 @@ contract ChatOracle is IOracle {
     // @notice Marks a Groq prompt as processed
     // @param promptId The ID of the prompt
     // @dev Called by teeML oracle
-    // @deprecated Will be removed in future versions
     function markGroqPromptAsProcessed(uint promptId) public onlyWhitelisted {
         isPromptProcessed[promptId] = true;
     }
