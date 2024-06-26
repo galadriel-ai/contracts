@@ -48,10 +48,13 @@ async function main() {
         console.log(`${message.role}: ${message.content}`)
         allMessages.push(message)
         if (allMessages.at(-1)?.role == "assistant") {
-          const toolRunning: string = await contract.toolRunning(chatId)
-          console.log(`Tool running: ${toolRunning}`)
-          if (toolRunning !== "") {
-            continue
+          try {
+            const toolRunning: string = await contract.toolRunning(chatId)
+            console.log(`Tool running: ${toolRunning}`)
+            if (toolRunning !== "") {
+              continue
+            }
+          } catch (error) {
           }
           const message = getUserInput()
           const transactionResponse = await contract.addMessage(message, chatId)
