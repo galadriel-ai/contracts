@@ -4,7 +4,6 @@ from typing import Optional
 import openai
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletion
-from openai.types.chat.chat_completion import ChatCompletion
 
 from src.entities import Chat
 from src.domain.llm.utils import TIMEOUT

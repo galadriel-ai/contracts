@@ -213,12 +213,20 @@ class Web3ChatRepository(Web3BaseRepository):
             ).build_transaction(tx_data)
         # Eventually more options here
         else:
-            tx = await self.oracle_contract.functions.addResponse(
-                chat.id,
-                chat.callback_id,
-                _format_llm_response(chat.response),
-                chat.error_message,
-            ).build_transaction(tx_data)
+            if chat.config:
+                tx = await self.oracle_contract.functions.addResponse(
+                    chat.id,
+                    chat.callback_id,
+                    _format_llm_response(chat.response),
+                    chat.error_message,
+                ).build_transaction(tx_data)
+            else:
+                tx = await self.oracle_contract.functions.addResponse(
+                    chat.id,
+                    chat.callback_id,
+                    chat.response,
+                    chat.error_message,
+                ).build_transaction(tx_data)
         return tx
 
     async def _get_llm_config(self, i: int) -> Optional[LlmConfig]:
