@@ -37,7 +37,7 @@ describe("GroqChatGpt", function () {
 
       await chatGpt.startChat("Hello");
       // promptId: 0, callbackId: 0
-      const groqConf = await oracle.groqConfigurations(0)
+      const groqConf = await oracle.llmConfigurations(0)
       const tools = [
         {
           "type": "function",
@@ -101,7 +101,7 @@ describe("GroqChatGpt", function () {
         promptTokens: 5,
         totalTokens: 15
       };
-      await oracle.connect(oracleAccount).addGroqResponse(0, 0, response, "");
+      await oracle.connect(oracleAccount).addResponse(0, 0, response, "");
 
       const messages = await oracle.getMessages(0, 0)
       expect(messages.length).to.equal(2)

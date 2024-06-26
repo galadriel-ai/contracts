@@ -39,8 +39,8 @@ contract GroqChatGpt {
     // @notice Event emitted when the oracle address is updated
     event OracleAddressUpdated(address indexed newOracleAddress);
 
-    // @notice Configuration for the Groq request
-    IOracle.GroqRequest private config;
+    // @notice Configuration for the LLM request
+    IOracle.LlmRequest private config;
 
     // @param initialOracleAddress Initial address of the oracle contract
     constructor(address initialOracleAddress) {
@@ -48,7 +48,7 @@ contract GroqChatGpt {
         oracleAddress = initialOracleAddress;
         chatRunsCount = 0;
 
-        config = IOracle.GroqRequest({
+        config = IOracle.LlmRequest({
         model : "mixtral-8x7b-32768",
         frequencyPenalty : 21, // > 20 for null
         logitBias : "", // empty str for null
@@ -99,20 +99,20 @@ contract GroqChatGpt {
         uint currentId = chatRunsCount;
         chatRunsCount = chatRunsCount + 1;
 
-        IOracle(oracleAddress).createGroqLlmCall(currentId, config);
+        IOracle(oracleAddress).createLlmCall(currentId, config);
         emit ChatCreated(msg.sender, currentId);
 
         return currentId;
     }
 
-    // @notice Handles the response from the oracle for a Groq LLM call
+    // @notice Handles the response from the oracle for an LLM call
     // @param runId The ID of the chat run
     // @param response The response from the oracle
     // @param errorMessage Any error message
     // @dev Called by teeML oracle
-    function onOracleGroqLlmResponse(
+    function onOracleLlmResponse(
         uint runId,
-        IOracle.GroqResponse memory response,
+        IOracle.LlmResponse memory response,
         string memory errorMessage
     ) public onlyOracle {
         ChatRun storage run = chatRuns[runId];
@@ -162,7 +162,7 @@ contract GroqChatGpt {
             newMessage.content = response;
             run.messages.push(newMessage);
             run.messagesCount++;
-            IOracle(oracleAddress).createGroqLlmCall(runId, config);
+            IOracle(oracleAddress).createLlmCall(runId, config);
         }
     }
 
@@ -185,7 +185,7 @@ contract GroqChatGpt {
         run.messages.push(newMessage);
         run.messagesCount++;
 
-        IOracle(oracleAddress).createGroqLlmCall(runId, config);
+        IOracle(oracleAddress).createLlmCall(runId, config);
     }
 
     // @notice Retrieves the message history contents of a chat run
