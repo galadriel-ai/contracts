@@ -100,8 +100,8 @@ interface IOracle {
         uint32 totalTokens;
     }
 
- struct LlmRequest {
-        // "gpt-4-turbo", "gpt-4-turbo-preview" or "gpt-3.5-turbo-1106"
+    struct LlmRequest {
+        // "claude-3-5-sonnet-20240620", "claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307", "claude-2.1", "claude-2.0", "claude-instant-1.2"
         string model;
         // int -20 - 20, Mapped to float -2.0 - 2.0. If bigger than 20 then null
         int8 frequencyPenalty;

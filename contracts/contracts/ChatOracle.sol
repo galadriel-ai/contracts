@@ -237,7 +237,7 @@ contract ChatOracle is IOracle {
     // @notice Adds a response to a prompt
     // @param promptId The ID of the prompt
     // @param promptCallBackId The callback ID for the prompt
-    // @param response The response text
+    // @param response The LLM response
     // @param errorMessage Any error message
     // @dev Called by teeML oracle
     function addResponse(

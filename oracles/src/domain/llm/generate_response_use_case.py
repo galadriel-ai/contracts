@@ -10,7 +10,6 @@ from src.domain.llm import groq_llm
 from src.domain.llm import openai_llm
 from src.domain.llm import anthropic_llm
 from src.domain.llm.entities import LLMResult
-from src.domain.llm.utils import TIMEOUT
 
 
 async def execute(model: str, chat: Chat) -> LLMResult:
