@@ -8,8 +8,7 @@ import "./interfaces/IOracle.sol";
 contract Test {
     address private owner;
     address public oracleAddress;
-    string public llmMessage;
-    IOracle.Message visionMessage;
+    IOracle.Message llmMessage;
     string public lastResponse;
     string public lastError;
     uint private callsCount;
@@ -58,7 +57,14 @@ contract Test {
         uint currentId = callsCount;
         callsCount = currentId + 1;
 
-        llmMessage = message;
+        llmMessage = IOracle.Message({
+            role: "user",
+            content: new IOracle.Content[](1)
+        });
+        llmMessage.content[0] = IOracle.Content({
+            contentType: "text",
+            value: message
+        });
         lastResponse = "";
         lastError = "";
     
@@ -88,7 +94,14 @@ contract Test {
         uint currentId = callsCount;
         callsCount = currentId + 1;
 
-        llmMessage = message;
+        llmMessage = IOracle.Message({
+            role: "user",
+            content: new IOracle.Content[](1)
+        });
+        llmMessage.content[0] = IOracle.Content({
+            contentType: "text",
+            value: message
+        });
         lastResponse = "";
         lastError = "";
     
@@ -121,15 +134,15 @@ contract Test {
         lastResponse = "";
         lastError = "";
     
-        visionMessage = IOracle.Message({
+        llmMessage = IOracle.Message({
             role: "user",
             content: new IOracle.Content[](2)
         });
-        visionMessage.content[0] = IOracle.Content({
+        llmMessage.content[0] = IOracle.Content({
             contentType: "text",
             value: message
         });
-        visionMessage.content[1] = IOracle.Content({
+        llmMessage.content[1] = IOracle.Content({
             contentType: "image_url",
             value: imageUrl
         });
@@ -160,7 +173,14 @@ contract Test {
         uint currentId = callsCount;
         callsCount = currentId + 1;
 
-        llmMessage = message;
+        llmMessage = IOracle.Message({
+            role: "user",
+            content: new IOracle.Content[](1)
+        });
+        llmMessage.content[0] = IOracle.Content({
+            contentType: "text",
+            value: message
+        });
         lastResponse = "";
         lastError = "";
 
@@ -184,21 +204,9 @@ contract Test {
         return currentId;
     }
 
-    function getMessageHistoryContents(uint /*chatId*/) public view returns (string[] memory) {
-        string[] memory messages = new string[](1);
-        messages[0] = llmMessage;
-        return messages;
-    }
-
-    function getMessageHistoryRoles(uint /*chatId*/) public pure returns (string[] memory) {
-        string[] memory roles = new string[](1);
-        roles[0] = "user";
-        return roles;
-    }
-
     function getMessageHistory(uint /*chatId*/) public view returns (IOracle.Message[] memory) {
         IOracle.Message[] memory messages = new IOracle.Message[](1);
-        messages[0] = visionMessage;
+        messages[0] = llmMessage;
         return messages;
     }
 
