@@ -12,6 +12,12 @@ interface IChatGpt {
 
     function onOracleLlmResponse(
         uint callbackId,
+        string memory response,
+        string memory errorMessage
+    ) external;
+
+    function onOracleLlmResponse(
+        uint callbackId,
         IOracle.LlmResponse memory response,
         string memory errorMessage
     ) external;

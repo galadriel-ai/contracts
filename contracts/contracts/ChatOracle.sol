@@ -183,6 +183,44 @@ contract ChatOracle is IOracle {
     // @notice Creates a new LLM call
     // @param promptCallbackId The callback ID for the LLM call
     // @return The ID of the created prompt
+    function createLlmCall(uint promptCallbackId) public returns (uint) {
+        uint promptId = promptsCount;
+        callbackAddresses[promptId] = msg.sender;
+        promptCallbackIds[promptId] = promptCallbackId;
+        isPromptProcessed[promptId] = false;
+        promptType[promptId] = promptTypes.defaultType;
+
+        promptsCount++;
+
+        emit PromptAdded(promptId, promptCallbackId, msg.sender);
+
+        return promptId;
+    }
+
+    // @notice Adds a response to a prompt
+    // @param promptId The ID of the prompt
+    // @param promptCallBackId The callback ID for the prompt
+    // @param response The response text
+    // @param errorMessage Any error message
+    // @dev Called by teeML oracle
+    function addResponse(
+        uint promptId,
+        uint promptCallBackId,
+        string memory response,
+        string memory errorMessage
+    ) public onlyWhitelisted {
+        require(!isPromptProcessed[promptId], "Prompt already processed");
+        isPromptProcessed[promptId] = true;
+        IChatGpt(callbackAddresses[promptId]).onOracleLlmResponse(
+            promptCallBackId,
+            response,
+            errorMessage
+        );
+    }
+
+    // @notice Creates a new LLM call
+    // @param promptCallbackId The callback ID for the LLM call
+    // @return The ID of the created prompt
     function createLlmCall(uint promptCallbackId, IOracle.LlmRequest memory request) public returns (uint) {
         uint promptId = promptsCount;
         callbackAddresses[promptId] = msg.sender;

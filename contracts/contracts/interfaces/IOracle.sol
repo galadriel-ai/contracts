@@ -161,6 +161,10 @@ interface IOracle {
     }
 
     function createLlmCall(
+        uint promptId
+    ) external returns (uint);
+
+    function createLlmCall(
         uint promptId,
         LlmRequest memory request
     ) external returns (uint);
