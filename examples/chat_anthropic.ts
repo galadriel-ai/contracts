@@ -1,5 +1,5 @@
 import {Contract, ethers, TransactionReceipt, Wallet} from "ethers";
-import ABI from "./abis/ChatGpt.json";
+import ABI from "./abis/AnthropicChatGpt.json";
 import * as readline from 'readline';
 
 require("dotenv").config()
@@ -14,8 +14,8 @@ async function main() {
   if (!rpcUrl) throw Error("Missing RPC_URL in .env")
   const privateKey = process.env.PRIVATE_KEY
   if (!privateKey) throw Error("Missing PRIVATE_KEY in .env")
-  const contractAddress = process.env.CHAT_CONTRACT_ADDRESS
-  if (!contractAddress) throw Error("Missing CHAT_CONTRACT_ADDRESS in .env")
+  const contractAddress = process.env.ANTROPIC_CONTRACT_ADDRESS
+  if (!contractAddress) throw Error("Missing ANTROPIC_CONTRACT_ADDRESS in .env")
 
   const provider = new ethers.JsonRpcProvider(rpcUrl)
   const wallet = new Wallet(
@@ -23,7 +23,6 @@ async function main() {
   )
   const contract = new Contract(contractAddress, ABI, wallet)
 
-  // The message you want to start the chat with
   const message = await getUserInput()
 
   // Call the startChat function
@@ -48,6 +47,14 @@ async function main() {
         console.log(`${message.role}: ${message.content}`)
         allMessages.push(message)
         if (allMessages.at(-1)?.role == "assistant") {
+          try {
+            const toolRunning: string = await contract.toolRunning(chatId)
+            console.log(`Tool running: ${toolRunning}`)
+            if (toolRunning !== "") {
+              continue
+            }
+          } catch (error) {
+          }
           const message = getUserInput()
           const transactionResponse = await contract.addMessage(message, chatId)
           const receipt = await transactionResponse.wait()
@@ -107,16 +114,17 @@ async function getNewMessages(
   chatId: number,
   currentMessagesCount: number
 ): Promise<Message[]> {
-  const messages = await contract.getMessageHistoryContents(chatId)
-  const roles = await contract.getMessageHistoryRoles(chatId)
+  const messages = await contract.getMessageHistory(chatId)
 
   const newMessages: Message[] = []
   messages.forEach((message: any, i: number) => {
     if (i >= currentMessagesCount) {
-      newMessages.push({
-        role: roles[i],
-        content: messages[i]
-      })
+      newMessages.push(
+        {
+          role: message[0],
+          content: message[1][0][1],
+        }
+      );
     }
   })
   return newMessages;

@@ -5,6 +5,7 @@
   "scripts": {
     "chat": "ts-node chat.ts",
     "chat_vision": "ts-node chat_vision.ts",
+    "chat_anthropic": "ts-node chat_anthropic.ts",
     "agent": "ts-node agent.ts"
   },
   "author": "",

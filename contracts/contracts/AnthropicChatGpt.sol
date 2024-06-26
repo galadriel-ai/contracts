@@ -9,14 +9,9 @@ import "./interfaces/IOracle.sol";
 // @notice This contract interacts with teeML oracle to handle chat interactions using the Anthropic model.
 contract AnthropicChatGpt {
 
-    struct Message {
-        string role;
-        string content;
-    }
-
     struct ChatRun {
         address owner;
-        Message[] messages;
+        IOracle.Message[] messages;
         uint messagesCount;
     }
 
@@ -93,11 +88,14 @@ contract AnthropicChatGpt {
         ChatRun storage run = chatRuns[chatRunsCount];
 
         run.owner = msg.sender;
-        Message memory newMessage;
-        newMessage.content = message;
-        newMessage.role = "user";
+        IOracle.Message memory newMessage = IOracle.Message({
+            role: "user",
+            content: new IOracle.Content[](1)
+        });
+        newMessage.content[0].contentType = "text";
+        newMessage.content[0].value = message;
         run.messages.push(newMessage);
-        run.messagesCount = 1;
+        run.messagesCount++;
 
         uint currentId = chatRunsCount;
         chatRunsCount++;
@@ -123,10 +121,13 @@ contract AnthropicChatGpt {
             "No message to respond to"
         );
 
-        Message memory newMessage;
         if (!compareStrings(errorMessage, "")) {
-            newMessage.role = "assistant";
-            newMessage.content = errorMessage;
+            IOracle.Message memory newMessage = IOracle.Message({
+                role: "assistant",
+                content: new IOracle.Content[](1)
+            });
+            newMessage.content[0].contentType = "text";
+            newMessage.content[0].value = errorMessage;
             run.messages.push(newMessage);
             run.messagesCount++;
         } else {
@@ -136,8 +137,12 @@ contract AnthropicChatGpt {
             } else {
                 toolRunning[runId] = "";
             }
-            newMessage.role = "assistant";
-            newMessage.content = response.content;
+            IOracle.Message memory newMessage = IOracle.Message({
+                role: "assistant",
+                content: new IOracle.Content[](1)
+            });
+            newMessage.content[0].contentType = "text";
+            newMessage.content[0].value = response.content;
             run.messages.push(newMessage);
             run.messagesCount++;
         }
@@ -159,9 +164,12 @@ contract AnthropicChatGpt {
         );
         ChatRun storage run = chatRuns[runId];
         if (compareStrings(errorMessage, "")) {
-            Message memory newMessage;
-            newMessage.role = "user";
-            newMessage.content = response;
+            IOracle.Message memory newMessage = IOracle.Message({
+                role: "user",
+                content: new IOracle.Content[](1)
+            });
+            newMessage.content[0].contentType = "text";
+            newMessage.content[0].value = response;
             run.messages.push(newMessage);
             run.messagesCount++;
             IOracle(oracleAddress).createLlmCall(runId, config);
@@ -183,10 +191,10 @@ contract AnthropicChatGpt {
             "No message to add context to"
         );
         // Retrieve the last user message
-        Message storage lastMessage = run.messages[run.messagesCount - 1];
+        IOracle.Message storage lastMessage = run.messages[run.messagesCount - 1];
 
         // Start with the original message content
-        string memory newContent = lastMessage.content;
+        string memory newContent = lastMessage.content[0].value;
 
         // Append "Relevant context:\n" only if there are documents
         if (documents.length > 0) {
@@ -199,7 +207,7 @@ contract AnthropicChatGpt {
         }
 
         // Finally, set the lastMessage content to the newly constructed string
-        lastMessage.content = newContent;
+        lastMessage.content[0].value = newContent;
 
         // Call LLM
         IOracle(oracleAddress).createLlmCall(runId, config);
@@ -218,9 +226,12 @@ contract AnthropicChatGpt {
             run.owner == msg.sender, "Only chat owner can add messages"
         );
 
-        Message memory newMessage;
-        newMessage.content = message;
-        newMessage.role = "user";
+        IOracle.Message memory newMessage = IOracle.Message({
+            role: "user",
+            content: new IOracle.Content[](1)
+        });
+        newMessage.content[0].contentType = "text";
+        newMessage.content[0].value = message;
         run.messages.push(newMessage);
         run.messagesCount++;
         // If there is a knowledge base, create a knowledge base query
@@ -237,28 +248,12 @@ contract AnthropicChatGpt {
         }
     }
 
-    // @notice Retrieves the message history contents of a chat run
+    // @notice Retrieves the message history of a chat run
     // @param chatId The ID of the chat run
-    // @return An array of message contents
+    // @return An array of messages
     // @dev Called by teeML oracle
-    function getMessageHistoryContents(uint chatId) public view returns (string[] memory) {
-        string[] memory messages = new string[](chatRuns[chatId].messages.length);
-        for (uint i = 0; i < chatRuns[chatId].messages.length; i++) {
-            messages[i] = chatRuns[chatId].messages[i].content;
-        }
-        return messages;
-    }
-
-    // @notice Retrieves the roles of the messages in a chat run
-    // @param chatId The ID of the chat run
-    // @return An array of message roles
-    // @dev Called by teeML oracle
-    function getMessageHistoryRoles(uint chatId) public view returns (string[] memory) {
-        string[] memory roles = new string[](chatRuns[chatId].messages.length);
-        for (uint i = 0; i < chatRuns[chatId].messages.length; i++) {
-            roles[i] = chatRuns[chatId].messages[i].role;
-        }
-        return roles;
+    function getMessageHistory(uint chatId) public view returns (IOracle.Message[] memory) {
+        return chatRuns[chatId].messages;
     }
 
     // @notice Compares two strings for equality

@@ -50,12 +50,8 @@ class Web3ChatRepository(Web3BaseRepository):
             is_prompt_processed = (
                 await self.oracle_contract.functions.isPromptProcessed(i).call()
             )
-            gpt_vision_support = False
             if prompt_type == PromptType.OPENAI:
                 config = await self._get_openai_config(i)
-                gpt_vision_support = (
-                    config.model == "gpt-4-turbo" or config.model == "gpt-4o"
-                )
             elif prompt_type == PromptType.GROQ:
                 config = await self._get_groq_config(i)
             else:
@@ -67,12 +63,14 @@ class Web3ChatRepository(Web3BaseRepository):
 
         messages = []
         try:
-            if gpt_vision_support:
-                history = await self.oracle_contract.functions.getMessagesAndRoles(
-                    i, callback_id
-                ).call()
-                messages = await self._format_history(history)
-            else:
+            # first try new method of reading history
+            history = await self.oracle_contract.functions.getMessagesAndRoles(
+                i, callback_id
+            ).call()
+            messages = await self._format_history(history)
+        except:
+            # fallback to old method
+            try:
                 contents = await self.oracle_contract.functions.getMessages(
                     i, callback_id
                 ).call()
@@ -86,11 +84,10 @@ class Web3ChatRepository(Web3BaseRepository):
                             "content": contents[j],
                         }
                     )
-        except Exception as e:
-            print(f"Error getting chat {i} history: {e}", flush=True)
-            self.metrics["chats_history_read_errors"] += 1
-            return None
-
+            except Exception as e:
+                print(f"Error getting chat {i} history: {e}", flush=True)
+                self.metrics["chats_history_read_errors"] += 1
+                return None
         return Chat(
             id=i,
             messages=messages,
