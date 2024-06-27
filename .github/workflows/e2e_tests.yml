@@ -2,15 +2,13 @@
 name: e2e tests
 on:
   pull_request:
-    branches:
-      - main
 jobs:
   e2e-tests:
     runs-on: ubuntu-latest
     env:
       NETWORK: "localhost"
       ORACLE_ADDRESS: "0x5FbDB2315678afecb367f032d93F642f64180aa3"
-      TEST_CONTRACT_ADDRESS: "0x610178dA211FEF7D417bC0e6FeD39F05609AD788"
+      TEST_CONTRACT_ADDRESS: "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e"
       IMAGE_URL: "https://picsum.photos/200/300"
     steps:
     - uses: actions/checkout@v4
@@ -71,6 +69,7 @@ jobs:
         E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
         PINATA_GATEWAY_TOKEN: ${{ secrets.PINATA_GATEWAY_TOKEN }}
         PINATA_API_JWT: ${{ secrets.PINATA_API_JWT }}
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     - name: "OpenAI gpt-4-turbo-preview"
       run:
         cd contracts && npx hardhat openai --contract-address ${{ env.TEST_CONTRACT_ADDRESS }} --model gpt-4-turbo-preview --message "Who is the president of USA?" --network ${{ env.NETWORK }}
@@ -109,6 +108,11 @@ jobs:
     - name: "Groq gemma-7b-it"
       run:
         cd contracts && npx hardhat groq --contract-address ${{ env.TEST_CONTRACT_ADDRESS }} --model gemma-7b-it --message "Who is the president of USA?" --network ${{ env.NETWORK }}
+      env:
+        PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
+    - name: "Anthropic claude-3-5-sonnet-20240620"
+      run:
+        cd contracts && npx hardhat llm --contract-address ${{ env.TEST_CONTRACT_ADDRESS }} --model claude-3-5-sonnet-20240620 --message "Who is the president of USA?" --network ${{ env.NETWORK }}
       env:
         PRIVATE_KEY_LOCALHOST: ${{ secrets.PRIVATE_KEY }}
     - name: "OpenAI Image Generation"

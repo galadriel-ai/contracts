@@ -75,6 +75,6 @@ async def _cache_ipfs_urls(chat: Chat, ipfs_repository: IpfsRepository):
                 if image_url and image_url.startswith("ipfs://"):
                     cached_url = await cache_ipfs_on_gcp_cache_use_case.execute(
                         image_url,
-                        ipfs_repository, 
+                        ipfs_repository,
                     )
                     content["image_url"]["url"] = cached_url

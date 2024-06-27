@@ -26,6 +26,11 @@ npm run chat
 npm run chat_vision
 ```
 
+**Anthropic Claude example**
+```
+npm run chat_anthropic
+```
+
 **Agent example**
 ```
 npm run agent
