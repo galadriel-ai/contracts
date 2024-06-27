@@ -121,6 +121,18 @@ task("e2e", "Runs all e2e tests")
     }
   
     try {
+      let result = await runLlm(
+        contractAddress,
+        "claude-3-5-sonnet-20240620",
+        "Who is the president of USA?",
+        hre,
+      )
+      testResults["Anthropic claude-3-5-sonnet-20240620"] = result.error ? truncateMessage(result.error) : "✅";
+    } catch (e: any) {
+      testResults["Anthropic claude-3-5-sonnet-20240620"] = truncateMessage(e.message)
+    }
+  
+    try {
       let result = await runTaskWithTimeout(
         "image_generation",
         {
@@ -272,6 +284,24 @@ async function runGroq(
 ) {
   let result = await runTaskWithTimeout(
     "groq",
+    {
+      contractAddress,
+      model,
+      message,
+    },
+    hre,
+  )
+  return result;
+}
+
+async function runLlm(
+  contractAddress: string,
+  model: string,
+  message: string,
+  hre: HardhatRuntimeEnvironment,
+) {
+  let result = await runTaskWithTimeout(
+    "llm",
     {
       contractAddress,
       model,
