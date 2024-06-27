@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "https://github.com/galadriel-ai/contracts/blob/main/contracts/contracts/interfaces/IOracle.sol";
+// import "https://github.com/galadriel-ai/contracts/blob/main/contracts/contracts/interfaces/IOracle.sol";
+import "./interfaces/IOracle.sol";
 
 contract SimpleLLM {
-    address private oracleAddress = <oracle_address_here>; // https://docs.galadriel.com/oracle-address
+    address private oracleAddress = 0x68EC9556830AD097D661Df2557FBCeC166a0A075; // use latest: https://docs.galadriel.com/oracle-address
     uint private runId = 0;
     string public message;
     string public response;
