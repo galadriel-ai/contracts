@@ -13,17 +13,17 @@ contract SimpleLLM {
 
     constructor() {
         config = IOracle.GroqRequest({
-            model : "mixtral-8x7b-32768", // "llama3-8b-8192", "llama3-70b-8192", "mixtral-8x7b-32768" or "gemma-7b-it"
-            frequencyPenalty : 21, // > 20 for null
-            logitBias : "", // empty str for null
-            maxTokens : 1000, // 0 for null
-            presencePenalty : 21, // > 20 for null
-            responseFormat : "{\"type\":\"text\"}",
-            seed : 0, // null
-            stop : "", // null
-            temperature : 10, // Example temperature (scaled up, 10 means 1.0), > 20 means null
-            topP : 101, // Percentage 0-100, > 100 means null
-            user : "" // null
+            model: "mixtral-8x7b-32768", // "llama3-8b-8192", "llama3-70b-8192", "mixtral-8x7b-32768" or "gemma-7b-it"
+            frequencyPenalty: 21, // > 20 for null
+            logitBias: "", // empty str for null
+            maxTokens: 1000, // 0 for null
+            presencePenalty: 21, // > 20 for null
+            responseFormat: '{"type":"text"}',
+            seed: 0, // null
+            stop: "", // null
+            temperature: 10, // Example temperature (scaled up, 10 means 1.0), > 20 means null
+            topP: 101, // Percentage 0-100, > 100 means null
+            user: "" // null
         });
     }
 
@@ -39,15 +39,18 @@ contract SimpleLLM {
         message = _message;
         IOracle(oracleAddress).createGroqLlmCall(runId, config);
     }
-			
-	// required for Oracle
-     function onOracleGroqLlmResponse(
+
+    // required for Oracle
+    function onOracleGroqLlmResponse(
         uint /*_runId*/,
         IOracle.GroqResponse memory _response,
         string memory _errorMessage
     ) public {
         require(msg.sender == oracleAddress, "Caller is not oracle");
-        if (keccak256(abi.encodePacked(_errorMessage)) != keccak256(abi.encodePacked(""))) {
+        if (
+            keccak256(abi.encodePacked(_errorMessage)) !=
+            keccak256(abi.encodePacked(""))
+        ) {
             response = _errorMessage;
         } else {
             response = _response.content;
@@ -55,7 +58,9 @@ contract SimpleLLM {
     }
 
     // required for Oracle
-    function getMessageHistory(uint /*_runId*/) public view returns (IOracle.Message[] memory) {
+    function getMessageHistory(
+        uint /*_runId*/
+    ) public view returns (IOracle.Message[] memory) {
         IOracle.Message memory newMessage = IOracle.Message({
             role: "user",
             content: new IOracle.Content[](1)
@@ -69,4 +74,3 @@ contract SimpleLLM {
         return newMessages;
     }
 }
-

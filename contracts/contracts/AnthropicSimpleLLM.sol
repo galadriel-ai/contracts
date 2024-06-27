@@ -13,19 +13,19 @@ contract SimpleLLM {
 
     constructor() {
         config = IOracle.LlmRequest({
-            model : "claude-3-5-sonnet-20240620", // "claude-3-5-sonnet-20240620", "claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307", "claude-2.1", "claude-2.0", "claude-instant-1.2"
-            frequencyPenalty : 21, // > 20 for null
-            logitBias : "", // empty str for null
-            maxTokens : 1000, // 0 for null
-            presencePenalty : 21, // > 20 for null
-            responseFormat : "{\"type\":\"text\"}",
-            seed : 0, // null
-            stop : "", // null
-            temperature : 10, // Example temperature (scaled up, 10 means 1.0), > 20 means null
-            topP : 101, // Percentage 0-100, > 100 means null
-            tools : "",
-            toolChoice : "auto", // "none" or "auto"
-            user : "" // null
+            model: "claude-3-5-sonnet-20240620", // "claude-3-5-sonnet-20240620", "claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307", "claude-2.1", "claude-2.0", "claude-instant-1.2"
+            frequencyPenalty: 21, // > 20 for null
+            logitBias: "", // empty str for null
+            maxTokens: 1000, // 0 for null
+            presencePenalty: 21, // > 20 for null
+            responseFormat: '{"type":"text"}',
+            seed: 0, // null
+            stop: "", // null
+            temperature: 10, // Example temperature (scaled up, 10 means 1.0), > 20 means null
+            topP: 101, // Percentage 0-100, > 100 means null
+            tools: "",
+            toolChoice: "auto", // "none" or "auto"
+            user: "" // null
         });
     }
 
@@ -41,15 +41,18 @@ contract SimpleLLM {
         message = _message;
         IOracle(oracleAddress).createLlmCall(runId, config);
     }
-			
-	// required for Oracle
-     function onOracleLlmResponse(
+
+    // required for Oracle
+    function onOracleLlmResponse(
         uint /*_runId*/,
         IOracle.LlmResponse memory _response,
         string memory _errorMessage
     ) public {
         require(msg.sender == oracleAddress, "Caller is not oracle");
-        if (keccak256(abi.encodePacked(_errorMessage)) != keccak256(abi.encodePacked(""))) {
+        if (
+            keccak256(abi.encodePacked(_errorMessage)) !=
+            keccak256(abi.encodePacked(""))
+        ) {
             response = _errorMessage;
         } else {
             response = _response.content;
@@ -57,7 +60,9 @@ contract SimpleLLM {
     }
 
     // required for Oracle
-    function getMessageHistory(uint /*_runId*/) public view returns (IOracle.Message[] memory) {
+    function getMessageHistory(
+        uint /*_runId*/
+    ) public view returns (IOracle.Message[] memory) {
         IOracle.Message memory newMessage = IOracle.Message({
             role: "user",
             content: new IOracle.Content[](1)
@@ -71,4 +76,3 @@ contract SimpleLLM {
         return newMessages;
     }
 }
-
