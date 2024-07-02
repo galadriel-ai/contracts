@@ -27,10 +27,10 @@ describe("Agent", function () {
 
       await agent.runAgent("which came first: the chicken or the egg?", 2);
       // promptId: 0, callbackId: 0
-      const messages = await oracle.getMessages(0, 0)
+      const messages = await oracle.getMessagesAndRoles(0, 0)
       expect(messages.length).to.equal(2)
-      expect(messages[0]).to.equal("system prompt")
-      expect(messages[1]).to.equal("which came first: the chicken or the egg?")
+      expect(messages[0].content[0].value).to.equal("system prompt")
+      expect(messages[1].content[0].value).to.equal("which came first: the chicken or the egg?")
     });
     it("Oracle adds response and agents asks a follow-up question", async () => {
       const {
@@ -58,10 +58,10 @@ describe("Agent", function () {
         totalTokens: 15
       };
       await oracle.connect(oracleAccount).addOpenAiResponse(0, 0, response, "");
-      const messages = await oracle.getMessages(0, 0)
+      const messages = await oracle.getMessagesAndRoles(0, 0)
       expect(messages.length).to.equal(3)
-      expect(messages[1]).to.equal("which came first: the chicken or the egg?")
-      expect(messages[2]).to.equal("The Chicken")
+      expect(messages[1].content[0].value).to.equal("which came first: the chicken or the egg?")
+      expect(messages[2].content[0].value).to.equal("The Chicken")
     });
   });
 });

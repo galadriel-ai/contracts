@@ -9,14 +9,9 @@ import "./interfaces/IOracle.sol";
 // @notice This contract interacts with teeML oracle to handle chat interactions using the OpenAI model.
 contract OpenAiChatGpt {
 
-    struct Message {
-        string role;
-        string content;
-    }
-
     struct ChatRun {
         address owner;
-        Message[] messages;
+        IOracle.Message[] messages;
         uint messagesCount;
     }
 
@@ -46,19 +41,19 @@ contract OpenAiChatGpt {
         chatRunsCount = 0;
 
         config = IOracle.OpenAiRequest({
-        model : "gpt-4-turbo-preview",
-        frequencyPenalty : 21, // > 20 for null
-        logitBias : "", // empty str for null
-        maxTokens : 1000, // 0 for null
-        presencePenalty : 21, // > 20 for null
-        responseFormat : "{\"type\":\"text\"}",
-        seed : 0, // null
-        stop : "", // null
-        temperature : 10, // Example temperature (scaled up, 10 means 1.0), > 20 means null
-        topP : 101, // Percentage 0-100, > 100 means null
-        tools : "[{\"type\":\"function\",\"function\":{\"name\":\"web_search\",\"description\":\"Search the internet\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"Search query\"}},\"required\":[\"query\"]}}},{\"type\":\"function\",\"function\":{\"name\":\"code_interpreter\",\"description\":\"Evaluates python code in a sandbox environment. The environment resets on every execution. You must send the whole script every time and print your outputs. Script should be pure python code that can be evaluated. It should be in python format NOT markdown. The code should NOT be wrapped in backticks. All python packages including requests, matplotlib, scipy, numpy, pandas, etc are available. Output can only be read from stdout, and stdin. Do not use things like plot.show() as it will not work. print() any output and results so you can capture the output.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"code\":{\"type\":\"string\",\"description\":\"The pure python script to be evaluated. The contents will be in main.py. It should not be in markdown format.\"}},\"required\":[\"code\"]}}}]",
-        toolChoice : "auto", // "none" or "auto"
-        user : "" // null
+            model : "gpt-4-turbo-preview",
+            frequencyPenalty : 21, // > 20 for null
+            logitBias : "", // empty str for null
+            maxTokens : 1000, // 0 for null
+            presencePenalty : 21, // > 20 for null
+            responseFormat : "{\"type\":\"text\"}",
+            seed : 0, // null
+            stop : "", // null
+            temperature : 10, // Example temperature (scaled up, 10 means 1.0), > 20 means null
+            topP : 101, // Percentage 0-100, > 100 means null
+            tools : "[{\"type\":\"function\",\"function\":{\"name\":\"web_search\",\"description\":\"Search the internet\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"Search query\"}},\"required\":[\"query\"]}}},{\"type\":\"function\",\"function\":{\"name\":\"code_interpreter\",\"description\":\"Evaluates python code in a sandbox environment. The environment resets on every execution. You must send the whole script every time and print your outputs. Script should be pure python code that can be evaluated. It should be in python format NOT markdown. The code should NOT be wrapped in backticks. All python packages including requests, matplotlib, scipy, numpy, pandas, etc are available. Output can only be read from stdout, and stdin. Do not use things like plot.show() as it will not work. print() any output and results so you can capture the output.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"code\":{\"type\":\"string\",\"description\":\"The pure python script to be evaluated. The contents will be in main.py. It should not be in markdown format.\"}},\"required\":[\"code\"]}}}]",
+            toolChoice : "auto", // "none" or "auto"
+            user : "" // null
         });
     }
 
@@ -88,9 +83,7 @@ contract OpenAiChatGpt {
         ChatRun storage run = chatRuns[chatRunsCount];
 
         run.owner = msg.sender;
-        Message memory newMessage;
-        newMessage.content = message;
-        newMessage.role = "user";
+        IOracle.Message memory newMessage = createTextMessage("user", message);
         run.messages.push(newMessage);
         run.messagesCount = 1;
 
@@ -120,18 +113,14 @@ contract OpenAiChatGpt {
         );
 
         if (!compareStrings(errorMessage, "")) {
-            Message memory newMessage;
-            newMessage.role = "assistant";
-            newMessage.content = errorMessage;
+            IOracle.Message memory newMessage = createTextMessage("assistant", errorMessage);
             run.messages.push(newMessage);
             run.messagesCount++;
         } else {
             if (compareStrings(response.content, "")) {
                 IOracle(oracleAddress).createFunctionCall(runId, response.functionName, response.functionArguments);
             } else {
-                Message memory newMessage;
-                newMessage.role = "assistant";
-                newMessage.content = response.content;
+                IOracle.Message memory newMessage = createTextMessage("assistant", response.content);
                 run.messages.push(newMessage);
                 run.messagesCount++;
             }
@@ -154,9 +143,7 @@ contract OpenAiChatGpt {
             "No function to respond to"
         );
         if (compareStrings(errorMessage, "")) {
-            Message memory newMessage;
-            newMessage.role = "user";
-            newMessage.content = response;
+            IOracle.Message memory newMessage = createTextMessage("user", response);
             run.messages.push(newMessage);
             run.messagesCount++;
             IOracle(oracleAddress).createOpenAiLlmCall(runId, config);
@@ -176,37 +163,33 @@ contract OpenAiChatGpt {
             run.owner == msg.sender, "Only chat owner can add messages"
         );
 
-        Message memory newMessage;
-        newMessage.content = message;
-        newMessage.role = "user";
+        IOracle.Message memory newMessage = createTextMessage("user", message);
         run.messages.push(newMessage);
         run.messagesCount++;
 
         IOracle(oracleAddress).createOpenAiLlmCall(runId, config);
     }
 
-    // @notice Retrieves the message history contents of a chat run
+    // @notice Retrieves the message history of a chat run
     // @param chatId The ID of the chat run
-    // @return An array of message contents
+    // @return An array of messages
     // @dev Called by teeML oracle
-    function getMessageHistoryContents(uint chatId) public view returns (string[] memory) {
-        string[] memory messages = new string[](chatRuns[chatId].messages.length);
-        for (uint i = 0; i < chatRuns[chatId].messages.length; i++) {
-            messages[i] = chatRuns[chatId].messages[i].content;
-        }
-        return messages;
+    function getMessageHistory(uint chatId) public view returns (IOracle.Message[] memory) {
+        return chatRuns[chatId].messages;
     }
 
-    // @notice Retrieves the roles of the messages in a chat run
-    // @param chatId The ID of the chat run
-    // @return An array of message roles
-    // @dev Called by teeML oracle
-    function getMessageHistoryRoles(uint chatId) public view returns (string[] memory) {
-        string[] memory roles = new string[](chatRuns[chatId].messages.length);
-        for (uint i = 0; i < chatRuns[chatId].messages.length; i++) {
-            roles[i] = chatRuns[chatId].messages[i].role;
-        }
-        return roles;
+    // @notice Creates a text message with the given role and content
+    // @param role The role of the message
+    // @param content The content of the message
+    // @return The created message
+    function createTextMessage(string memory role, string memory content) private pure returns (IOracle.Message memory) {
+        IOracle.Message memory newMessage = IOracle.Message({
+            role: role,
+            content: new IOracle.Content[](1)
+        });
+        newMessage.content[0].contentType = "text";
+        newMessage.content[0].value = content;
+        return newMessage;
     }
 
     // @notice Compares two strings for equality

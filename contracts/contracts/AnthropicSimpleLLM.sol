@@ -30,14 +30,6 @@ contract SimpleLLM {
     }
 
     function sendMessage(string memory _message) public {
-        IOracle.Message memory newMessage = IOracle.Message({
-            role: "user",
-            content: new IOracle.Content[](1)
-        });
-        newMessage.content[0] = IOracle.Content({
-            contentType: "text",
-            value: _message
-        });
         message = _message;
         IOracle(oracleAddress).createLlmCall(runId, config);
     }
@@ -50,8 +42,7 @@ contract SimpleLLM {
     ) public {
         require(msg.sender == oracleAddress, "Caller is not oracle");
         if (
-            keccak256(abi.encodePacked(_errorMessage)) !=
-            keccak256(abi.encodePacked(""))
+            bytes(_errorMessage).length > 0
         ) {
             response = _errorMessage;
         } else {
