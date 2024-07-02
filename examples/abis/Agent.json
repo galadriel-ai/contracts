@@ -89,31 +89,36 @@
         "type": "uint256"
       }
     ],
-    "name": "getMessageHistoryContents",
+    "name": "getMessageHistory",
     "outputs": [
       {
-        "internalType": "string[]",
+        "components": [
+          {
+            "internalType": "string",
+            "name": "role",
+            "type": "string"
+          },
+          {
+            "components": [
+              {
+                "internalType": "string",
+                "name": "contentType",
+                "type": "string"
+              },
+              {
+                "internalType": "string",
+                "name": "value",
+                "type": "string"
+              }
+            ],
+            "internalType": "struct IOracle.Content[]",
+            "name": "content",
+            "type": "tuple[]"
+          }
+        ],
+        "internalType": "struct IOracle.Message[]",
         "name": "",
-        "type": "string[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "agentId",
-        "type": "uint256"
-      }
-    ],
-    "name": "getMessageHistoryRoles",
-    "outputs": [
-      {
-        "internalType": "string[]",
-        "name": "",
-        "type": "string[]"
+        "type": "tuple[]"
       }
     ],
     "stateMutability": "view",
@@ -284,7 +289,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "i",
+        "name": "",
         "type": "uint256"
       }
     ],

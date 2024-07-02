@@ -5,13 +5,15 @@ pragma solidity ^0.8.13;
 import "./interfaces/IOracle.sol";
 
 contract SimpleLLM {
-    address private oracleAddress = 0x68EC9556830AD097D661Df2557FBCeC166a0A075; // use latest: https://docs.galadriel.com/oracle-address
+    address private oracleAddress; // use latest: https://docs.galadriel.com/oracle-address
     uint private runId = 0;
     string public message;
     string public response;
     IOracle.LlmRequest private config;
 
-    constructor() {
+    constructor(address initialOracleAddress) {
+        oracleAddress = initialOracleAddress;
+
         config = IOracle.LlmRequest({
             model: "claude-3-5-sonnet-20240620", // "claude-3-5-sonnet-20240620", "claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307", "claude-2.1", "claude-2.0", "claude-instant-1.2"
             frequencyPenalty: 21, // > 20 for null
