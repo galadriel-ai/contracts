@@ -4,14 +4,16 @@ pragma solidity ^0.8.13;
 // import "https://github.com/galadriel-ai/contracts/blob/main/contracts/contracts/interfaces/IOracle.sol";
 import "./interfaces/IOracle.sol";
 
-contract SimpleLLM {
-    address private oracleAddress = 0x68EC9556830AD097D661Df2557FBCeC166a0A075; // use latest: https://docs.galadriel.com/oracle-address
+contract GroqSimpleLLM {
+    address private oracleAddress; // use latest: https://docs.galadriel.com/oracle-address
     uint private runId = 0;
     string public message;
     string public response;
     IOracle.GroqRequest private config;
 
-    constructor() {
+    constructor(address initialOracleAddress) {
+        oracleAddress = initialOracleAddress;
+
         config = IOracle.GroqRequest({
             model: "mixtral-8x7b-32768", // "llama3-8b-8192", "llama3-70b-8192", "mixtral-8x7b-32768" or "gemma-7b-it"
             frequencyPenalty: 21, // > 20 for null
