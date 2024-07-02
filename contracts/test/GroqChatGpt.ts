@@ -27,9 +27,9 @@ describe("GroqChatGpt", function () {
 
       await chatGpt.startChat("Hello");
       // promptId: 0, callbackId: 0
-      const messages = await oracle.getMessages(0, 0)
+      const messages = await oracle.getMessagesAndRoles(0, 0)
       expect(messages.length).to.equal(1)
-      expect(messages[0]).to.equal("Hello")
+      expect(messages[0].content[0].value).to.equal("Hello")
     });
     it("Configuration gets sent to oracle", async () => {
       const {chatGpt, oracle, owner} = await loadFixture(deploy);
@@ -61,9 +61,9 @@ describe("GroqChatGpt", function () {
       };
       await oracle.connect(oracleAccount).addGroqResponse(0, 0, response, "");
 
-      const messages = await oracle.getMessages(0, 0)
+      const messages = await oracle.getMessagesAndRoles(0, 0)
       expect(messages.length).to.equal(2)
-      expect(messages[1]).to.equal("Hi!")
+      expect(messages[1].content[0].value).to.equal("Hi!")
     });
   });
 });

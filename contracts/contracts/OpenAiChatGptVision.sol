@@ -160,7 +160,7 @@ contract OpenAiChatGptVision {
             run.owner == msg.sender, "Only chat owner can add messages"
         );
 
-         IOracle.Message memory newMessage = IOracle.Message({
+        IOracle.Message memory newMessage = IOracle.Message({
             role: "user",
             content: new IOracle.Content[](1)
         });

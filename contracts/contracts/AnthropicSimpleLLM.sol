@@ -5,13 +5,14 @@ pragma solidity ^0.8.13;
 import "./interfaces/IOracle.sol";
 
 contract SimpleLLM {
-    address private oracleAddress = 0x68EC9556830AD097D661Df2557FBCeC166a0A075; // use latest: https://docs.galadriel.com/oracle-address
-    uint private runId = 0;
-    string public message;
+    address private oracleAddress; // use latest: https://docs.galadriel.com/oracle-address
+    IOracle.Message public message;
     string public response;
     IOracle.LlmRequest private config;
 
-    constructor() {
+    constructor(address initialOracleAddress) {
+        oracleAddress = initialOracleAddress;
+
         config = IOracle.LlmRequest({
             model: "claude-3-5-sonnet-20240620", // "claude-3-5-sonnet-20240620", "claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307", "claude-2.1", "claude-2.0", "claude-instant-1.2"
             frequencyPenalty: 21, // > 20 for null
@@ -30,16 +31,8 @@ contract SimpleLLM {
     }
 
     function sendMessage(string memory _message) public {
-        IOracle.Message memory newMessage = IOracle.Message({
-            role: "user",
-            content: new IOracle.Content[](1)
-        });
-        newMessage.content[0] = IOracle.Content({
-            contentType: "text",
-            value: _message
-        });
-        message = _message;
-        IOracle(oracleAddress).createLlmCall(runId, config);
+        message = createTextMessage("user", _message);
+        IOracle(oracleAddress).createLlmCall(0, config);
     }
 
     // required for Oracle
@@ -49,10 +42,7 @@ contract SimpleLLM {
         string memory _errorMessage
     ) public {
         require(msg.sender == oracleAddress, "Caller is not oracle");
-        if (
-            keccak256(abi.encodePacked(_errorMessage)) !=
-            keccak256(abi.encodePacked(""))
-        ) {
+        if (bytes(_errorMessage).length > 0) {
             response = _errorMessage;
         } else {
             response = _response.content;
@@ -63,16 +53,22 @@ contract SimpleLLM {
     function getMessageHistory(
         uint /*_runId*/
     ) public view returns (IOracle.Message[] memory) {
+        IOracle.Message[] memory messages = new IOracle.Message[](1);
+        messages[0] = message;
+        return messages;
+    }
+
+    // @notice Creates a text message with the given role and content
+    // @param role The role of the message
+    // @param content The content of the message
+    // @return The created message
+    function createTextMessage(string memory role, string memory content) private pure returns (IOracle.Message memory) {
         IOracle.Message memory newMessage = IOracle.Message({
-            role: "user",
+            role: role,
             content: new IOracle.Content[](1)
         });
-        newMessage.content[0] = IOracle.Content({
-            contentType: "text",
-            value: message
-        });
-        IOracle.Message[] memory newMessages = new IOracle.Message[](1);
-        newMessages[0] = newMessage;
-        return newMessages;
+        newMessage.content[0].contentType = "text";
+        newMessage.content[0].value = content;
+        return newMessage;
     }
 }

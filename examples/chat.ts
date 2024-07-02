@@ -107,16 +107,17 @@ async function getNewMessages(
   chatId: number,
   currentMessagesCount: number
 ): Promise<Message[]> {
-  const messages = await contract.getMessageHistoryContents(chatId)
-  const roles = await contract.getMessageHistoryRoles(chatId)
+  const messages = await contract.getMessageHistory(chatId)
 
   const newMessages: Message[] = []
   messages.forEach((message: any, i: number) => {
     if (i >= currentMessagesCount) {
-      newMessages.push({
-        role: roles[i],
-        content: messages[i]
-      })
+      newMessages.push(
+        {
+          role: message[0],
+          content: message.content[0].value,
+        }
+      );
     }
   })
   return newMessages;

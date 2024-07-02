@@ -9,14 +9,9 @@ import "./interfaces/IOracle.sol";
 // @notice This contract interacts with teeML Oracle to handle chat interactions using the Groq model.
 contract GroqChatGpt {
 
-    struct Message {
-        string role;
-        string content;
-    }
-
     struct ChatRun {
         address owner;
-        Message[] messages;
+        IOracle.Message[] messages;
         uint messagesCount;
     }
 
@@ -46,17 +41,17 @@ contract GroqChatGpt {
         chatRunsCount = 0;
 
         config = IOracle.GroqRequest({
-        model : "mixtral-8x7b-32768",
-        frequencyPenalty : 21, // > 20 for null
-        logitBias : "", // empty str for null
-        maxTokens : 1000, // 0 for null
-        presencePenalty : 21, // > 20 for null
-        responseFormat : "{\"type\":\"text\"}",
-        seed : 0, // null
-        stop : "", // null
-        temperature : 10, // Example temperature (scaled up, 10 means 1.0), > 20 means null
-        topP : 101, // Percentage 0-100, > 100 means null
-        user : "" // null
+            model : "mixtral-8x7b-32768",
+            frequencyPenalty : 21, // > 20 for null
+            logitBias : "", // empty str for null
+            maxTokens : 1000, // 0 for null
+            presencePenalty : 21, // > 20 for null
+            responseFormat : "{\"type\":\"text\"}",
+            seed : 0, // null
+            stop : "", // null
+            temperature : 10, // Example temperature (scaled up, 10 means 1.0), > 20 means null
+            topP : 101, // Percentage 0-100, > 100 means null
+            user : "" // null
         });
     }
 
@@ -85,9 +80,7 @@ contract GroqChatGpt {
         ChatRun storage run = chatRuns[chatRunsCount];
 
         run.owner = msg.sender;
-        Message memory newMessage;
-        newMessage.content = message;
-        newMessage.role = "user";
+        IOracle.Message memory newMessage = createTextMessage("user", message);
         run.messages.push(newMessage);
         run.messagesCount = 1;
 
@@ -116,15 +109,11 @@ contract GroqChatGpt {
             "No message to respond to"
         );
         if (!compareStrings(errorMessage, "")) {
-            Message memory newMessage;
-            newMessage.role = "assistant";
-            newMessage.content = errorMessage;
+            IOracle.Message memory newMessage = createTextMessage("assistant", errorMessage);
             run.messages.push(newMessage);
             run.messagesCount++;
         } else {
-            Message memory newMessage;
-            newMessage.role = "assistant";
-            newMessage.content = response.content;
+            IOracle.Message memory newMessage = createTextMessage("assistant", response.content);
             run.messages.push(newMessage);
             run.messagesCount++;
         }
@@ -143,37 +132,33 @@ contract GroqChatGpt {
             run.owner == msg.sender, "Only chat owner can add messages"
         );
 
-        Message memory newMessage;
-        newMessage.content = message;
-        newMessage.role = "user";
+        IOracle.Message memory newMessage = createTextMessage("user", message);
         run.messages.push(newMessage);
         run.messagesCount++;
 
         IOracle(oracleAddress).createGroqLlmCall(runId, config);
     }
 
-    // @notice Retrieves the message history contents of a chat run
+    // @notice Retrieves the message history of a chat run
     // @param chatId The ID of the chat run
-    // @return An array of message contents
+    // @return An array of messages
     // @dev Called by teeML oracle
-    function getMessageHistoryContents(uint chatId) public view returns (string[] memory) {
-        string[] memory messages = new string[](chatRuns[chatId].messages.length);
-        for (uint i = 0; i < chatRuns[chatId].messages.length; i++) {
-            messages[i] = chatRuns[chatId].messages[i].content;
-        }
-        return messages;
+    function getMessageHistory(uint chatId) public view returns (IOracle.Message[] memory) {
+        return chatRuns[chatId].messages;
     }
 
-    // @notice Retrieves the roles of the messages in a chat run
-    // @param chatId The ID of the chat run
-    // @return An array of message roles
-    // @dev Called by teeML oracle
-    function getMessageHistoryRoles(uint chatId) public view returns (string[] memory) {
-        string[] memory roles = new string[](chatRuns[chatId].messages.length);
-        for (uint i = 0; i < chatRuns[chatId].messages.length; i++) {
-            roles[i] = chatRuns[chatId].messages[i].role;
-        }
-        return roles;
+    // @notice Creates a text message with the given role and content
+    // @param role The role of the message
+    // @param content The content of the message
+    // @return The created message
+    function createTextMessage(string memory role, string memory content) private pure returns (IOracle.Message memory) {
+        IOracle.Message memory newMessage = IOracle.Message({
+            role: role,
+            content: new IOracle.Content[](1)
+        });
+        newMessage.content[0].contentType = "text";
+        newMessage.content[0].value = content;
+        return newMessage;
     }
 
     // @notice Compares two strings for equality

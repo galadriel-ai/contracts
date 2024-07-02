@@ -9,14 +9,9 @@ import "./interfaces/IOracle.sol";
 // @notice This contract handles chat interactions and integrates with teeML oracle for LLM and knowledge base queries.
 contract ChatGpt {
 
-    struct Message {
-        string role;
-        string content;
-    }
-
     struct ChatRun {
         address owner;
-        Message[] messages;
+        IOracle.Message[] messages;
         uint messagesCount;
     }
 
@@ -73,9 +68,7 @@ contract ChatGpt {
         ChatRun storage run = chatRuns[chatRunsCount];
 
         run.owner = msg.sender;
-        Message memory newMessage;
-        newMessage.content = message;
-        newMessage.role = "user";
+        IOracle.Message memory newMessage = createTextMessage("user", message);
         run.messages.push(newMessage);
         run.messagesCount = 1;
 
@@ -114,9 +107,7 @@ contract ChatGpt {
             "No message to respond to"
         );
 
-        Message memory newMessage;
-        newMessage.content = response;
-        newMessage.role = "assistant";
+        IOracle.Message memory newMessage = createTextMessage("assistant", response);
         run.messages.push(newMessage);
         run.messagesCount++;
     }
@@ -136,10 +127,10 @@ contract ChatGpt {
             "No message to add context to"
         );
         // Retrieve the last user message
-        Message storage lastMessage = run.messages[run.messagesCount - 1];
+        IOracle.Message storage lastMessage = run.messages[run.messagesCount - 1];
 
         // Start with the original message content
-        string memory newContent = lastMessage.content;
+        string memory newContent = lastMessage.content[0].value;
 
         // Append "Relevant context:\n" only if there are documents
         if (documents.length > 0) {
@@ -152,7 +143,7 @@ contract ChatGpt {
         }
 
         // Finally, set the lastMessage content to the newly constructed string
-        lastMessage.content = newContent;
+        lastMessage.content[0].value = newContent;
 
         // Call LLM
         IOracle(oracleAddress).createLlmCall(runId);
@@ -171,9 +162,7 @@ contract ChatGpt {
             run.owner == msg.sender, "Only chat owner can add messages"
         );
 
-        Message memory newMessage;
-        newMessage.content = message;
-        newMessage.role = "user";
+        IOracle.Message memory newMessage = createTextMessage("user", message);
         run.messages.push(newMessage);
         run.messagesCount++;
         // If there is a knowledge base, create a knowledge base query
@@ -190,27 +179,25 @@ contract ChatGpt {
         }
     }
 
-    // @notice Retrieves the message history contents of a chat run
+    // @notice Retrieves the message history of a chat run
     // @param chatId The ID of the chat run
-    // @return An array of message contents
+    // @return An array of messages
     // @dev Called by teeML oracle
-    function getMessageHistoryContents(uint chatId) public view returns (string[] memory) {
-        string[] memory messages = new string[](chatRuns[chatId].messages.length);
-        for (uint i = 0; i < chatRuns[chatId].messages.length; i++) {
-            messages[i] = chatRuns[chatId].messages[i].content;
-        }
-        return messages;
+    function getMessageHistory(uint chatId) public view returns (IOracle.Message[] memory) {
+        return chatRuns[chatId].messages;
     }
 
-    // @notice Retrieves the roles of the messages in a chat run
-    // @param chatId The ID of the chat run
-    // @return An array of message roles
-    // @dev Called by teeML oracle
-    function getMessageHistoryRoles(uint chatId) public view returns (string[] memory) {
-        string[] memory roles = new string[](chatRuns[chatId].messages.length);
-        for (uint i = 0; i < chatRuns[chatId].messages.length; i++) {
-            roles[i] = chatRuns[chatId].messages[i].role;
-        }
-        return roles;
+    // @notice Creates a text message with the given role and content
+    // @param role The role of the message
+    // @param content The content of the message
+    // @return The created message
+    function createTextMessage(string memory role, string memory content) private pure returns (IOracle.Message memory) {
+        IOracle.Message memory newMessage = IOracle.Message({
+            role: role,
+            content: new IOracle.Content[](1)
+        });
+        newMessage.content[0].contentType = "text";
+        newMessage.content[0].value = content;
+        return newMessage;
     }
 }

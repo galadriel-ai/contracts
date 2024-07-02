@@ -122,8 +122,8 @@ async function getNewMessages(
     if (i >= currentMessagesCount) {
       newMessages.push(
         {
-          role: message[0],
-          content: message[1][0][1],
+          role: message.role,
+          content: message.content[0].value,
         }
       );
     }

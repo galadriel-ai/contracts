@@ -11,14 +11,9 @@ contract Agent {
 
     string public prompt;
 
-    struct Message {
-        string role;
-        string content;
-    }
-
     struct AgentRun {
         address owner;
-        Message[] messages;
+        IOracle.Message[] messages;
         uint responsesCount;
         uint8 max_iterations;
         bool is_finished;
@@ -102,14 +97,10 @@ contract Agent {
         run.responsesCount = 0;
         run.max_iterations = max_iterations;
 
-        Message memory systemMessage;
-        systemMessage.content = prompt;
-        systemMessage.role = "system";
+        IOracle.Message memory systemMessage = createTextMessage("system", prompt);
         run.messages.push(systemMessage);
 
-        Message memory newMessage;
-        newMessage.content = query;
-        newMessage.role = "user";
+        IOracle.Message memory newMessage =  createTextMessage("user", query);
         run.messages.push(newMessage);
 
         uint currentId = agentRunCount;
@@ -134,9 +125,7 @@ contract Agent {
         AgentRun storage run = agentRuns[runId];
 
         if (!compareStrings(errorMessage, "")) {
-            Message memory newMessage;
-            newMessage.role = "assistant";
-            newMessage.content = errorMessage;
+            IOracle.Message memory newMessage = createTextMessage("assistant", errorMessage);
             run.messages.push(newMessage);
             run.responsesCount++;
             run.is_finished = true;
@@ -147,10 +136,8 @@ contract Agent {
             return;
         }
         if (!compareStrings(response.content, "")) {
-            Message memory assistantMessage;
-            assistantMessage.content = response.content;
-            assistantMessage.role = "assistant";
-            run.messages.push(assistantMessage);
+            IOracle.Message memory newMessage = createTextMessage("assistant", response.content);
+            run.messages.push(newMessage);
             run.responsesCount++;
         }
         if (!compareStrings(response.functionName, "")) {
@@ -178,36 +165,18 @@ contract Agent {
             result = errorMessage;
         }
 
-        Message memory newMessage;
-        newMessage.role = "user";
-        newMessage.content = result;
+        IOracle.Message memory newMessage =  createTextMessage("user", result);
         run.messages.push(newMessage);
         run.responsesCount++;
         IOracle(oracleAddress).createOpenAiLlmCall(runId, config);
     }
 
-    // @notice Retrieves the message history contents for a given agent run
+    // @notice Retrieves the message history for a given agent run
     // @param agentId The ID of the agent run
-    // @return An array of message contents
+    // @return An array of messages
     // @dev Called by teeML oracle
-    function getMessageHistoryContents(uint agentId) public view returns (string[] memory) {
-        string[] memory messages = new string[](agentRuns[agentId].messages.length);
-        for (uint i = 0; i < agentRuns[agentId].messages.length; i++) {
-            messages[i] = agentRuns[agentId].messages[i].content;
-        }
-        return messages;
-    }
-
-    // @notice Retrieves the roles of the messages in a given agent run
-    // @param agentId The ID of the agent run
-    // @return An array of message roles
-    // @dev Called by teeML oracle
-    function getMessageHistoryRoles(uint agentId) public view returns (string[] memory) {
-        string[] memory roles = new string[](agentRuns[agentId].messages.length);
-        for (uint i = 0; i < agentRuns[agentId].messages.length; i++) {
-            roles[i] = agentRuns[agentId].messages[i].role;
-        }
-        return roles;
+    function getMessageHistory(uint agentId) public view returns (IOracle.Message[] memory) {
+        return agentRuns[agentId].messages;
     }
 
     // @notice Checks if a given agent run is finished
@@ -215,6 +184,20 @@ contract Agent {
     // @return True if the run is finished, false otherwise
     function isRunFinished(uint runId) public view returns (bool) {
         return agentRuns[runId].is_finished;
+    }
+
+    // @notice Creates a text message with the given role and content
+    // @param role The role of the message
+    // @param content The content of the message
+    // @return The created message
+    function createTextMessage(string memory role, string memory content) private pure returns (IOracle.Message memory) {
+        IOracle.Message memory newMessage = IOracle.Message({
+            role: role,
+            content: new IOracle.Content[](1)
+        });
+        newMessage.content[0].contentType = "text";
+        newMessage.content[0].value = content;
+        return newMessage;
     }
 
     // @notice Compares two strings for equality
