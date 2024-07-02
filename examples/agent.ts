@@ -112,16 +112,17 @@ async function getNewMessages(
   agentRunID: number,
   currentMessagesCount: number
 ): Promise<Message[]> {
-  const messages = await contract.getMessageHistoryContents(agentRunID)
-  const roles = await contract.getMessageHistoryRoles(agentRunID)
+  const messages = await contract.getMessageHistory(agentRunID)
 
   const newMessages: Message[] = []
   messages.forEach((message: any, i: number) => {
     if (i >= currentMessagesCount) {
-      newMessages.push({
-        role: roles[i],
-        content: messages[i]
-      })
+      newMessages.push(
+        {
+          role: message.role,
+          content: message.content[0].value,
+        }
+      );
     }
   })
   return newMessages;
