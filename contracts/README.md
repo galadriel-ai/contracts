@@ -24,6 +24,11 @@ Get the [oracle address](https://docs.galadriel.com/oracle-address) from the doc
 the address.  
 Check the available example contracts in the [contracts](contracts) directory
 
+**Compile the contracts**
+```
+npm run compile
+```
+**Deploy a contract**
 ```
 npx hardhat deploy --network [network (galadriel or localhost)] --contract [contract name] --oracleaddress [oracle_address] [space separated extra constructor args]
 # ChatGpt example
