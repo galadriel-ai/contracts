@@ -1,5 +1,5 @@
-import {Contract, ethers, TransactionReceipt, Wallet} from "ethers";
-import ABI from "./abis/dAGILLM.json";
+import {Contract, ethers, Wallet} from "ethers";
+import ABI from "./abis/OpenAiSimpleLLM.json";
 import * as readline from 'readline';
 
 require("dotenv").config()
