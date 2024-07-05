@@ -29,14 +29,18 @@ contract AiTownAgent {
     // @notice Address of the oracle contract
     address public oracleAddress;
 
+    // @notice System prompt for the agent
+    string public systemPrompt;
+
     // @notice Event emitted when the oracle address is updated
     event OracleAddressUpdated(address indexed newOracleAddress);
 
     // @param initialOracleAddress Initial address of the oracle contract
     // @param systemPrompt System prompt for the run
-    constructor(address initialOracleAddress) {
+    constructor(address initialOracleAddress, string memory _systemPrompt) {
         owner = msg.sender;
         oracleAddress = initialOracleAddress;
+        systemPrompt = _systemPrompt;
     }
 
     // @notice Ensures the caller is the contract owner
@@ -56,7 +60,7 @@ contract AiTownAgent {
         emit OracleAddressUpdated(newOracleAddress);
     }
 
-    function startChat(string memory conversationId, string memory systemPrompt, string memory message) public returns (uint) {
+    function startChat(string memory conversationId, string memory message) public returns (uint) {
         ChatRun storage run = chatRuns[chatRunsCount];
         conversationIdToChatRun[conversationId] = chatRunsCount;
         run.owner = msg.sender;
