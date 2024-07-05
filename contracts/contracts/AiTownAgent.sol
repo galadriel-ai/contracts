@@ -4,9 +4,10 @@ pragma solidity ^0.8.9;
 // Uncomment this line to use console.log
 // import "hardhat/console.sol";
 import "./interfaces/IOracle.sol";
+import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
 // @title AiTownAgent
-contract AiTownAgent {
+contract AiTownAgent is ERC1155 {
 
     struct ChatRun {
         address owner;
@@ -25,7 +26,7 @@ contract AiTownAgent {
 
     // @notice Address of the contract owner
     address private owner;
-    
+
     // @notice Address of the oracle contract
     address public oracleAddress;
 
@@ -37,7 +38,9 @@ contract AiTownAgent {
 
     // @param initialOracleAddress Initial address of the oracle contract
     // @param systemPrompt System prompt for the run
-    constructor(address initialOracleAddress, string memory _systemPrompt) {
+    constructor(address initialOracleAddress, string memory _systemPrompt, string memory _tokenUri)
+    ERC1155(_tokenUri)
+    {
         owner = msg.sender;
         oracleAddress = initialOracleAddress;
         systemPrompt = _systemPrompt;
@@ -96,6 +99,11 @@ contract AiTownAgent {
         IOracle.Message memory newMessage = createTextMessage("assistant", response);
         run.messages.push(newMessage);
         run.messagesCount++;
+
+        if (run.messagesCount == 7 && this.balanceOf(run.owner, 0) == 0) {
+            // token_id:0, amount: 1
+            _mint(run.owner, 0, 1, "");
+        }
     }
 
     function addMessage(string memory message, string memory conversationId) public {
@@ -127,8 +135,8 @@ contract AiTownAgent {
 
     function createTextMessage(string memory role, string memory content) private pure returns (IOracle.Message memory) {
         IOracle.Message memory newMessage = IOracle.Message({
-            role: role,
-            content: new IOracle.Content[](1)
+        role : role,
+        content : new IOracle.Content[](1)
         });
         newMessage.content[0].contentType = "text";
         newMessage.content[0].value = content;
