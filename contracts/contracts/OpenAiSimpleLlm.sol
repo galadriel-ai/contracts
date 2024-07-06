@@ -36,7 +36,6 @@ contract OpenAiSimpleLLM {
 
     // required for Oracle
     function onOracleOpenAiLlmResponse(
-        uint runId,
         IOracle.OpenAiResponse memory _response,
         string memory _errorMessage
     ) public {
