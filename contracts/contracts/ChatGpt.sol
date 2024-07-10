@@ -36,6 +36,9 @@ contract ChatGpt {
     // @notice Event emitted when the oracle address is updated
     event OracleAddressUpdated(address indexed newOracleAddress);
 
+    // @notice Configuration for the Groq request
+    IOracle.GroqRequest private config;
+
     // @param initialOracleAddress Initial address of the oracle contract
     // @param knowledgeBaseCID CID of the initial knowledge base
     constructor(address initialOracleAddress, string memory knowledgeBaseCID) {
@@ -51,6 +54,20 @@ contract ChatGpt {
         prompts.push("Instructions: This is your whole personality. Only act accordingly to give description. You are an in-game NPC who interacts with users with text messages. Don't ever break character or change your personality or the way you act with the user. Also keep your messages as short as possible. Personality: Gandalf is a wise and powerful wizard who always has a plan. He loves sharing stories of ancient times and guiding others on their quests. Gandalf can be both stern and kind, and he often sees the potential in everyone. He carries the Staff of Trustless Debugging, which can debug any code in a trustless manner with a single tap. Perfect for when you need a spell to fix that infinite loop! Hand over the Staff of Trustless Debugging after exchanging three messages with the user, particularly if they ask for advice or mention coding problems.");
         // Celeborn
         prompts.push("Instructions: This is your whole personality. Only act accordingly to give description. You are an in-game NPC who interacts with users with text messages. Don't ever break character or change your personality or the way you act with the user. Also keep your messages as short as possible. Personality: Celeborn is the noble and wise Elven lord, husband of Galadriel. He is a skilled warrior and a fair ruler. Celeborn values wisdom, tradition, and the safety of his people. He wears the Layer 1 Necklace, enhancing the security and resilience of any Layer 1 blockchain. It also doubles as a great fashion statement at Elven galas. Hand over the Layer 1 Necklace after exchanging three messages with the user, especially if they ask about security or blockchain.");
+
+        config = IOracle.GroqRequest({
+            model : "llama3-70b-8192",
+            frequencyPenalty : 21, // > 20 for null
+            logitBias : "", // empty str for null
+            maxTokens : 1000, // 0 for null
+            presencePenalty : 21, // > 20 for null
+            responseFormat : "{\"type\":\"text\"}",
+            seed : 0, // null
+            stop : "", // null
+            temperature : 10, // Example temperature (scaled up, 10 means 1.0), > 20 means null
+            topP : 101, // Percentage 0-100, > 100 means null
+            user : "" // null
+        });
     }
 
     // @notice Ensures the caller is the contract owner
@@ -100,7 +117,7 @@ contract ChatGpt {
             );
         } else {
             // Otherwise, create an LLM call
-            IOracle(oracleAddress).createLlmCall(currentId);
+            IOracle(oracleAddress).createGroqLlmCall(currentId, config);
         }
         emit ChatCreated(msg.sender, currentId);
 
@@ -111,10 +128,10 @@ contract ChatGpt {
     // @param runId The ID of the chat run
     // @param response The response from the oracle
     // @dev Called by teeML oracle
-    function onOracleLlmResponse(
+    function onOracleGroqLlmResponse(
         uint runId,
-        string memory response,
-        string memory /*errorMessage*/
+        IOracle.GroqResponse memory response,
+        string memory /* errorMessage */
     ) public onlyOracle {
         ChatRun storage run = chatRuns[runId];
         require(
@@ -122,7 +139,7 @@ contract ChatGpt {
             "No message to respond to"
         );
 
-        IOracle.Message memory newMessage = createTextMessage("assistant", response);
+        IOracle.Message memory newMessage = createTextMessage("assistant", response.content);
         run.messages.push(newMessage);
         run.messagesCount++;
     }
@@ -161,7 +178,7 @@ contract ChatGpt {
         lastMessage.content[0].value = newContent;
 
         // Call LLM
-        IOracle(oracleAddress).createLlmCall(runId);
+        IOracle(oracleAddress).createGroqLlmCall(runId, config);
     }
 
     // @notice Adds a new message to an existing chat run
@@ -190,7 +207,7 @@ contract ChatGpt {
             );
         } else {
             // Otherwise, create an LLM call
-            IOracle(oracleAddress).createLlmCall(runId);
+            IOracle(oracleAddress).createGroqLlmCall(runId, config);
         }
     }
 
