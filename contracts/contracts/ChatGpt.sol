@@ -98,7 +98,7 @@ contract ChatGpt {
         ChatRun storage run = chatRuns[chatRunsCount];
 
         run.owner = msg.sender;
-        IOracle.Message memory systemMessage = createTextMessage("system", prompts[promptId]);
+        IOracle.Message memory systemMessage = createTextMessage("user", prompts[promptId]);
         run.messages.push(systemMessage);
         IOracle.Message memory newMessage = createTextMessage("user", message);
         run.messages.push(newMessage);
