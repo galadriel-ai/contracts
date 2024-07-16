@@ -4,6 +4,10 @@ import {spawn} from 'child_process';
 
 const TIMEOUT_SECONDS: number = 60 * 60
 
+const getTimestamp = (): string => {
+  return new Date().toISOString()
+}
+
 async function main(): Promise<void> {
   const command = 'npx';
   const contractAddress = process.env.TEST_CONTRACT_ADDRESS
@@ -11,19 +15,19 @@ async function main(): Promise<void> {
   const network = process.env.TEST_NETWORK
   const slackWebHookUrl = process.env.TEST_SLACK_WEBHOOK_URL
   if (!contractAddress) {
-    console.log(".env is missing TEST_CONTRACT_ADDRESS")
+    console.log(getTimestamp(), ".env is missing TEST_CONTRACT_ADDRESS")
     return
   }
   if (!oracleAddress) {
-    console.log(".env is missing ORACLE_ADDRESS")
+    console.log(getTimestamp(), ".env is missing ORACLE_ADDRESS")
     return
   }
   if (!network) {
-    console.log(".env is missing TEST_NETWORK")
+    console.log(getTimestamp(), ".env is missing TEST_NETWORK")
     return
   }
   if (!slackWebHookUrl) {
-    console.log(".env is missing TEST_SLACK_WEBHOOK_URL")
+    console.log(getTimestamp(), ".env is missing TEST_SLACK_WEBHOOK_URL")
     return
   }
   const args: string[] = [
@@ -36,9 +40,9 @@ async function main(): Promise<void> {
 
   let previousResult = false;
   while (true) {
-    console.log(`Running e2e tests with `)
+    console.log(getTimestamp(), `Running e2e tests with `)
     previousResult = await runTests(command, args, slackWebHookUrl, previousResult)
-    console.log(`Run done, sleeping for ${TIMEOUT_SECONDS} seconds`)
+    console.log(getTimestamp(), `Run done, sleeping for ${TIMEOUT_SECONDS} seconds`)
     await new Promise((resolve) => setTimeout(resolve, TIMEOUT_SECONDS * 1000));
   }
 }
@@ -63,7 +67,7 @@ async function runTests(
 
       childProcess.stderr.on('data', (data) => {
         stderrData += data.toString();
-        console.error(data.toString());
+        console.error(getTimestamp(), data.toString());
       });
 
       childProcess.on('close', (code) => {
@@ -75,7 +79,7 @@ async function runTests(
       });
     });
   } catch (e: any) {
-    console.error(e.message);
+    console.error(getTimestamp(), e.message);
     await postSlackMessage(
       e.message,
       slackWebHookUrl,
@@ -119,13 +123,13 @@ async function postSlackMessage(
       }
     )
   } catch (e: any) {
-    console.error("Failed to post msg to slack", e.message)
+    console.error(getTimestamp(), "Failed to post msg to slack", e.message)
   }
 }
 
 main()
   .then(() => process.exit(0))
   .catch((error: any) => {
-    console.error(error);
+    console.error(getTimestamp(), error);
     process.exit(1);
   });
