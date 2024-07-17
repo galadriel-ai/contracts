@@ -42,7 +42,7 @@ async function main() {
 
   let allMessages: Message[] = []
   // Run the chat loop: read messages and send messages
-  var exitNextLoop = false;
+  let exitNextLoop = false;
   while (true) {
     const newMessages: Message[] = await getNewMessages(contract, agentRunID, allMessages.length);
     if (newMessages) {
