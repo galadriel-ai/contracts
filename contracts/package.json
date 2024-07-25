@@ -1,5 +1,5 @@
 {
-  "name": "arbitrum-contracts",
+  "name": "galadriel-contracts",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
@@ -14,7 +14,8 @@
     "deployTest:galadriel": "npx hardhat run scripts/deployTest.ts --network galadriel",
     "callQuickstart": "npx hardhat run scripts/callQuickstart.ts --network galadriel",
     "generateStandardJson": "npx hardhat solidity-json",
-    "debug": "npx hardhat test scripts/debugContract.ts"
+    "debug": "npx hardhat test scripts/debugContract.ts",
+    "address": "npx hardhat run scripts/getOracleAddress.ts --network galadriel"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
