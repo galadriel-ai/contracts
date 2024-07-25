@@ -14,7 +14,9 @@ contract GroqSimpleLLM {
         oracleAddress = initialOracleAddress;
 
         config = IOracle.GroqRequest({
-            model: "mixtral-8x7b-32768", // "llama3-8b-8192", "llama3-70b-8192", "mixtral-8x7b-32768" or "gemma-7b-it"
+            // To see supported models, visit the docs:
+            // https://docs.galadriel.com/reference/llms/groq#groqrequest-object
+            model: "llama-3.1-8b-instant",
             frequencyPenalty: 21, // > 20 for null
             logitBias: "", // empty str for null
             maxTokens: 1000, // 0 for null
