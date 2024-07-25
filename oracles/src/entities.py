@@ -14,7 +14,12 @@ OpenAiModelType = Literal[
     "gpt-4o", "gpt-4-turbo", "gpt-4-turbo-preview", "gpt-3.5-turbo-1106"
 ]
 GroqModelType = Literal[
-    "llama3-8b-8192", "llama3-70b-8192", "mixtral-8x7b-32768", "gemma-7b-it"
+    "llama-3.1-70b-versatile",
+    "llama-3.1-8b-instant",
+    "llama3-70b-8192",
+    "llama3-8b-8192",
+    "mixtral-8x7b-32768",
+    "gemma-7b-it",
 ]
 AnthropicModelType = Literal[
     "claude-3-5-sonnet-20240620",

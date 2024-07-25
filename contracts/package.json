@@ -7,7 +7,6 @@
     "node": "npx hardhat node",
     "compile": "npx hardhat compile",
     "test": "npx hardhat test",
-    "whitelist": "npx hardhat run scripts/whitelist.ts --network galadriel",
     "deployAll:localhost": "npx hardhat run scripts/deployAll.ts --network localhost",
     "deployAll:galadriel": "npx hardhat run scripts/deployAll.ts --network galadriel",
     "deployQuickstart": "npx hardhat run scripts/deployQuickstart.ts --network galadriel",
