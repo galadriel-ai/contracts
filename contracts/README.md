@@ -31,7 +31,7 @@ npm run compile
 **Deploy a contract**
 ```
 npx hardhat deploy --network [network (galadriel or localhost)] --contract [contract name] --oracleaddress [oracle_address] [space separated extra constructor args]
-# ChatGpt example
+# ChatGpt example, "" is a required constructor arg. "" for empty knowledge base, IPFS CID for knowledge base.
 npx hardhat deploy --network galadriel --contract ChatGpt --oracleaddress [oracle_address] ""
 # Dall-e example
 npx hardhat deploy --network galadriel --contract DalleNft --oracleaddress [oracle_address] "system prompt"
