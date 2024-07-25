@@ -16,7 +16,7 @@ contract GroqSimpleLLM {
         config = IOracle.GroqRequest({
             // To see supported models, visit the docs:
             // https://docs.galadriel.com/reference/llms/groq#groqrequest-object
-            model: "mixtral-8x7b-32768",
+            model: "llama-3.1-8b-instant",
             frequencyPenalty: 21, // > 20 for null
             logitBias: "", // empty str for null
             maxTokens: 1000, // 0 for null
