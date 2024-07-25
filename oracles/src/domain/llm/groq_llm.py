@@ -1,15 +1,14 @@
-import backoff
 from typing import Optional
 
+import backoff
 import groq
 from groq import AsyncGroq
-from openai.types.chat import ChatCompletion
-from openai.types.chat.chat_completion import ChatCompletion
 from groq.types.chat import ChatCompletion as GroqChatCompletion
+from openai.types.chat.chat_completion import ChatCompletion
 
-from src.entities import Chat
-from src.domain.llm.utils import TIMEOUT
 import settings
+from src.domain.llm.utils import TIMEOUT
+from src.entities import Chat
 
 
 @backoff.on_exception(
@@ -20,6 +19,9 @@ async def execute(chat: Chat) -> Optional[GroqChatCompletion]:
         api_key=settings.GROQ_API_KEY,
         timeout=TIMEOUT,
     )
+    for message in chat.messages:
+        if len(message.get("content")) and message.get("content")[0].get("text"):
+            message["content"] = message.get("content")[0].get("text")
     chat_completion: ChatCompletion = await client.chat.completions.create(
         messages=chat.messages,
         model=chat.config.model,
