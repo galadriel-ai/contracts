@@ -1,11 +1,12 @@
 import { task } from "hardhat/config";
 
-task("whitelist", "Whitelists an address in the Oracle contract")
-  .addParam("oracleaddress", "The address of the Oracle contract")
-  .addParam("whitelistaddress", "The address to whitelist")
+// Define the task with the name 'whitelist-address'
+export const whitelistTask = task("whitelist", "Whitelists an address in the Oracle contract")
+  .addParam("oracleAddress", "The address of the Oracle contract")
+  .addParam("whitelistAddress", "The address to whitelist")
   .setAction(async (taskArgs, hre) => {
-    const oracleContractAddress = taskArgs.oracleaddress;
-    const whitelistAddress = taskArgs.whitelistaddress;
+    const oracleContractAddress = taskArgs.oracleAddress;
+    const whitelistAddress = taskArgs.whitelistAddress;
     const pcr0Hash = "5c8ce02f8c739a6578886ef009dc27dc69ac85a631689b093f75f6ae238e10d70a08dce8f0cafdd1f7d9b3a26c889565";
 
     const contractABI = [
