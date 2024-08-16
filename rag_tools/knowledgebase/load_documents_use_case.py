@@ -30,7 +30,7 @@ def execute(data_dir: str, text_splitter: TextSplitter) -> List[Document]:
         new_documents = []
         if (file_size := _get_file_size(file_path)) > settings.MAX_DOCUMENT_SIZE_MB:
             print(
-                f"Document {file_path} too big ({file_size} > {settings.get().MAX_DOCUMENT_SIZE_MB}), skipping."
+                f"Document {file_path} too big ({file_size} > {settings.MAX_DOCUMENT_SIZE_MB}), skipping."
             )
             continue
         try:
