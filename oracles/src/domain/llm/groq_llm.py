@@ -20,8 +20,10 @@ async def execute(chat: Chat) -> Optional[GroqChatCompletion]:
         timeout=TIMEOUT,
     )
     for message in chat.messages:
-        if len(message.get("content")) and message.get("content")[0].get("text"):
-            message["content"] = message.get("content")[0].get("text")
+        if len(message.get("content")) and message.get("content"):
+            content = message.get("content")
+            if type(content) is not str:
+                message["content"] = message.get("content")[0].get("text")
     chat_completion: ChatCompletion = await client.chat.completions.create(
         messages=chat.messages,
         model=chat.config.model,
