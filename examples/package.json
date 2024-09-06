@@ -7,7 +7,8 @@
     "simpleChat": "ts-node simpleLlmChat.ts",
     "chat_vision": "ts-node chat_vision.ts",
     "chat_anthropic": "ts-node chat_anthropic.ts",
-    "agent": "ts-node agent.ts"
+    "agent": "ts-node agent.ts",
+    "chatGroq": "ts-node chat_groq.ts"
   },
   "author": "",
   "license": "ISC",
