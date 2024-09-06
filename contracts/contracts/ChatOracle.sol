@@ -77,35 +77,33 @@ contract ChatOracle is IOracle {
     // Total number of functions
     uint public functionsCount;
 
-    // Mapping of knowledge base indexing request ID to the IPFS CID
-    mapping(uint => string) public kbIndexingRequests;
+    // Mapping of langchain knowledge base indexing request ID to the s3 key
+    mapping(uint => string) public langchainkbIndexingRequests;
 
-    // Mapping of knowledge base indexing request ID to the error message
-    mapping(uint => string) public kbIndexingRequestErrors;
+    // Mapping of langchain knowledge base indexing request ID to the error message
+    mapping(uint => string) public langchainkbIndexingRequestErrors;
 
-    // Mapping of knowledge base indexing request ID to whether the request has been processed
-    mapping(uint => bool) public isKbIndexingRequestProcessed;
+    // Mapping of langchain knowledge base indexing request ID to whether the request has been processed
+    mapping(uint => bool) public langchainisKbIndexingRequestProcessed;
 
-    // Mapping of knowledge base CID to the index CID
-    mapping(string => string) public kbIndexes;
+    // Total number of langchain knowledge base indexing requests
+    uint public langchainkbIndexingRequestCount;
 
-    // Total number of knowledge base indexing requests
-    uint public kbIndexingRequestCount;
+    // Mapping of langchain knowledge base query ID to the the query request
+    mapping(uint => IOracle.LangchainKnowledgeBaseQueryRequest)
+        public langchainkbQueries;
+    
+    // Mapping of langchain knowledge base query ID to the address of the contract that called the query
+    mapping(uint => address) public langchainkbQueryCallbackAddresses;
 
-    // Mapping of knowledge base query ID to the query request
-    mapping(uint => IOracle.KnowledgeBaseQueryRequest) public kbQueries;
+    // Mapping of langchain knowledge base query ID to the callback ID of the contract that called the query
+    mapping(uint => uint) public langchainkbQueryCallbackIds;
 
-    // Mapping of knowledge base query ID to the address of the contract that called the query
-    mapping(uint => address) public kbQueryCallbackAddresses;
-
-    // Mapping of knowledge base query ID to the callback ID of the contract that called the query
-    mapping(uint => uint) public kbQueryCallbackIds;
-
-    // Mapping of knowledge base query ID to whether the query has been processed
-    mapping(uint => bool) public isKbQueryProcessed;
+    // Mapping of langchain knowledge base query ID to whether the query has been processed
+    mapping(uint => bool) public langchainisKbQueryProcessed;
 
     // Total number of knowledge base queries
-    uint public kbQueryCount;
+    uint public langchainkbQueryCount;
 
     address private owner;
     
@@ -117,22 +115,25 @@ contract ChatOracle is IOracle {
         address sender
     );
 
-    // Event emitted when a knowledge base indexing request is added
-    event KnowledgeBaseIndexRequestAdded(
-        uint indexed id,
+    // Event emitted when a langchain knowledge base query is added
+    event LangchainKnowledgeIndexRequestAdded(
+        uint indexed kbQueryId,
         address sender
     );
 
     // Event emitted when a knowledge base is indexed
-    event KnowledgeBaseIndexed(
-        string indexed cid,
-        string indexed indexCid
-    );
+    event LangchainKnowledgeBaseIndexed(string indexed key);
 
-    // Event emitted when a knowledge base query is added
-    event KnowledgeBaseQueryAdded(
+    // Event emitted when a langchain knowledge base query is added
+    event LangchainKnowledgeBaseQueryAdded(
         uint indexed kbQueryId,
         address sender
+    );
+
+    event LangchainKnowledgeBaseQueryResponseAdded(
+        uint indexed kbQueryId,
+        string[] documents,
+        string errorMessage
     );
 
     constructor() {
@@ -358,67 +359,114 @@ contract ChatOracle is IOracle {
         isPromptProcessed[promptId] = true;
     }
 
-    function addKnowledgeBase(string memory cid) public {
-        require(bytes(kbIndexes[cid]).length == 0, "Index already set for this CID");
-        uint kbIndexingRequestId = kbIndexingRequestCount;
-        kbIndexingRequests[kbIndexingRequestId] = cid;
-        kbIndexingRequestCount++;
-        emit KnowledgeBaseIndexRequestAdded(kbIndexingRequestId, msg.sender);
+    // Adds a knowledge base with the given s3 key
+    // @param key: s3 key of the knowledge base
+    function addLangchainKnowledgeBase(string memory key) public {
+        uint langchainkbIndexingRequestId = langchainkbIndexingRequestCount;
+        langchainkbIndexingRequests[langchainkbIndexingRequestId] = key;
+        langchainkbIndexingRequestCount++;
+        emit LangchainKnowledgeIndexRequestAdded(
+            langchainkbIndexingRequestId,
+            msg.sender
+        );
     }
 
-    function addKnowledgeBaseIndex(uint kbIndexingRequestId, string memory indexCid, string memory error) public onlyWhitelisted {
-        require(!isKbIndexingRequestProcessed[kbIndexingRequestId], "Indexing request already processed");
-        kbIndexes[kbIndexingRequests[kbIndexingRequestId]] = indexCid;
-        kbIndexingRequestErrors[kbIndexingRequestId] = error;
-        isKbIndexingRequestProcessed[kbIndexingRequestId] = true;
-        emit KnowledgeBaseIndexed(kbIndexingRequests[kbIndexingRequestId], indexCid);
+    // Adds an index to a knowledge base
+    // @param langchainkbIndexingRequestId The ID of the indexing request
+    // @param error Any error message
+    function addLangchainKnowledgeBaseIndex(
+        uint langchainkbIndexingRequestId,
+        string memory error
+    ) public onlyWhitelisted {
+        require(
+            !langchainisKbIndexingRequestProcessed[
+                langchainkbIndexingRequestId
+            ],
+            "Langchain indexing request already processed"
+        );
+        langchainkbIndexingRequestErrors[langchainkbIndexingRequestId] = error;
+        langchainisKbIndexingRequestProcessed[
+            langchainkbIndexingRequestId
+        ] = true;
+        emit LangchainKnowledgeBaseIndexed(
+            langchainkbIndexingRequests[langchainkbIndexingRequestId]
+        );
     }
 
-    function markKnowledgeBaseAsProcessed(uint kbIndexingRequestId) public onlyWhitelisted {
-        isKbIndexingRequestProcessed[kbIndexingRequestId] = true;
+    // Marks a knowledge base indexing request as processed
+    // @param langchainkbIndexingRequestId The ID of the indexing request
+    function markLangchainKnowledgeBaseAsProcessed(
+        uint langchainkbIndexingRequestId
+    ) public onlyWhitelisted {
+        langchainisKbIndexingRequestProcessed[
+            langchainkbIndexingRequestId
+        ] = true;
     }
 
-    function createKnowledgeBaseQuery(
-        uint kbQueryCallbackId,
-        string memory cid,
+    // Creates a new knowledge base query
+    // @param langchainkbQueryCallbackId The callback ID for the query
+    // @param query The query text
+    // @param num_documents The number of documents to retrieve
+    // @return The ID of the created query
+    function createLangchainKnowledgeBaseQuery(
+        uint langchainkbQueryCallbackId,
         string memory query,
         uint32 num_documents
     ) public returns (uint) {
-        require(bytes(kbIndexes[cid]).length > 0, "Index not available for this CID");
         require(bytes(query).length > 0, "Query cannot be empty");
-        require(num_documents > 0, "Number of documents should be greater than 0");
-        uint kbQueryId = kbQueryCount;
-        kbQueries[kbQueryId].cid = cid;
-        kbQueries[kbQueryId].query = query;
-        kbQueries[kbQueryId].num_documents = num_documents;
-        kbQueryCallbackIds[kbQueryId] = kbQueryCallbackId;
+        require(
+            num_documents > 0,
+            "Number of documents should be greater than 0"
+        );
+        uint kbQueryId = langchainkbQueryCount;
+        langchainkbQueries[kbQueryId].query = query;
+        langchainkbQueries[kbQueryId].num_documents = num_documents;
+        langchainkbQueryCallbackIds[kbQueryId] = langchainkbQueryCallbackId;
 
-        kbQueryCallbackAddresses[kbQueryId] = msg.sender;
-        isKbQueryProcessed[kbQueryId] = false;
+        langchainkbQueryCallbackAddresses[kbQueryId] = msg.sender;
+        langchainisKbQueryProcessed[kbQueryId] = false;
 
-        kbQueryCount++;
+        langchainkbQueryCount++;
 
-        emit KnowledgeBaseQueryAdded(kbQueryId, msg.sender);
+        emit LangchainKnowledgeBaseQueryAdded(kbQueryId, msg.sender);
 
         return kbQueryId;
     }
 
-    function addKnowledgeBaseQueryResponse(
-        uint kbQueryId,
-        uint kbQueryCallbackId,
+    // Adds a response to a knowledge base query
+    // @param langchainkbQueryId The ID of the query
+    // @param langchainkbQueryCallbackId The callback ID for the query
+    // @param documents The array of retrieved documents
+    // @param errorMessage Any error message
+    function addLangchainKnowledgeBaseQueryResponse(
+        uint langchainkbQueryId,
+        uint langchainkbQueryCallbackId,
         string[] memory documents,
         string memory errorMessage
     ) public onlyWhitelisted {
-        require(!isKbQueryProcessed[kbQueryId], "Knowledge base query already processed");
-        isKbQueryProcessed[kbQueryId] = true;
-        IChatGpt(kbQueryCallbackAddresses[kbQueryId]).onOracleKnowledgeBaseQueryResponse(
-            kbQueryCallbackId,
+        require(
+            !langchainisKbQueryProcessed[langchainkbQueryId],
+            "Knowledge base query already processed"
+        );
+        langchainisKbQueryProcessed[langchainkbQueryId] = true;
+        // IChatGpt(langchainkbQueryCallbackAddresses[langchainkbQueryId])
+        //     .onOracleKnowledgeBaseQueryResponse(
+        //         langchainkbQueryCallbackId,
+        //         documents,
+        //         errorMessage
+        //     );
+        emit LangchainKnowledgeBaseQueryResponseAdded(
+            langchainkbQueryCallbackId,
             documents,
             errorMessage
         );
     }
 
-    function markKnowledgeBaseQueryAsProcessed(uint kbQueryId) public onlyWhitelisted {
-        isKbQueryProcessed[kbQueryId] = true;
+    // Marks a knowledge base query as processed
+    // @param langchainkbQueryId The ID of the query
+    function markLangchainKnowledgeBaseQueryAsProcessed(
+        uint langchainkbQueryId
+    ) public onlyWhitelisted {
+        langchainisKbQueryProcessed[langchainkbQueryId] = true;
     }
 }

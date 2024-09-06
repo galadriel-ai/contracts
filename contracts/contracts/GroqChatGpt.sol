@@ -19,6 +19,8 @@ contract GroqChatGpt {
 
     // Event emitted when a new chat is created
     event ChatCreated(address indexed owner, uint indexed chatId);
+    event MessageAdded(address indexed owner, uint indexed chatId);
+    event MessageReceived(address indexed owner, uint indexed chatId);
 
     // Address of the contract owner
     address private owner;
@@ -104,6 +106,7 @@ contract GroqChatGpt {
             run.messages.push(newMessage);
             run.messagesCount++;
         }
+        emit MessageReceived(msg.sender, runId);
     }
 
     function addMessage(string memory message, uint runId) public {
@@ -121,6 +124,7 @@ contract GroqChatGpt {
         run.messagesCount++;
 
         IOracle(oracleAddress).createGroqLlmCall(runId, config);
+        emit MessageAdded(msg.sender, runId);
     }
 
     function getMessageHistory(uint chatId) public view returns (IOracle.Message[] memory) {

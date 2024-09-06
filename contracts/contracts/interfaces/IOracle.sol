@@ -147,9 +147,7 @@ interface IOracle {
         uint32 totalTokens;
     }
 
-
-    struct KnowledgeBaseQueryRequest {
-        string cid;
+    struct LangchainKnowledgeBaseQueryRequest {
         string query;
         uint32 num_documents;
     }
@@ -179,9 +177,8 @@ interface IOracle {
         string memory functionInput
     ) external returns (uint i);
 
-    function createKnowledgeBaseQuery(
-        uint kbQueryCallbackId,
-        string memory cid,
+    function createLangchainKnowledgeBaseQuery(
+        uint langchainkbQueryCallbackId,
         string memory query,
         uint32 num_documents
     ) external returns (uint i);

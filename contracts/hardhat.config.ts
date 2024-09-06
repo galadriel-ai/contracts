@@ -4,9 +4,7 @@ import "@xyrusworx/hardhat-solidity-json";
 import 'solidity-docgen';
 import "./tasks/whitelist";
 import "./tasks/deploy";
-import "./tasks/e2e";
-import "./tasks/functions";
-
+import "./tasks/deployOracle";
 require('dotenv').config()
 
 const galadrielDevnet = []
