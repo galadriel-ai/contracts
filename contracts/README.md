@@ -15,6 +15,9 @@
 npm run node
 # Copy one of the funded private key and address on the local running node: <oracle_machine_wallet_private_key> and <oracle_machine_wallet_address>
 
+# compile all the contracts
+npm run compile
+
 # deploy Oracle contract and copy oracle contract address: <oracle_address>
 npx hardhat deployOracle --network localhost
 
