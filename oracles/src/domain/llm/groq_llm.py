@@ -28,13 +28,13 @@ async def execute(langchain_repository: LangchainKnowledgeBaseRepository, chat: 
             content = message.get("content")
             if type(content) is not str:
                 message["content"] = message.get("content")[0].get("text")
-    last_message = chat.messages.pop()
     num_docs: int = chat.config.rag_config.num_documents
     system_prompt_formatted: dict[str, Union[str, List[dict[str, str]]]] = {
         "role": "system",
         "content": []
     }
     if num_docs > 0:
+        last_message = chat.messages.pop()
         docs: List[Document] = await langchain_repository.query(last_message['content'], num_docs)
         context = "\n".join([doc.page_content for doc in docs])
         system_prompt = f"""You are an assistant for question-answering tasks.Use the following pieces of retrieved context to answer the question. If you don't know the answer, say that you don't know. Use three sentences maximum and keep the answer concise, Always say "thanks for asking!" at the end of the answer.
