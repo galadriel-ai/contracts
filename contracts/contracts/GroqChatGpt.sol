@@ -101,12 +101,18 @@ contract GroqChatGpt {
             keccak256(abi.encodePacked(run.messages[run.messagesCount - 1].role)) == keccak256(abi.encodePacked("user")),
             "No message to respond to"
         );
-        // push system prompt into the message array
         if (!compareStrings(errorMessage, "")) {
             IOracle.Message memory newMessage = createTextMessage("assistant", errorMessage);
             run.messages.push(newMessage);
             run.messagesCount++;
         } else {
+
+            if (response.system_prompt.content.length > 0) {
+                IOracle.Message memory systemMessage = response.system_prompt;
+                run.messages.push(systemMessage);
+                run.messagesCount++;
+            }
+
             IOracle.Message memory newMessage = createTextMessage("assistant", response.content);
             run.messages.push(newMessage);
             run.messagesCount++;

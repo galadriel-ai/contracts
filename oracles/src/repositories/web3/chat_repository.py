@@ -13,6 +13,7 @@ from pydantic import TypeAdapter
 import settings
 from src.entities import ALLOWED_FUNCTION_NAMES
 from src.entities import Chat
+from src.entities import RagConfig
 from src.entities import GroqConfig
 from src.entities import GroqModelType
 from src.entities import OpenAiConfig
@@ -64,7 +65,7 @@ class Web3ChatRepository(Web3BaseRepository):
         messages = []
         try:
             # first try new method of reading history
-            history = await self.oracle_contract.functions.getMessagesAndRoles(
+            history: List = await self.oracle_contract.functions.getMessagesAndRoles(
                 i, callback_id
             ).call()
             messages = await self._format_history(history)
@@ -198,14 +199,14 @@ class Web3ChatRepository(Web3BaseRepository):
             tx = await self.oracle_contract.functions.addOpenAiResponse(
                 chat.id,
                 chat.callback_id,
-                _format_openai_response(chat.response),
+                _format_openai_response(chat),
                 chat.error_message,
             ).build_transaction(tx_data)
         elif chat.prompt_type == PromptType.GROQ:
             tx = await self.oracle_contract.functions.addGroqResponse(
                 chat.id,
                 chat.callback_id,
-                _format_groq_response(chat.response),
+                _format_groq_response(chat),
                 chat.error_message,
             ).build_transaction(tx_data)
         # Eventually more options here
@@ -214,7 +215,7 @@ class Web3ChatRepository(Web3BaseRepository):
                 tx = await self.oracle_contract.functions.addResponse(
                     chat.id,
                     chat.callback_id,
-                    _format_llm_response(chat.response),
+                    _format_llm_response(chat),
                     chat.error_message,
                 ).build_transaction(tx_data)
             else:
@@ -250,6 +251,9 @@ class Web3ChatRepository(Web3BaseRepository):
                     else None
                 ),
                 user=_value_or_none(config[12]),
+                rag_config=RagConfig(
+                    num_documents=config[13][0],
+                ),
             )
         except:
             return None
@@ -278,6 +282,9 @@ class Web3ChatRepository(Web3BaseRepository):
                     else None
                 ),
                 user=_value_or_none(config[12]),
+                rag_config=RagConfig(
+                    num_documents=config[13][0],
+                ),
             )
         except:
             return None
@@ -300,6 +307,9 @@ class Web3ChatRepository(Web3BaseRepository):
                 temperature=_parse_float_from_int(config[8], 0, 20),
                 top_p=_parse_float_from_int(config[9], 0, 100, decimals=2),
                 user=_value_or_none(config[10]),
+                rag_config=RagConfig(
+                    num_documents=config[11][0],
+                ),
             )
         except:
             return None
@@ -371,10 +381,12 @@ def _get_response_format(value: Optional[str]):
         return parsed
     return None
 
-def _format_llm_response(completion: Optional[ChatCompletion]) -> Dict:
-    if not completion:
+def _format_llm_response(chat: Chat) -> Dict:
+    if not chat.response:
         return {
             "id": "",
+            "num_documents": chat.rag_config.num_documents,
+            "system_prompt": chat.system_prompt,
             "content": "",
             "functionName": "",
             "functionArguments": "",
@@ -386,27 +398,31 @@ def _format_llm_response(completion: Optional[ChatCompletion]) -> Dict:
             "promptTokens": 0,
             "totalTokens": 0,
         }
-    choice = completion.choices[0].message
+    choice = chat.response.choices[0].message
     return {
-        "id": completion.id,
+        "id": chat.response.id,
+        "num_documents": chat.rag_config.num_documents,
+        "system_prompt": chat.system_prompt,
         "content": choice.content if choice.content else "",
         "functionName": choice.tool_calls[0].function.name if choice.tool_calls else "",
         "functionArguments": (
             choice.tool_calls[0].function.arguments if choice.tool_calls else ""
         ),
-        "created": completion.created,
-        "model": completion.model,
-        "systemFingerprint": completion.system_fingerprint or "",
-        "object": completion.object,
-        "completionTokens": completion.usage.completion_tokens,
-        "promptTokens": completion.usage.prompt_tokens,
-        "totalTokens": completion.usage.total_tokens,
+        "created": chat.response.created,
+        "model": chat.response.model,
+        "systemFingerprint": chat.response.system_fingerprint or "",
+        "object": chat.response.object,
+        "completionTokens": chat.response.usage.completion_tokens,
+        "promptTokens": chat.response.usage.prompt_tokens,
+        "totalTokens": chat.response.usage.total_tokens,
     }
 
-def _format_openai_response(completion: Optional[ChatCompletion]) -> Dict:
-    if not completion:
+def _format_openai_response(chat: Chat) -> Dict:
+    if not chat.response:
         return {
             "id": "",
+            "num_documents": chat.rag_config.num_documents,
+            "system_prompt": chat.system_prompt,
             "content": "",
             "functionName": "",
             "functionArguments": "",
@@ -418,28 +434,32 @@ def _format_openai_response(completion: Optional[ChatCompletion]) -> Dict:
             "promptTokens": 0,
             "totalTokens": 0,
         }
-    choice = completion.choices[0].message
+    choice = chat.response.choices[0].message
     return {
-        "id": completion.id,
+        "id": chat.response.id,
+        "num_documents": chat.rag_config.num_documents,
+        "system_prompt": chat.system_prompt,
         "content": choice.content if choice.content else "",
         "functionName": choice.tool_calls[0].function.name if choice.tool_calls else "",
         "functionArguments": (
             choice.tool_calls[0].function.arguments if choice.tool_calls else ""
         ),
-        "created": completion.created,
-        "model": completion.model,
-        "systemFingerprint": completion.system_fingerprint or "",
-        "object": completion.object,
-        "completionTokens": completion.usage.completion_tokens,
-        "promptTokens": completion.usage.prompt_tokens,
-        "totalTokens": completion.usage.total_tokens,
+        "created": chat.response.created,
+        "model": chat.response.model,
+        "systemFingerprint": chat.response.system_fingerprint or "",
+        "object": chat.response.object,
+        "completionTokens": chat.response.usage.completion_tokens,
+        "promptTokens": chat.response.usage.prompt_tokens,
+        "totalTokens": chat.response.usage.total_tokens,
     }
 
 
-def _format_groq_response(completion: Optional[GroqChatCompletion]) -> Dict:
-    if not completion:
+def _format_groq_response(chat: Chat) -> Dict:
+    if not chat.response:
         return {
             "id": "",
+            "num_documents": chat.rag_config.num_documents,
+            "system_prompt": chat.system_prompt,
             "content": "",
             "created": 0,
             "model": "",
@@ -449,17 +469,19 @@ def _format_groq_response(completion: Optional[GroqChatCompletion]) -> Dict:
             "promptTokens": 0,
             "totalTokens": 0,
         }
-    choice = completion.choices[0].message
+    choice = chat.response.choices[0].message
     return {
-        "id": completion.id,
+        "id": chat.response.id,
+        "num_documents": chat.rag_config.num_documents,
+        "system_prompt": chat.system_prompt,
         "content": choice.content if choice.content else "",
-        "created": completion.created,
-        "model": completion.model,
-        "systemFingerprint": completion.system_fingerprint or "",
-        "object": completion.object,
-        "completionTokens": completion.usage.completion_tokens,
-        "promptTokens": completion.usage.prompt_tokens,
-        "totalTokens": completion.usage.total_tokens,
+        "created": chat.response.created,
+        "model": chat.response.model,
+        "systemFingerprint": chat.response.system_fingerprint or "",
+        "object": chat.response.object,
+        "completionTokens": chat.response.usage.completion_tokens,
+        "promptTokens": chat.response.usage.prompt_tokens,
+        "totalTokens": chat.response.usage.total_tokens,
     }
 
 

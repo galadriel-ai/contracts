@@ -1,9 +1,7 @@
 import json
 import time
 import backoff
-from typing import List
-from typing import Union
-from typing import Optional
+from typing import List, Tuple, Union, Optional
 
 
 from openai.types.completion_usage import CompletionUsage
@@ -23,6 +21,7 @@ from anthropic import AsyncAnthropic
 from anthropic.types import Message
 
 from src.entities import Chat
+from src.repositories.langchain_knowledge_base_repository import LangchainKnowledgeBaseRepository
 
 import settings
 
@@ -30,7 +29,7 @@ import settings
 @backoff.on_exception(
     backoff.expo, (anthropic.RateLimitError, anthropic.APITimeoutError), max_tries=3
 )
-async def execute(chat: Chat) -> Optional[ChatCompletion]:
+async def execute(langchain_repository: LangchainKnowledgeBaseRepository ,chat: Chat) -> Tuple[Optional[ChatCompletion], int, dict[str, Union[str, List[dict[str, str]]]]]:
     client = AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
     system_prompt = NOT_GIVEN
     messages = chat.messages
@@ -52,7 +51,7 @@ async def execute(chat: Chat) -> Optional[ChatCompletion]:
         top_p=chat.config.top_p or NOT_GIVEN,
     )
 
-    return _convert_output_to_chat_completion(chat, message)
+    return _convert_output_to_chat_completion(chat, message), 0, {}
 
 
 def _convert_output_to_chat_completion(

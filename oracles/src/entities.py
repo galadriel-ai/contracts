@@ -43,6 +43,10 @@ ToolChoiceType = Literal["none", "auto"]
 
 
 @dataclass
+class RagConfig:
+    num_documents: int
+
+@dataclass
 class LlmConfig:
     model: AnthropicModelType
     frequency_penalty: Optional[float]
@@ -57,6 +61,7 @@ class LlmConfig:
     tools: Optional[List[ChatCompletionToolParam]]
     tool_choice: Optional[ToolChoiceType]
     user: Optional[str]
+    rag_config: RagConfig
 
 
 @dataclass
@@ -74,6 +79,7 @@ class OpenAiConfig:
     tools: Optional[List[ChatCompletionToolParam]]
     tool_choice: Optional[ToolChoiceType]
     user: Optional[str]
+    rag_config: RagConfig
 
 
 @dataclass
@@ -89,7 +95,7 @@ class GroqConfig:
     temperature: Optional[float]
     top_p: Optional[float]
     user: Optional[str]
-
+    rag_config: RagConfig
 
 @dataclass
 class Chat:
@@ -98,6 +104,7 @@ class Chat:
     is_processed: bool
     prompt_type: PromptTypeLiteral
     messages: List[dict]
+    system_prompt: Optional[dict[str, Union[str, List[dict[str, str]]]]] = None
     config: Optional[LlmConfig] = None
     response: Optional[Union[str, ChatCompletion]] = None
     error_message: Optional[str] = None
@@ -117,21 +124,18 @@ class FunctionCall:
 
 
 @dataclass
-class KnowledgeBaseIndexingRequest:
+class LangchainKnowledgeBaseIndexingRequest:
     id: int
-    cid: str
+    key: str
     is_processed: bool
-    index_cid: Optional[str] = None
     transaction_receipt: dict = None
 
 
 @dataclass
-class KnowledgeBaseQuery:
+class LangchainKnowledgeBaseQuery:
     id: int
     callback_id: int
     is_processed: bool
-    cid: str
-    index_cid: str
     query: str
     num_documents: int
     transaction_receipt: dict = None

@@ -1,10 +1,11 @@
 import asyncio
 from asyncio import Semaphore
 
-from src.entities import Chat
+from src.entities import Chat, RagConfig
 from src.domain.llm import generate_response_use_case
 from src.domain.storage import cache_ipfs_on_gcp_cache_use_case
 from src.repositories.ipfs_repository import IpfsRepository
+from src.repositories.langchain_knowledge_base_repository import LangchainKnowledgeBaseRepository
 from src.repositories.web3.chat_repository import Web3ChatRepository
 
 CHAT_TASKS = {}
@@ -14,6 +15,7 @@ MAX_CONCURRENT_CHATS = 5
 async def execute(
     repository: Web3ChatRepository,
     ipfs_repository: IpfsRepository,
+    langchain_repository: LangchainKnowledgeBaseRepository,
 ):
     semaphore = asyncio.Semaphore(MAX_CONCURRENT_CHATS)
     while True:
@@ -22,7 +24,8 @@ async def execute(
             for chat in chats:
                 if chat.id not in CHAT_TASKS:
                     task = asyncio.create_task(
-                        _answer_chat(repository, ipfs_repository, chat, semaphore)
+                        _answer_chat(repository, ipfs_repository,
+                                     langchain_repository, chat,semaphore)
                     )
                     CHAT_TASKS[chat.id] = task
             completed_tasks = [
@@ -42,6 +45,7 @@ async def execute(
 async def _answer_chat(
     repository: Web3ChatRepository,
     ipfs_repository: IpfsRepository,
+    langchain_repository: LangchainKnowledgeBaseRepository,
     chat: Chat,
     semaphore: Semaphore,
 ):
@@ -51,10 +55,15 @@ async def _answer_chat(
             await _cache_ipfs_urls(chat, ipfs_repository)
             if chat.response is None:
                 response = await generate_response_use_case.execute(
-                    "gpt-4-turbo-preview", chat
+                    "gpt-4-turbo-preview",
+                    langchain_repository, 
+                    chat
                 )
                 chat.response = response.chat_completion
                 chat.error_message = response.error
+                chat.rag_config = RagConfig(num_documents=response.num_documents)
+                chat.system_prompt = response.system_prompt
+
 
             success = await repository.send_chat_response(chat)
             print(
