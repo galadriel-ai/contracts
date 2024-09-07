@@ -51,7 +51,8 @@ contract GroqChatGpt {
             stop : "", // null
             temperature : 10, // Example temperature (scaled up, 10 means 1.0), > 20 means null
             topP : 101, // Percentage 0-100, > 100 means null
-            user : "" // null
+            user : "", // null
+            ragConfig : IOracle.RAGConfig({num_documents: 0})
         });
     }
 
@@ -70,7 +71,7 @@ contract GroqChatGpt {
         emit OracleAddressUpdated(newOracleAddress);
     }
 
-    function startChat(string memory message) public returns (uint) {
+    function startChat(string memory message, uint num_documents) public returns (uint) {
         ChatRun storage run = chatRuns[chatRunsCount];
 
         run.owner = msg.sender;
@@ -81,7 +82,10 @@ contract GroqChatGpt {
         uint currentId = chatRunsCount;
         chatRunsCount = chatRunsCount + 1;
 
-        IOracle(oracleAddress).createGroqLlmCall(currentId, config);
+        IOracle.GroqRequest memory callConfig = config;
+        callConfig.ragConfig.num_documents = num_documents;
+
+        IOracle(oracleAddress).createGroqLlmCall(currentId, callConfig);
         emit ChatCreated(msg.sender, currentId);
 
         return currentId;
@@ -97,6 +101,7 @@ contract GroqChatGpt {
             keccak256(abi.encodePacked(run.messages[run.messagesCount - 1].role)) == keccak256(abi.encodePacked("user")),
             "No message to respond to"
         );
+        // push system prompt into the message array
         if (!compareStrings(errorMessage, "")) {
             IOracle.Message memory newMessage = createTextMessage("assistant", errorMessage);
             run.messages.push(newMessage);
@@ -109,7 +114,7 @@ contract GroqChatGpt {
         emit MessageReceived(msg.sender, runId);
     }
 
-    function addMessage(string memory message, uint runId) public {
+    function addMessage(string memory message, uint num_documents, uint runId) public {
         ChatRun storage run = chatRuns[runId];
         require(
             keccak256(abi.encodePacked(run.messages[run.messagesCount - 1].role)) == keccak256(abi.encodePacked("assistant")),
@@ -123,11 +128,14 @@ contract GroqChatGpt {
         run.messages.push(newMessage);
         run.messagesCount++;
 
-        IOracle(oracleAddress).createGroqLlmCall(runId, config);
+        IOracle.GroqRequest memory callConfig = config;
+        callConfig.ragConfig.num_documents = num_documents;
+
+        IOracle(oracleAddress).createGroqLlmCall(runId, callConfig);
         emit MessageAdded(msg.sender, runId);
     }
 
-    function getMessageHistory(uint chatId) public view returns (IOracle.Message[] memory) {
+    function getMessageHistory(uint chatId) public view returns (IOracle.Message[] memory){
         return chatRuns[chatId].messages;
     }
 

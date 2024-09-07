@@ -8,6 +8,10 @@ interface IOracle {
         string value;
     }
 
+    struct RAGConfig {
+        uint num_documents;
+    }
+
     struct Message {
         string role;
         Content [] content;
@@ -39,6 +43,8 @@ interface IOracle {
         // "none", "auto" or empty str which defaults to auto on OpenAI side
         string toolChoice;
         string user;
+
+        RAGConfig ragConfig;
     }
 
     struct OpenAiResponse {
@@ -46,6 +52,8 @@ interface IOracle {
 
         // either content is an empty str or functionName and functionArguments
         string content;
+        uint num_documents;
+        Message system_prompt;
         string functionName;
         string functionArguments;
 
@@ -82,13 +90,16 @@ interface IOracle {
         // 0-100  percentage, > 100 for null
         uint topP;
         string user;
+
+        RAGConfig ragConfig;
     }
 
     struct GroqResponse {
         string id;
 
         string content;
-
+        uint num_documents;
+        Message system_prompt;
         uint64 created;
         string model;
         string systemFingerprint;
@@ -126,6 +137,7 @@ interface IOracle {
         // "none", "auto" or empty str which defaults to auto on OpenAI side
         string toolChoice;
         string user;
+        RAGConfig ragConfig;
     }
 
     struct LlmResponse {
@@ -133,6 +145,8 @@ interface IOracle {
 
         // either content is an empty str or functionName and functionArguments
         string content;
+        uint num_documents;
+        Message system_prompt;
         string functionName;
         string functionArguments;
 

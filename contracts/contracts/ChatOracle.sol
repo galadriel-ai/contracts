@@ -449,12 +449,6 @@ contract ChatOracle is IOracle {
             "Knowledge base query already processed"
         );
         langchainisKbQueryProcessed[langchainkbQueryId] = true;
-        // IChatGpt(langchainkbQueryCallbackAddresses[langchainkbQueryId])
-        //     .onOracleKnowledgeBaseQueryResponse(
-        //         langchainkbQueryCallbackId,
-        //         documents,
-        //         errorMessage
-        //     );
         emit LangchainKnowledgeBaseQueryResponseAdded(
             langchainkbQueryCallbackId,
             documents,
