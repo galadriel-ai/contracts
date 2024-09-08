@@ -2,6 +2,7 @@ import "./index.scss";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import LandingPage from "./pages/LandingPage";
+import MintPage from "./pages/MintPage";
 import AppBar from "./components/AppBar";
 
 export interface Page {
@@ -23,7 +24,7 @@ function App() {
     },
     {
       name: "Mint",
-      component: <div>Mint</div>,
+      component: <MintPage />,
       path: "/mint",
     },
   ];
