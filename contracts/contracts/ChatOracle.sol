@@ -122,7 +122,7 @@ contract ChatOracle is IOracle {
     );
 
     // Event emitted when a knowledge base is indexed
-    event LangchainKnowledgeBaseIndexed(string indexed key);
+    event LangchainKnowledgeBaseIndexed(uint indexed kbQueryId, string key, string errorMessage);
 
     // Event emitted when a langchain knowledge base query is added
     event LangchainKnowledgeBaseQueryAdded(
@@ -376,7 +376,7 @@ contract ChatOracle is IOracle {
     // @param error Any error message
     function addLangchainKnowledgeBaseIndex(
         uint langchainkbIndexingRequestId,
-        string memory error
+        string memory errorMessage
     ) public onlyWhitelisted {
         require(
             !langchainisKbIndexingRequestProcessed[
@@ -384,12 +384,14 @@ contract ChatOracle is IOracle {
             ],
             "Langchain indexing request already processed"
         );
-        langchainkbIndexingRequestErrors[langchainkbIndexingRequestId] = error;
+        langchainkbIndexingRequestErrors[langchainkbIndexingRequestId] = errorMessage;
         langchainisKbIndexingRequestProcessed[
             langchainkbIndexingRequestId
         ] = true;
         emit LangchainKnowledgeBaseIndexed(
-            langchainkbIndexingRequests[langchainkbIndexingRequestId]
+            langchainkbIndexingRequestId, 
+            langchainkbIndexingRequests[langchainkbIndexingRequestId],
+            errorMessage
         );
     }
 
