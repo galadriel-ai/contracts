@@ -72,6 +72,7 @@
 
     &-image{
         &-grid-container{
+            margin: 1rem;
             padding: 1rem;
             flex: 7;
             display: grid;
@@ -85,7 +86,6 @@
             &::-webkit-scrollbar {
                 display: none;
             }
-            margin: 1rem;
         }
 
         &-container{

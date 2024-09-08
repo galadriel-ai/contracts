@@ -10,11 +10,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@web3modal/ethers": "^5.1.6",
+    "add": "^2.0.6",
+    "axios": "^1.7.7",
+    "ethers": "^6.13.2",
     "react": "^18.3.1",
     "react-autosize-textarea": "^7.1.0",
     "react-dom": "^18.3.1",
     "react-dropdown": "^1.11.0",
-    "react-router-dom": "^6.26.1"
+    "react-router-dom": "^6.26.1",
+    "yarn": "^1.22.22"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",

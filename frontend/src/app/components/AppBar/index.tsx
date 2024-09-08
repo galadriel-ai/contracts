@@ -4,12 +4,38 @@ import logo from "../../../assets/images/logo.png";
 import profile from "../../../assets/icons/profile.svg";
 import search from "../../../assets/icons/search.svg";
 import "./index.scss";
+import { useEffect } from "react";
+import { useWeb3Modal } from "@web3modal/ethers/react";
+import { useWeb3ModalAccount } from "@web3modal/ethers/react";
+import { BrowserProvider } from "ethers";
+import { useWeb3ModalProvider } from "@web3modal/ethers/react";
+import login from "../../../services/api/loginApi";
+import { Eip1193Provider } from "ethers";
 
 export interface AppBarProps {
   pages: Page[];
 }
 
 const AppBar: React.FC<AppBarProps> = ({ pages }) => {
+  const { open } = useWeb3Modal();
+  const { address, isConnected } = useWeb3ModalAccount();
+  const { walletProvider } = useWeb3ModalProvider();
+
+  useEffect(() => {
+    const backendLogin = async () => {
+      if (isConnected) {
+        console.log("Connected to wallet");
+        const provider = new BrowserProvider(walletProvider as Eip1193Provider);
+        const signer = await provider.getSigner();
+        const message = "Login";
+        const signature = (await signer?.signMessage("Login")) as string;
+        const data = login(address as string, message, signature);
+        console.log(data);
+      }
+    };
+    backendLogin();
+  }, [isConnected]);
+
   return (
     <div className="app-bar">
       <Link className="app-bar-logo" to="/">
@@ -28,7 +54,9 @@ const AppBar: React.FC<AppBarProps> = ({ pages }) => {
           placeholder="Search posts or people"
         />
       </div>
-      <button className="app-bar-wallet-connect">Connect Wallet</button>
+      <button onClick={() => open()} className="app-bar-wallet-connect">
+        {isConnected ? address : "Connect Wallet"}
+      </button>
       <img className="app-bar-profile" src={profile} />
     </div>
   );
