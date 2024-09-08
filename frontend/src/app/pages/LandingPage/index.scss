@@ -1,11 +1,55 @@
-.landing-page-container{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    width: 100%;
-    background-image: url('../../../assets/images/background.png');
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-position: center;
+.landing-page {
+    &-container{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+    }
+
+    &-banner{
+        display: flex;
+        flex-flow: column nowrap;
+        justify-content: center;
+        align-items: center;
+        width: 40%;
+        gap: 1rem;
+
+        &-icon{
+            width: 10rem;
+        }
+
+        &-title{
+            font-family: "Waukegan LDO Extended Black";
+            font-size: 3rem;
+            line-height: 3.25rem;
+            font-weight: 900;
+            color: #fff;
+            text-align: center;
+        }
+
+        &-description{
+            font-size: 1.25rem;
+            font-weight: 400;
+            color: #fff;
+            text-align: center;
+        }
+
+        &-chat{
+            &-button{
+                padding: 0 1rem;
+                background-color: #002FFF;
+                display: flex;
+                flex-flow: row nowrap;
+                justify-content: center;
+                align-items: center;
+                gap: 1rem;
+            }
+
+            &-content{
+                color: white;
+                font-size: 1.25rem;
+                font-weight: 600;
+            }
+        }
+    }
 }
