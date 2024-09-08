@@ -1,7 +1,8 @@
 import "./index.scss";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import LandingPage from "./pages/LandingPage";
+// import LandingPage from "./pages/LandingPage";
+import HomePage from "./pages/HomePage";
 import MintPage from "./pages/MintPage";
 import AppBar from "./components/AppBar";
 import PostPage from "./pages/PostPage";
@@ -15,7 +16,7 @@ function App() {
   const pages: Page[] = [
     {
       name: "Home",
-      component: <LandingPage />,
+      component: <HomePage />,
       path: "/",
     },
     {

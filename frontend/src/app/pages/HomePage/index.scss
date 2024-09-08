@@ -1,0 +1,140 @@
+.home-page{
+
+    &-container{
+        display: flex;
+        flex-flow: column nowrap;
+        align-items: center;
+        flex: 1;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    &-content{
+        &-container{
+            display: flex;
+                flex-flow: column nowrap;
+                align-items: center;
+                width: 50%;
+                height: 100%;
+        }
+
+        &-header {
+            &-title {
+                font-family: Waukegan LDO Extended;
+                font-size: 2.5rem;
+                font-weight: 900;
+            }
+
+            &-dropdown {
+                background-color: #111;
+                border-radius: 1.5rem;
+                font-size: 1.5rem;
+                padding: 0.5rem 2rem;
+
+                &-container {
+                    border-radius: 1.5rem;
+                    cursor: pointer;
+                }
+            }
+
+            &-container {
+                display: flex;
+                flex-flow: column nowrap;
+                justify-content: center;
+                align-items: center;
+                gap: 1rem;
+            }
+        }
+
+        &-list-container{
+            padding: 3rem;
+            gap: 1rem;
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            // flex-flow: column nowrap;
+            overflow: auto;
+            justify-content: stretch;
+            align-items: stretch;
+            
+            -ms-overflow-style: none;
+            /* IE and Edge */
+            scrollbar-width: none;
+        
+            /* Firefox */
+            &::-webkit-scrollbar {
+                display: none;
+            }
+        }
+
+        &-post{
+            &-container{
+                display: flex;
+                flex-flow: column nowrap;
+                justify-content: center;
+                align-items: stretch;
+                background-color: #292929;
+                border-radius: 1rem;
+                padding: 1rem 0;
+            }
+
+            &-header{
+                display: flex;
+                flex-flow: row nowrap;
+                justify-content: space-between;
+                padding: 1rem;
+            }
+        }
+
+        &-nft{
+            &-container{
+                display: flex;
+                flex-flow: column nowrap;
+                justify-content: center;
+                align-items: stretch;
+                background-color: #292929;
+                border-radius: 1rem;
+                padding: 1rem 0;
+            }
+
+            &-header {
+                display: flex;
+                flex-flow: row nowrap;
+                justify-content: space-between;
+                padding: 1rem;
+            }
+
+            &-image{
+                height: 100%;
+                width: 100%;
+                object-fit: cover;
+            }
+
+            &-footer{
+                padding-top: 1rem;
+                display: flex;
+                flex-flow: nowrap;
+                justify-content: center;
+                &-bid {
+                    &-container{
+                        display: flex;
+                        flex-flow: row nowrap;
+                        background-color: rgba(7, 7, 7, 0.61);
+                        border-radius: 1rem;
+                    }
+
+                    &-amount{
+                        padding: 0.5rem;
+                        border-radius: 1rem;
+                        border: none;
+                        outline: none;
+                    }
+
+                    &-button{
+                        background-color: #002FFF;
+                        padding: 0.5rem 1rem;
+                    }
+                }
+            }
+        }
+    }
+}
