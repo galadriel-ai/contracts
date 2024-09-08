@@ -54,6 +54,9 @@ contract DalleImageGenerator {
         emit OracleAddressUpdated(newOracleAddress);
     }
 
+    mapping(uint=>address) private promptIdToAddress;
+    uint tokenCounter = 0;
+
     // Add prompt to the oracle
     function addPrompt(string memory prompt, string memory taskId) public {
         uint promptId = _promptId;
@@ -65,6 +68,7 @@ contract DalleImageGenerator {
             prompt
         );
         _promptId++;
+        promptIdToAddress[promptId] = msg.sender;
         emit PromptAdded(taskId);
     }
 
@@ -75,6 +79,9 @@ contract DalleImageGenerator {
         string memory /*errorMessage*/
     ) public onlyOracle {
         promptResponses[promptId] = response;
+        _mint(promptIdToAddress[promptId], tokenCounter);
+        _setTokenURI(tokenCounter, response);
+        tokenCounter++;
         emit PromptReplied(promptId);
     }
 
