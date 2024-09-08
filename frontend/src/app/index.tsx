@@ -3,8 +3,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import LandingPage from "./pages/LandingPage";
 import MintPage from "./pages/MintPage";
-import ProfilePage from "./pages/ProfilePage";
 import AppBar from "./components/AppBar";
+import PostPage from "./pages/PostPage";
 
 export interface Page {
   name: string;
@@ -20,8 +20,8 @@ function App() {
     },
     {
       name: "Create",
-      component: <div>Create</div>,
-      path: "/create",
+      component: <PostPage />,
+      path: "/post",
     },
     {
       name: "Mint",
@@ -30,7 +30,7 @@ function App() {
     },
     {
       name: "Profile",
-      component: <ProfilePage />,
+      component: <div>Profile</div>,
       path: "/profile",
     },
   ];
