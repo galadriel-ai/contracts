@@ -34,12 +34,12 @@ const contract = new Contract(
   signer
 );
 
-const promptTx = await contract.addPrompt("A cat on an airplan");
+const promptTx = await contract.addPrompt("A cat on an airplan", "task1");
 const tx = await promptTx.wait();
 console.log("tx reciept", tx);
 
-contract.once("PromptAdded", (promptId: number) => {
-  console.log("PromptAdded", promptId);
+contract.once("PromptAdded", (taskId: string) => {
+  console.log("PromptAdded", taskId);
 });
 
 contract.once("PromptReplied", async (promptId: number) => {

@@ -16,13 +16,14 @@ contract DalleImageGenerator {
     address public oracleAddress;
 
     // Event emitted when the prompt is updated
-    event PromptAdded(uint indexed promptId);
+    event PromptAdded(string indexed taskId);
 
     // Event emitted when the prompt is replied
     event PromptReplied(uint indexed promptId);
 
     mapping(uint => string) public prompts;
     mapping (uint => string) public promptResponses;
+    mapping(string => uint) public tasks;
 
     // Event emitted when the oracle address is updated
     event OracleAddressUpdated(address indexed newOracleAddress);
@@ -54,8 +55,9 @@ contract DalleImageGenerator {
     }
 
     // Add prompt to the oracle
-    function addPrompt(string memory prompt) public {
+    function addPrompt(string memory prompt, string memory taskId) public {
         uint promptId = _promptId;
+        tasks[taskId] = _promptId;
         prompts[promptId] = prompt;
         IOracle(oracleAddress).createFunctionCall(
             _promptId,
@@ -63,7 +65,7 @@ contract DalleImageGenerator {
             prompt
         );
         _promptId++;
-        emit PromptAdded(promptId);
+        emit PromptAdded(taskId);
     }
 
     // Handles the response from the oracle for the function call
