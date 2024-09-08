@@ -1,0 +1,53 @@
+.app-bar{
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-evenly;
+    align-items: center;
+    width: 100%;
+    position: absolute;
+
+    &-logo{
+        padding: 1em;
+    }
+
+    &-page-links{
+        color: white;
+        padding: 1rem;
+        font-size: 1rem;
+        text-align: center;
+    }
+
+    &-search{
+        outline: none;
+        background: none;
+        border: none;
+        font-size: 1.2rem;
+        width: 100%;
+
+        &-container{
+            padding: 0.5rem;
+            border: 1px solid #2A2537;
+            border-radius: 0.75rem;
+            flex: 1;
+            margin: 0 1rem;
+            display: flex;
+            flex-flow: row nowrap;
+        }
+
+        &-icon{
+            color: #2A2537;
+            padding: 0.5rem;
+        }
+    }
+
+    &-wallet-connect{
+        background-color: #002FFF;
+        padding: 1rem;
+        border: none;
+        margin: 1rem;
+    }
+
+    &-profile{
+        margin: 1rem;
+    }
+}
