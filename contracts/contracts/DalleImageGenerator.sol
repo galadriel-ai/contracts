@@ -4,9 +4,10 @@ pragma solidity ^0.8.20;
 // Uncomment this line to use console.log
 // import "hardhat/console.sol";
 import {IOracle} from "./interfaces/IOracle.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
 // DalleNft
-contract DalleImageGenerator {
+contract DalleImageGenerator is ERC721URIStorage {
     uint256 private _promptId;
 
     // Address of the contract owner
@@ -31,7 +32,7 @@ contract DalleImageGenerator {
     // initialOracleAddress Initial address of the oracle contract
     constructor(
         address initialOracleAddress
-    ) {
+    ) ERC721("aiNFT", "ANFT") {
         owner = msg.sender;
         oracleAddress = initialOracleAddress;
     }
