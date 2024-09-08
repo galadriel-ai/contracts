@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import LandingPage from "./pages/LandingPage";
 import MintPage from "./pages/MintPage";
+import ProfilePage from "./pages/ProfilePage";
 import AppBar from "./components/AppBar";
 
 export interface Page {
@@ -26,6 +27,11 @@ function App() {
       name: "Mint",
       component: <MintPage />,
       path: "/mint",
+    },
+    {
+      name: "Profile",
+      component: <ProfilePage />,
+      path: "/profile",
     },
   ];
 
