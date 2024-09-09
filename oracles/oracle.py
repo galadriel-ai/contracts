@@ -4,7 +4,8 @@ from typing import Optional
 
 import settings
 
-from src.repositories.filesystem_repository import FileSystemRepository
+# from src.repositories.filesystem_repository import FileSystemRepository
+from src.repositories.basin_repository import BasinRepository
 from src.repositories.ipfs_repository import IpfsRepository
 from src.repositories.web3.chat_repository import Web3ChatRepository
 from src.repositories.web3.function_repository import Web3FunctionRepository
@@ -43,11 +44,13 @@ async def collect_and_save_metrics():
         await asyncio.sleep(10)
 
 async def main():
-    filesystem_repository = FileSystemRepository()
+    # filesystem_repository = FileSystemRepository()
+    basin_repository = BasinRepository()
     ipfs_repository = IpfsRepository()
 
     # Load index from file 'index' if it exists
-    index_data: Optional[bytes] = await filesystem_repository.read_binary_file("index", settings.KNOWLEDGE_BASE_MAX_SIZE_BYTES)
+    # index_data: Optional[bytes] = await filesystem_repository.read_binary_file("index", settings.KNOWLEDGE_BASE_MAX_SIZE_BYTES)
+    index_data = Optional[bytes] = await basin_repository.read_binary_file("index", settings.KNOWLEDGE_BASE_MAX_SIZE_BYTES)
     if index_data is not None:
         print("index file exists!")
     else:
@@ -58,10 +61,10 @@ async def main():
         chat_service.execute(web3_chat_repository, ipfs_repository, langchain_kb_repository),
         functions_service.execute(web3_function_repository),
         langchain_knowledge_base_indexing_service.execute(
-            web3_langchain_kb_repository, filesystem_repository, langchain_kb_repository
+            web3_langchain_kb_repository, basin_repository, langchain_kb_repository
         ),
         langchain_knowledge_base_query_service.execute(
-            web3_langchain_kb_repository, filesystem_repository, langchain_kb_repository
+            web3_langchain_kb_repository, basin_repository, langchain_kb_repository
         ),
         collect_and_save_metrics(),
     ]

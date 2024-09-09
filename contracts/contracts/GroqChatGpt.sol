@@ -130,11 +130,14 @@ contract GroqChatGpt {
                 IOracle.Score memory score = response.scores[i];
                 total += score.score;   
             }
-
+            console.log("total amount allocated for chat is ", total);
             for(uint i = 0; i < response.scores.length; i++) {
                 IOracle.Score memory score = response.scores[i];
+                console.log("score for ", score.owner, "is", score.score);
+                console.log("chat balance", chatBalances[runId]);
+                console.log("balance before", balances[score.owner]);
                 balances[score.owner] += chatBalances[runId] * (score.score / total);
-                console.log("balance for ", score.owner, "is", balances[score.owner]);
+                console.log("balance after ", score.owner, "is", balances[score.owner]);
             }
 
         }

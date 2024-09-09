@@ -4,13 +4,15 @@ from typing import List
 from src.entities import LangchainKnowledgeBaseQuery
 from langchain_core.documents import Document
 from src.domain.langchain_knowledge_base.entities import LangchainKnowledgeBaseQueryResult
-from src.repositories.filesystem_repository import FileSystemRepository
+# from src.repositories.filesystem_repository import FileSystemRepository
+from src.repositories.basin_repository import BasinRepository
 from src.repositories.langchain_knowledge_base_repository import LangchainKnowledgeBaseRepository
 
 
 async def execute(
     request: LangchainKnowledgeBaseQuery,
-    filesystem_repository: FileSystemRepository,
+    # filesystem_repository: FileSystemRepository,
+    basin_repository: BasinRepository,
     kb_repository: LangchainKnowledgeBaseRepository,
 ) -> LangchainKnowledgeBaseQueryResult:
     try:
@@ -43,10 +45,13 @@ if __name__ == "__main__":
             query="What was the color of the car?",
             num_documents=1
         )
-        filesystem_repository = FileSystemRepository()
+        # filesystem_repository = FileSystemRepository()
+        basin_repository = BasinRepository()
         kb_repository = LangchainKnowledgeBaseRepository()
-        print(await execute(query, filesystem_repository, kb_repository))
+        # print(await execute(query, filesystem_repository, kb_repository))
+        print(await query(query, basin_repository, kb_repository))
         for i in range(100):
-            print(await execute(query, filesystem_repository, kb_repository))
+            # print(await execute(query, filesystem_repository, kb_repository))
+            print(query(query, basin_repository, kb_repository))
 
     asyncio.run(main())

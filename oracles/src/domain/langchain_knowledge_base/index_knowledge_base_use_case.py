@@ -1,19 +1,23 @@
 from src.entities import LangchainKnowledgeBaseIndexingRequest
 from src.domain.langchain_knowledge_base.entities import LangchainKnowledgeBaseIndexingResult
-from src.repositories.filesystem_repository import FileSystemRepository
+# from src.repositories.filesystem_repository import FileSystemRepository
+from src.repositories.basin_repository import BasinRepository
 from src.repositories.langchain_knowledge_base_repository import LangchainKnowledgeBaseRepository
 import settings
 
 async def execute(
     request: LangchainKnowledgeBaseIndexingRequest,
-    file_repository: FileSystemRepository,
+    # file_repository: FileSystemRepository,
+    basin_repository: BasinRepository,
     kb_repository: LangchainKnowledgeBaseRepository,
 ) -> LangchainKnowledgeBaseIndexingRequest:
     try:
-        content = await file_repository.read_file(
+        # content = await file_repository.read_file(
+        #     request.key, settings.KNOWLEDGE_BASE_MAX_SIZE_BYTES
+        # )
+        content = await basin_repository.read_file(
             request.key, settings.KNOWLEDGE_BASE_MAX_SIZE_BYTES
         )
-
         if content is None:
             raise FileNotFoundError(filename=request.key)
         
@@ -21,7 +25,8 @@ async def execute(
             request.key, content, request.owner
         )
         index = await kb_repository.serialize()
-        await file_repository.write_file(index, key="index")
+        # await file_repository.write_file(index, key="index")
+        await basin_repository.write_file(index, key="index")
         return LangchainKnowledgeBaseIndexingResult(
             error="",
         )

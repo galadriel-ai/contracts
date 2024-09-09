@@ -23,51 +23,49 @@ console.log("indexer address", indexePrivateKey);
 const indexer = new ethers.Wallet(indexePrivateKey, provider);
 const indexerAddress = await indexer.getAddress();
 
-let signerBalance = await provider.getBalance(signerAddress);
+const chatGptAbi = ChatGpt.abi;
+const CHATGPT_CONTRACT_ADDRESS: string = process.env.CONTRACT_ADDRESS as string;
+console.log("contract address", CHATGPT_CONTRACT_ADDRESS);
+
+const contract = new Contract(CHATGPT_CONTRACT_ADDRESS, chatGptAbi, signer);
+let signerBalance = await contract.balances(signerAddress);
 console.log("signer balance", ethers.formatEther(signerBalance));
-let indexerBalance = await provider.getBalance(indexerAddress);
+let indexerBalance = await contract.balances(indexerAddress);
 console.log("indexer balance", ethers.formatEther(indexerBalance));
 
-// const chatGptAbi = ChatGpt.abi;
-// const CHATGPT_CONTRACT_ADDRESS: string = process.env.CONTRACT_ADDRESS as string;
-// console.log("contract address", CHATGPT_CONTRACT_ADDRESS);
+const ioInterface = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
 
-// const contract = new Contract(CHATGPT_CONTRACT_ADDRESS, chatGptAbi, signer);
+const prompt = (query: string) =>
+  new Promise((resolve) => ioInterface.question(query, resolve));
 
-// const ioInterface = readline.createInterface({
-//   input: process.stdin,
-//   output: process.stdout,
-// });
+const ask = async (id: number) => {
+  const message = await prompt("Enter message: ");
+  const documentCount = await prompt("Enter number of document: ");
+  const askTx = await contract.addMessage(message, documentCount, id);
+};
 
-// const prompt = (query: string) =>
-//   new Promise((resolve) => ioInterface.question(query, resolve));
+const recieve = async (id: number) => {
+  const results = await contract.getMessageHistory(id);
+  console.log("Reply: ", results.slice(-1)[0][1][0][1]);
+};
 
-// const ask = async (id: number) => {
-//   const message = await prompt("Enter message: ");
-//   const documentCount = await prompt("Enter number of document: ");
-//   const askTx = await contract.addMessage(message, documentCount, id);
-// };
+const message = await prompt("Enter message: ");
+const documentCount = await prompt("Enter number of document: ");
+const startTx = await contract.startChat(message, documentCount, {
+  value: ethers.parseEther("0.000001"),
+});
 
-// const recieve = async (id: number) => {
-//   const results = await contract.getMessageHistory(id);
-//   console.log("Reply: ", results.slice(-1)[0][1][0][1]);
-// };
+contract.once("ChatCreated", async (_, __) => {});
 
-// const message = await prompt("Enter message: ");
-// const documentCount = await prompt("Enter number of document: ");
-// const startTx = await contract.startChat(message, documentCount, {
-//   value: ethers.parseEther("0.000001"),
-// });
+contract.once("MessageAdded", async (_, __) => {});
 
-// contract.once("ChatCreated", async (_, __) => {});
-
-// contract.once("MessageAdded", async (_, __) => {});
-
-// contract.once("MessageReceived", async (_, id) => {
-//   await recieve(id);
-// });
-
-// signerBalance = await provider.getBalance(signerAddress);
-// console.log("signer balance", ethers.formatEther(signerBalance));
-// indexerBalance = await provider.getBalance(indexerAddress);
-// console.log("indexer balance", ethers.formatEther(indexerBalance));
+contract.once("MessageReceived", async (_, id) => {
+  await recieve(id);
+  signerBalance = await contract.balances(signerAddress);
+  console.log("signer balance", ethers.formatEther(signerBalance));
+  indexerBalance = await contract.balances(indexerAddress);
+  console.log("indexer balance", ethers.formatEther(indexerBalance));
+});

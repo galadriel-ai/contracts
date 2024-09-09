@@ -3,7 +3,8 @@ from asyncio import Semaphore
 
 from src.entities import LangchainKnowledgeBaseQuery
 from src.domain.langchain_knowledge_base import query_knowledge_base_use_case
-from src.repositories.filesystem_repository import FileSystemRepository
+# from src.repositories.filesystem_repository import FileSystemRepository
+from src.repositories.basin_repository import BasinRepository
 from src.repositories.langchain_knowledge_base_repository import LangchainKnowledgeBaseRepository
 from src.repositories.web3.langchain_knowledge_base_repository import Web3LangchainKnowledgeBaseRepository
 
@@ -13,7 +14,8 @@ MAX_CONCURRENT_KB_QUERIES = 5
 
 async def execute(
     repository: Web3LangchainKnowledgeBaseRepository,
-    filesystem_repository: FileSystemRepository,
+    # filesystem_repository: FileSystemRepository,
+    basin_repository: BasinRepository,
     kb_repository: LangchainKnowledgeBaseRepository,
 ):
     semaphore = asyncio.Semaphore(MAX_CONCURRENT_KB_QUERIES)
@@ -29,7 +31,8 @@ async def execute(
                         _query_knowledge_base(
                             kb_query,
                             repository,
-                            filesystem_repository,
+                            # filesystem_repository,
+                            basin_repository,
                             kb_repository,
                             semaphore,
                         )
@@ -52,14 +55,18 @@ async def execute(
 async def _query_knowledge_base(
     request: LangchainKnowledgeBaseQuery,
     repository: Web3LangchainKnowledgeBaseRepository,
-    filesystem_repository: FileSystemRepository,
+    # filesystem_repository: FileSystemRepository,
+    basin_repository: BasinRepository,
     kb_repository: LangchainKnowledgeBaseRepository,
     semaphore: Semaphore,
 ):
     try:
         async with semaphore:
+            # query_result = await query_knowledge_base_use_case.execute(
+            #     request, filesystem_repository, kb_repository
+            # )
             query_result = await query_knowledge_base_use_case.execute(
-                request, filesystem_repository, kb_repository
+                request, basin_repository, kb_repository
             )
             success = await repository.send_kb_query_response(
                 request, query_result.documents, error_message=query_result.error

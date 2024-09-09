@@ -3,7 +3,8 @@ from asyncio import Semaphore
 
 from src.entities import LangchainKnowledgeBaseIndexingRequest
 from src.domain.langchain_knowledge_base import index_knowledge_base_use_case
-from src.repositories.filesystem_repository import FileSystemRepository
+# from src.repositories.filesystem_repository import FileSystemRepository
+from src.repositories.basin_repository import BasinRepository
 from src.repositories.langchain_knowledge_base_repository import LangchainKnowledgeBaseRepository
 from src.repositories.web3.langchain_knowledge_base_repository import Web3LangchainKnowledgeBaseRepository
 
@@ -13,7 +14,8 @@ MAX_CONCURRENT_INDEXING = 5
 
 async def execute(
     repository: Web3LangchainKnowledgeBaseRepository,
-    filesystem_repository: FileSystemRepository,
+    # filesystem_repository: FileSystemRepository,
+    basin_repository: BasinRepository,
     langchain_kb_repository: LangchainKnowledgeBaseRepository,
 ):
     semaphore = asyncio.Semaphore(MAX_CONCURRENT_INDEXING)
@@ -29,7 +31,7 @@ async def execute(
                         _index_knowledgebase_function(
                             kb_indexing_request,
                             repository,
-                            filesystem_repository,
+                            basin_repository,
                             langchain_kb_repository,
                             semaphore,
                         )
@@ -54,14 +56,18 @@ async def execute(
 async def _index_knowledgebase_function(
     request: LangchainKnowledgeBaseIndexingRequest,
     repository: Web3LangchainKnowledgeBaseRepository,
-    filesystem_repository: FileSystemRepository,
+    # filesystem_repository: FileSystemRepository,
+    basin_repository: BasinRepository,
     kb_repository: LangchainKnowledgeBaseRepository,
     semaphore: Semaphore,
 ):
     try:
         async with semaphore:
+            # indexing_result = await index_knowledge_base_use_case.execute(
+            #     request, filesystem_repository, kb_repository
+            # )
             indexing_result = await index_knowledge_base_use_case.execute(
-                request, filesystem_repository, kb_repository
+                request, basin_repository, kb_repository
             )
             success = await repository.send_kb_indexing_response(
                 request,
