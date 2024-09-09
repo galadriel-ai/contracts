@@ -64,8 +64,9 @@ class LangchainKnowledgeBaseRepository:
         
 
 
-    async def create(self, name: str, content: str):
-        docs = self.text_splitter.create_documents([content], metadatas=[{"source": name}])
+    async def create(self, name: str, content: str, owner: str):
+        print("creating document", name, content, owner)
+        docs = self.text_splitter.create_documents([content], metadatas=[{"source": name, "owner": owner}])
         print("length of docs created by text splitter",len(docs))
         index(
             docs_source=docs,

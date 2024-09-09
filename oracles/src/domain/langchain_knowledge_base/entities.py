@@ -7,5 +7,5 @@ class LangchainKnowledgeBaseIndexingResult:
 
 @dataclass
 class LangchainKnowledgeBaseQueryResult:
-    documents: List[str]
+    documents: List[dict[str, str | int]]
     error: str

@@ -10,5 +10,6 @@ from groq.types.chat import ChatCompletion as GroqChatCompletion
 class LLMResult:
     chat_completion: Optional[Union[str, ChatCompletion, GroqChatCompletion]]
     system_prompt: dict[str, Union[str, List[dict[str, str]]]]
+    score_list: List[dict[str, Union[str, int]]]
     num_documents: int
     error: str

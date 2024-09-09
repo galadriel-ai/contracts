@@ -14,7 +14,7 @@ from src.repositories.langchain_knowledge_base_repository import LangchainKnowle
 @backoff.on_exception(
     backoff.expo, (openai.RateLimitError, openai.APITimeoutError), max_tries=3
 )
-async def execute(langchain_repository: LangchainKnowledgeBaseRepository ,model: str, messages: List[dict]) -> Tuple[Optional[str], int, dict[str, Union[str, dict[str, str]]]]:
+async def execute(langchain_repository: LangchainKnowledgeBaseRepository ,model: str, messages: List[dict]) -> Tuple[Optional[str], int, dict[str, Union[str, dict[str, str]]], List[dict[str, Union[str, int]]]]:
     client = AsyncOpenAI(
         api_key=settings.OPEN_AI_API_KEY,
         timeout=TIMEOUT,
@@ -23,4 +23,4 @@ async def execute(langchain_repository: LangchainKnowledgeBaseRepository ,model:
         messages=messages,
         model=model,
     )
-    return chat_completion.choices[0].message.content, 0, {}
+    return chat_completion.choices[0].message.content, 0, {}, []

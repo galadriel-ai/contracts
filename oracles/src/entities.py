@@ -105,6 +105,7 @@ class Chat:
     prompt_type: PromptTypeLiteral
     messages: List[dict]
     system_prompt: Optional[dict[str, Union[str, List[dict[str, str]]]]] = None
+    score_list: Optional[List[dict[str, Union[str, int]]]] = None
     config: Optional[LlmConfig] = None
     response: Optional[Union[str, ChatCompletion]] = None
     error_message: Optional[str] = None
@@ -127,6 +128,7 @@ class FunctionCall:
 class LangchainKnowledgeBaseIndexingRequest:
     id: int
     key: str
+    owner: str
     is_processed: bool
     transaction_receipt: dict = None
 

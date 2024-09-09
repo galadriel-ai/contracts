@@ -63,6 +63,7 @@ async def _answer_chat(
                 chat.error_message = response.error
                 chat.rag_config = RagConfig(num_documents=response.num_documents)
                 chat.system_prompt = response.system_prompt
+                chat.score_list = response.score_list
 
 
             success = await repository.send_chat_response(chat)

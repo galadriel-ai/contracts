@@ -18,19 +18,20 @@ async def execute(model: str, langchain_repository: LangchainKnowledgeBaseReposi
         num_docs = 0
         if not chat.config or chat.prompt_type == PromptType.DEFAULT:
             if chat.config and chat.config.model in get_args(AnthropicModelType):
-                response, num_docs, chat.system_prompt = await anthropic_llm.execute(langchain_repository, chat)
+                response, num_docs, chat.system_prompt, chat.score_list = await anthropic_llm.execute(langchain_repository, chat)
             else:
-                response, num_docs, chat.system_prompt = await basic_llm.execute(langchain_repository, model, messages=chat.messages)
+                response, num_docs, chat.system_prompt, chat.score_list = await basic_llm.execute(langchain_repository, model, messages=chat.messages)
         elif chat.prompt_type == PromptType.OPENAI:
-            response, num_docs, chat.system_prompt = await openai_llm.execute(langchain_repository, chat)
+            response, num_docs, chat.system_prompt, chat.score_list = await openai_llm.execute(langchain_repository, chat)
         elif chat.prompt_type == PromptType.GROQ:
-            response, num_docs, chat.system_prompt = await groq_llm.execute(langchain_repository,chat)
+            response, num_docs, chat.system_prompt, chat.score_list = await groq_llm.execute(langchain_repository,chat)
         else:
             response = "Invalid promptType"
         return LLMResult(
             chat_completion=response,
             system_prompt=chat.system_prompt,
             num_documents=num_docs,
+            score_list=chat.score_list,
             error="",
         )
     except openai.APIError as api_error:
@@ -38,6 +39,7 @@ async def execute(model: str, langchain_repository: LangchainKnowledgeBaseReposi
         return LLMResult(
             chat_completion=None,
             system_prompt={},
+            score_list=[],
             num_documents=num_docs,
             error=api_error.message,
         )
@@ -46,6 +48,7 @@ async def execute(model: str, langchain_repository: LangchainKnowledgeBaseReposi
         return LLMResult(
             chat_completion=None,
             system_prompt={},
+            score_list=[],
             num_documents=num_docs,
             error=str(e),
         )

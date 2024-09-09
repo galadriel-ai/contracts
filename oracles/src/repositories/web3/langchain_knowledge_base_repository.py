@@ -44,9 +44,13 @@ class Web3LangchainKnowledgeBaseRepository(Web3BaseRepository):
                 ).call()
             )
             key = await self.oracle_contract.functions.langchainkbIndexingRequests(i).call()
+            owner = await self.oracle_contract.functions.langchainkbIndexingOwnerAddress(
+                i
+            ).call()
             return LangchainKnowledgeBaseIndexingRequest(
                 id=i,
                 key=key,
+                owner=owner,
                 is_processed=is_processed,
             )
         except ContractLogicError as e:
@@ -219,7 +223,7 @@ class Web3LangchainKnowledgeBaseRepository(Web3BaseRepository):
     async def send_kb_query_response(
         self,
         request: LangchainKnowledgeBaseQuery,
-        documents: List[str],
+        documents: List[dict[str, str | int]],
         error_message: str = "",
     ) -> bool:
         nonce = await self.web3_client.eth.get_transaction_count(self.account.address)

@@ -17,6 +17,11 @@ interface IOracle {
         Content [] content;
     }
 
+    struct Score {
+        address owner;
+        uint score;
+    }
+
     struct OpenAiRequest {
         // "gpt-4-turbo", "gpt-4-turbo-preview" or "gpt-3.5-turbo-1106"
         string model;
@@ -54,6 +59,7 @@ interface IOracle {
         string content;
         uint num_documents;
         Message system_prompt;
+        Score[] scores;
         string functionName;
         string functionArguments;
 
@@ -100,6 +106,7 @@ interface IOracle {
         string content;
         uint num_documents;
         Message system_prompt;
+        Score[] scores;
         uint64 created;
         string model;
         string systemFingerprint;
@@ -147,6 +154,7 @@ interface IOracle {
         string content;
         uint num_documents;
         Message system_prompt;
+        Score[] scores;
         string functionName;
         string functionArguments;
 

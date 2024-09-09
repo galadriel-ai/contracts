@@ -2,7 +2,7 @@
 pragma solidity ^0.8.9;
 
 // Uncomment this line to use console.log
-// import "hardhat/console.sol";
+import "hardhat/console.sol";
 import "./interfaces/IOracle.sol";
 
 contract GroqChatGpt {
@@ -34,6 +34,9 @@ contract GroqChatGpt {
     // Configuration for the Groq request
     IOracle.GroqRequest private config;
 
+    mapping(address => uint) public balances;
+    mapping(uint => uint) public chatBalances;
+
     // initialOracleAddress Initial address of the oracle contract
     constructor(address initialOracleAddress) {
         owner = msg.sender;
@@ -54,6 +57,8 @@ contract GroqChatGpt {
             user : "", // null
             ragConfig : IOracle.RAGConfig({num_documents: 0})
         });
+
+        console.log("balance", address(this).balance);
     }
 
     modifier onlyOwner() {
@@ -71,7 +76,8 @@ contract GroqChatGpt {
         emit OracleAddressUpdated(newOracleAddress);
     }
 
-    function startChat(string memory message, uint num_documents) public returns (uint) {
+    function startChat(string memory message, uint num_documents) public payable returns (uint) {
+        
         ChatRun storage run = chatRuns[chatRunsCount];
 
         run.owner = msg.sender;
@@ -87,7 +93,9 @@ contract GroqChatGpt {
 
         IOracle(oracleAddress).createGroqLlmCall(currentId, callConfig);
         emit ChatCreated(msg.sender, currentId);
-
+        console.log("received", msg.value);
+        chatBalances[currentId] = msg.value;
+        console.log("balance", address(this).balance);
         return currentId;
     }
 
@@ -116,8 +124,27 @@ contract GroqChatGpt {
             IOracle.Message memory newMessage = createTextMessage("assistant", response.content);
             run.messages.push(newMessage);
             run.messagesCount++;
+
+            uint total = 0;
+            for (uint i = 0; i < response.scores.length; i++) {
+                IOracle.Score memory score = response.scores[i];
+                total += score.score;   
+            }
+
+            for(uint i = 0; i < response.scores.length; i++) {
+                IOracle.Score memory score = response.scores[i];
+                balances[score.owner] += chatBalances[runId] * (score.score / total);
+                console.log("balance for ", score.owner, "is", balances[score.owner]);
+            }
+
         }
         emit MessageReceived(msg.sender, runId);
+    }
+
+    function widthdraw(uint amount) public {
+        require(balances[msg.sender] >= amount, "Insufficient balance");
+        balances[msg.sender] -= amount;
+        payable(msg.sender).transfer(amount);
     }
 
     function addMessage(string memory message, uint num_documents, uint runId) public {

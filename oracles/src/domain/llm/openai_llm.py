@@ -15,7 +15,7 @@ import settings
 @backoff.on_exception(
     backoff.expo, (openai.RateLimitError, openai.APITimeoutError), max_tries=3
 )
-async def execute(langchain_repository: LangchainKnowledgeBaseRepository, chat: Chat) -> Tuple[Optional[ChatCompletion], int, dict[str, Union[str, List[dict[str, str]]]]]:
+async def execute(langchain_repository: LangchainKnowledgeBaseRepository, chat: Chat) -> Tuple[Optional[ChatCompletion], int, dict[str, Union[str, List[dict[str, str]]]], List[dict[str, Union[str, int]]]]:
     client = AsyncOpenAI(
         api_key=settings.OPEN_AI_API_KEY,
         timeout=TIMEOUT,

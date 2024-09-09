@@ -18,8 +18,15 @@ async def execute(
         print(f"Found {len(documents)} documents", flush=True)
         for docs in documents:
             print(f'content: {docs.page_content}, metadata: {docs.metadata}', flush=True)
-        document_texts = [document.page_content for document in documents]
-        return LangchainKnowledgeBaseQueryResult(documents=document_texts, error="")
+        document_map_list = [
+            {
+                "text": doc.page_content,
+                "score": doc.metadata["score"],
+                "owner": doc.metadata["owner"],
+            }
+            for doc in documents
+        ]
+        return LangchainKnowledgeBaseQueryResult(documents=document_map_list, error="")
     except Exception as e:
         print(e, flush=True)
         return LangchainKnowledgeBaseQueryResult(documents=[], error=str(e))

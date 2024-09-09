@@ -18,7 +18,7 @@ async def execute(
             raise FileNotFoundError(filename=request.key)
         
         await kb_repository.create(
-            request.key, content
+            request.key, content, request.owner
         )
         index = await kb_repository.serialize()
         await file_repository.write_file(index, key="index")

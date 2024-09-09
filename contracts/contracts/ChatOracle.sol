@@ -14,6 +14,12 @@ contract ChatOracle is IOracle {
         string groq;
     }
 
+    struct Document {
+        string text;
+        address owner;
+        uint score;
+    }
+
     // Available prompt types
     PromptTypes public promptTypes;
 
@@ -80,6 +86,9 @@ contract ChatOracle is IOracle {
     // Mapping of langchain knowledge base indexing request ID to the s3 key
     mapping(uint => string) public langchainkbIndexingRequests;
 
+    // Mapping of langchain knowledge base indexing request ID to the address of the EOA that called the request
+    mapping(uint => address) public langchainkbIndexingOwnerAddress;
+
     // Mapping of langchain knowledge base indexing request ID to the error message
     mapping(uint => string) public langchainkbIndexingRequestErrors;
 
@@ -132,7 +141,7 @@ contract ChatOracle is IOracle {
 
     event LangchainKnowledgeBaseQueryResponseAdded(
         uint indexed kbQueryId,
-        string[] documents,
+        Document[] documents,
         string errorMessage
     );
 
@@ -364,6 +373,8 @@ contract ChatOracle is IOracle {
     function addLangchainKnowledgeBase(string memory key) public {
         uint langchainkbIndexingRequestId = langchainkbIndexingRequestCount;
         langchainkbIndexingRequests[langchainkbIndexingRequestId] = key;
+        langchainkbIndexingOwnerAddress[langchainkbIndexingRequestId] = msg.sender;
+        
         langchainkbIndexingRequestCount++;
         emit LangchainKnowledgeIndexRequestAdded(
             langchainkbIndexingRequestId,
@@ -443,7 +454,7 @@ contract ChatOracle is IOracle {
     function addLangchainKnowledgeBaseQueryResponse(
         uint langchainkbQueryId,
         uint langchainkbQueryCallbackId,
-        string[] memory documents,
+        Document[] memory documents,
         string memory errorMessage
     ) public onlyWhitelisted {
         require(

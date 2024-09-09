@@ -29,7 +29,7 @@ import settings
 @backoff.on_exception(
     backoff.expo, (anthropic.RateLimitError, anthropic.APITimeoutError), max_tries=3
 )
-async def execute(langchain_repository: LangchainKnowledgeBaseRepository ,chat: Chat) -> Tuple[Optional[ChatCompletion], int, dict[str, Union[str, List[dict[str, str]]]]]:
+async def execute(langchain_repository: LangchainKnowledgeBaseRepository ,chat: Chat) -> Tuple[Optional[ChatCompletion], int, dict[str, Union[str, List[dict[str, str]]]], List[dict[str, Union[str, int]]]]:
     client = AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
     system_prompt = NOT_GIVEN
     messages = chat.messages
