@@ -18,13 +18,22 @@ Ensure that your Oracle smart contract is deployed and your wallet address is [w
 
 ### Configuration
 
-Create a `.env` file in the project root with the content updated to your values:
+Before starting the project, you need to configure the necessary environment variables.
+
+1. Copy the `.env.template` file into a new `.env` file at the root of the project:
+
+   ```shell
+   cp .env.template .env
+   ```
+
+2. Open the .env file and update the values with your specific information:
 
 ```plaintext
 PRIVATE_KEY="[whitelisted wallet private key]"
 ORACLE_ADDRESS="[oracle smart contract address]"
 OPEN_AI_API_KEY="[openai api key]"
 SERPER_API_KEY="[serper api key]"
+PINATA_API_JWT="[pinata API JWT]"
 ```
 
 For more configuration parameters, see [template.env](https://github.com/galadriel-ai/contracts/blob/main/oracles/template.env)
